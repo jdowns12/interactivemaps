@@ -70,6 +70,26 @@ body {
     z-index: 2;
   }
   
+  /* Dim background overlay */
+.dim-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* semi-transparent black */
+    z-index: 998;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  
+  /* Show overlay when a map is expanded */
+  .overlay-active .dim-overlay {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
   .location-icon {
     width: 24px;
     height: 24px;

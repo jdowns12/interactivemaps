@@ -14,6 +14,7 @@ function toggleExpand(event, icon) {
   
     selectedMap.classList.add('expanded');
     document.body.classList.add('overlay-active');
+    document.body.classList.remove('overlay-active');
   }
   
   function collapseMap(map) {
