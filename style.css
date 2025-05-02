@@ -102,6 +102,30 @@ body {
     cursor: pointer;
   }
   
+/* Style for Left Arrow */
+.LeftArrow {
+    width: 30px;
+    height: 30px;
+    background-color: #E87722;  /* You can change this to your desired color */
+    clip-path: polygon(40% 0%, 40% 20%, 100% 20%, 100% 80%, 40% 80%, 40% 100%, 0% 50%);  /* Arrow shape */
+    display: inline-block;
+    position: absolute; /* Positioning to stay in place */
+    top: 0; /* You can adjust based on where you want the icon */
+    left: 0; /* Adjust as needed */
+  }
+  
+  /* Style for Right Arrow */
+  .RightArrow {
+    width: 30px;
+    height: 30px;
+    background-color: #E87722;  /* You can change this to your desired color */
+    clip-path: polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%);  /* Arrow shape */
+    display: inline-block;
+    position: absolute; /* Positioning to stay in place */
+    top: 0; /* You can adjust based on where you want the icon */
+    left: 0; /* Adjust as needed */
+  }
+
   .icon-label {
     font-size: 12px;
   }
