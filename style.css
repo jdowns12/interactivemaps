@@ -1,9 +1,11 @@
+/* Base styles */
 body {
     margin: 0;
     font-family: sans-serif;
     background: #f5f5f5;
   }
   
+  /* Layout for multiple maps */
   .map-row {
     display: flex;
     flex-wrap: wrap;
@@ -22,6 +24,7 @@ body {
     transition: all 0.3s ease;
     cursor: pointer;
     aspect-ratio: 4 / 3;
+    z-index: 1; /* Base z-index */
   }
   
   .map-container.expanded {
@@ -32,8 +35,9 @@ body {
     height: auto;
     max-height: 90vh;
     transform: translate(-50%, -50%);
-    z-index: 1000;
+    z-index: 9999; /* High z-index for expanded state */
     background: #000;
+    aspect-ratio: auto;
   }
   
   .map-container.dimmed {
@@ -41,16 +45,26 @@ body {
     pointer-events: none;
   }
   
-  .map-label {
-    color: white;
-    background: rgba(0,0,0,0.6);
-    padding: 5px 10px;
-    position: absolute;
+  /* Dim background overlay */
+  .dim-overlay {
+    position: fixed;
     top: 0;
     left: 0;
-    z-index: 3;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
   }
   
+  .overlay-active .dim-overlay {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  /* Map image & content */
   .map-content {
     position: relative;
     width: 100%;
@@ -64,98 +78,91 @@ body {
     display: block;
   }
   
+  /* Labels */
+  .map-label {
+    color: white;
+    background: rgba(0,0,0,0.6);
+    padding: 5px 10px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 3;
+  }
+  
+  /* Location icons */
   .location-wrapper {
     position: absolute;
     transform: translate(-50%, -50%);
     z-index: 2;
   }
   
-  /* Dim background overlay */
-.dim-overlay {
-    position: fixed;
+  /* Arrow icon base */
+  .location-icon {
+    width: 30px;
+    height: 30px;
+    background-color: #E87722;
+    position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* semi-transparent black */
-    z-index: 998;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-  }
-  
-  /* Show overlay when a map is expanded */
-  .overlay-active .dim-overlay {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .location-icon {
-    width: 24px;
-    height: 24px;
-    background: red;
-    border-radius: 50%;
-    color: white;
-    text-align: center;
-    line-height: 24px;
-    font-weight: bold;
+    display: inline-block;
     cursor: pointer;
+    z-index: -2;
   }
   
-/* Style for Left Arrow */
-.LeftArrow {
-    width: 30px;
-    height: 30px;
-    background-color: #E87722;  /* You can change this to your desired color */
-    clip-path: polygon(40% 0%, 40% 20%, 100% 20%, 100% 80%, 40% 80%, 40% 100%, 0% 50%);  /* Arrow shape */
-    display: inline-block;
-    position: absolute; /* Positioning to stay in place */
-    top: 0; /* You can adjust based on where you want the icon */
-    left: 0; /* Adjust as needed */
+  /* Arrow directions */
+  .LeftArrow {
+    clip-path: polygon(40% 0%, 40% 20%, 100% 20%, 100% 80%, 40% 80%, 40% 100%, 0% 50%);
   }
   
-  /* Style for Right Arrow */
   .RightArrow {
-    width: 30px;
-    height: 30px;
-    background-color: #E87722;  /* You can change this to your desired color */
-    clip-path: polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%);  /* Arrow shape */
-    display: inline-block;
-    position: absolute; /* Positioning to stay in place */
-    top: 0; /* You can adjust based on where you want the icon */
-    left: 0; /* Adjust as needed */
+    clip-path: polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%);
   }
-
+  
   .icon-label {
     font-size: 12px;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    line-height: 30px;
+    display: block;
   }
   
+  /* Info boxes */
   .info-box {
     background: white;
     color: black;
-    padding: 5px;
+    padding: 10px;
     border: 1px solid #333;
     margin-top: 5px;
     display: none;
     position: absolute;
-    top: 30px;
+    top: 35px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 3;
+    z-index: 10;
+    width: 300px;
+    max-width: 90vw;
+    max-height: 400px;
+    overflow: auto;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    border-radius: 6px;
+    font-size: 16px;
+    pointer-events: none; /* allows clicks to pass through */
   }
   
- /* Show info-box on hover (desktop only) */
-@media (hover: hover) and (pointer: fine) {
-    .location-icon:hover + .info-box {
+  /* Show info-box on hover (desktop only) */
+  @media (hover: hover) and (pointer: fine) {
+    .location-wrapper:hover .info-box {
       display: block;
     }
   }
   
-  /* Also show if icon is clicked (mobile or desktop) */
+  /* Show info-box when clicked */
   .location-icon.expanded + .info-box {
     display: block;
   }
   
+  /* Close button for expanded map */
   .close-button {
     position: absolute;
     top: 10px;
@@ -165,12 +172,28 @@ body {
     border: none;
     font-size: 18px;
     cursor: pointer;
-    z-index: 3;
+    z-index: 4;
   }
   
+  /* Responsive: stack maps on mobile */
   @media (max-width: 768px) {
     .map-container {
       flex: 1 1 100%;
       max-width: 100%;
+    }
+  
+    .info-box {
+      width: 90vw;
+      font-size: 14px;
+    }
+  
+    .location-icon {
+      width: 26px;
+      height: 26px;
+    }
+  
+    .icon-label {
+      font-size: 11px;
+      line-height: 26px;
     }
   }
