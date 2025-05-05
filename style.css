@@ -139,18 +139,19 @@ body {
     margin-top: 5px;
     display: none;
     position: absolute;
-    top: -110px;
-    left: 75px;
+    top: 35px;
+    left: 50%;
     transform: translateX(-50%);
     z-index: 10;
     width: 300px;
     max-width: 90vw;
     max-height: 400px;
     overflow: auto;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     border-radius: 6px;
     font-size: 16px;
-    pointer-events: none;}
+    pointer-events: none; /* allows clicks to pass through */
+  }
   
   /* Show info-box on hover (desktop only)
   @media (hover: hover) and (pointer: fine) {
