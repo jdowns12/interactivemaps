@@ -38,6 +38,7 @@ body {
     z-index: 9999; /* High z-index for expanded state */
     background: #000;
     aspect-ratio: auto;
+    overflow: visible;
   }
   
   .map-container.dimmed {
@@ -108,6 +109,8 @@ body {
     cursor: pointer;
     z-index: -2;
   }
+
+  
   
   /* Arrow directions */
   .LeftArrow {
@@ -136,26 +139,28 @@ body {
     margin-top: 5px;
     display: none;
     position: absolute;
-    top: 35px;
-    left: 50%;
+    top: -110px;
+    left: 75px;
     transform: translateX(-50%);
     z-index: 10;
     width: 300px;
     max-width: 90vw;
     max-height: 400px;
     overflow: auto;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     border-radius: 6px;
     font-size: 16px;
-    pointer-events: none; /* allows clicks to pass through */
-  }
+    pointer-events: none;}
   
-  /* Show info-box on hover (desktop only) */
+  /* Show info-box on hover (desktop only)
   @media (hover: hover) and (pointer: fine) {
     .location-wrapper:hover .info-box {
       display: block;
     }
-  }
+    .location-wrapper.location-two:hover ~ div > .arrow-hide {
+        display: none;
+    }
+  } */
   
   /* Show info-box when clicked */
   .location-icon.expanded + .info-box {
