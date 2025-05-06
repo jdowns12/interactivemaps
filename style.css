@@ -34,7 +34,7 @@ body {
     width: 90vw;
     height: auto;
     max-height: 90vh;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -60%);
     z-index: 9999; /* High z-index for expanded state */
     background: #000;
     aspect-ratio: auto;
@@ -137,32 +137,21 @@ body {
     border: 1px solid #333;
     margin-top: 5px;
     display: none;
-    position: absolute;
-    top: 35px;
-    left: 50%;
-    transform: translateX(-50%);
+    position: fixed;
+    top: 25px;
+    left: 20%%;
+    transform: translatex(-50%);
     z-index: 10;
-    width: 300px;
+    width: 400px;
     height: auto;
     max-width: 90vw;
     max-height: 800px;
     overflow: auto;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     border-radius: 6px;
     font-size: 16px;
-    pointer-events: none; /* allows clicks to pass through */
-    
+    pointer-events: none;
   }
-  
-  /* Show info-box on hover (desktop only)
-  @media (hover: hover) and (pointer: fine) {
-    .location-wrapper:hover .info-box {
-      display: block;
-    }
-    .location-wrapper.location-two:hover ~ div > .arrow-hide {
-        display: none;
-    }
-  } */
   
   /* Show info-box when clicked */
   .location-icon.expanded + .info-box {

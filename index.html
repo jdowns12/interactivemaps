@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Side-by-Side Maps</title>
+  <title>WEP Venue Maps</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -16,43 +16,54 @@
         <img src="map1.jpg" alt="Map 1" class="map-image" />
 
         <!-- Location 1 -->
-        <div class="location-wrapper" style="top: 26%; left: 42%;">
+        <div class="location-wrapper" style="top: 65%; left: 44.5%;">
           <div class="location-icon map-one-arrows RightArrow" onclick="toggleExpand(event, this)">
             <span class="icon-label">1</span>
           </div>
           <div class="info-box">
-            <strong>Location 1 Info</strong><br>
-            <img src="location1-1.jpg" alt="Location 1" style="max-width: 100%; height: auto; margin-top: 5px;" />
-            <p>This is information about location 1 map 1</p>
+            <strong>Main Left</strong><br>
+            <img src="location1-1.jpg" alt="Location 1" style="max-width: 45%; height: auto; margin-top: 5px;" />
+            <p>Main Left is at the top of section 102 on the third floor concourse. 1-6 on the wall
+                is located in panel 2 at Truck Pedestal. 1-6 in the white box is New Main Left located
+                in panel 1 at Truck Pedestal.  </p>
           </div>
         </div>
 
         <!-- Location 2 -->
-        <div class="location-wrapper" style="top: 45%; left: 35%;">
-            <div class="location-icon map-one-arrows RightArrow" onclick="toggleExpand(event, this)">
+        <div class="location-wrapper" style="top: 65%; left: 50%;">
+            <div class="location-icon map-one-arrows LeftArrow" onclick="toggleExpand(event, this)">
               <span class="icon-label">2</span>
             </div>
             <div class="info-box">
-              <strong>Location 2 Info</strong><br>
-              <img src="location1-1.jpg" alt="Location 2" style="max-width: 100%; height: auto; margin-top: 5px;" />
-              <p>Here’s some description or additional details.</p>
+              <strong>Main Right</strong><br>
+              <img src="location1-2.jpg" alt="Location 2" style="max-width: 45%; height: auto; margin-top: 5px;" />
+              <p>Main Right is at the top of section 103 on the third floor concourse. Top 1-6 in the white box is Main Left located
+                in panel 2 at Truck Pedestal. Bottom 1-6 in the white box is New Main Left located in Panel 1 at Truck Dock. </p>
             </div>
           </div>
 
-        <!-- Location 3 -->
-        <div class="location-wrapper" style="top: 50%; left: 40%;">
-          <div class="location-icon map-one-arrows RightArrow" onclick="toggleExpand(event, this)">
+         <!-- Location 3 -->
+         <div class="location-wrapper" style="top: 18%; left: 50%;">
+          <div class="location-icon map-one-arrows LeftArrow" onclick="toggleExpand(event, this)">
             <span class="icon-label">3</span>
           </div>
-          <div class="info-box">Info for Map 1, Location 3</div>
+          <div class="info-box">
+            <strong>Main Reverse</strong><br>
+            <img src="location1-3.jpg" alt="Location 2" style="max-width: 45%; height: auto; margin-top: 5px;" />
+            <p>Main Right is at the top of section 111. 1-6 on the wall is Main Reverse in Panel 2 at Truck Dock. </p>
+          </div>
         </div>
 
         <!-- Location 4 -->
-        <div class="location-wrapper" style="top: 20%; left: 30%;">
-          <div class="location-icon map-one-arrows RightArrow" onclick="toggleExpand(event, this)">
+        <div class="location-wrapper" style="top: 35%; left: 33%;">
+          <div class="location-icon map-one-arrows LeftArrow" onclick="toggleExpand(event, this)">
             <span class="icon-label">4</span>
           </div>
-          <div class="info-box">Info for Map 1, Location 4</div>
+          <div class="info-box">
+            <strong>Floor Far Left (FFL)</strong><br>
+            <img src="location1-4.jpg" alt="Location 2" style="max-width: 45%; height: auto; margin-top: 5px;" />
+            <p>Floor Far Left is located between section K and L floor level. 1-36 is FFL in Panel 2 at Truck Dock.  </p>
+          </div>
         </div>
 
         <!-- Close Button -->
@@ -87,10 +98,16 @@
       <div class="map-content">
         <img src="map3.jpg" alt="Map 3" class="map-image" />
         <div class="location-wrapper" style="top: 30%; left: 60%;">
-          <div class="location-icon RightArrow" onclick="toggleExpand(event, this)">
+          <div class="location-icon  map-three-arrows RightArrow" onclick="toggleExpand(event, this)">
             <span class="icon-label">1</span>
           </div>
           <div class="info-box">Info for Map 3, Location 1</div>
+        </div>
+        <div class="location-wrapper" style="top: 60%; left: 60%;">
+          <div class="location-icon map-three-arrows RightArrow" onclick="toggleExpand(event, this)">
+            <span class="icon-label">2</span>
+          </div>
+          <div class="info-box">Info for Map 3, Location 2</div>
         </div>
         <button class="close-button" onclick="event.stopPropagation(); collapseMap(this.closest('.map-container'));">✕ Close</button>
       </div>
