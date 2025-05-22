@@ -100,32 +100,38 @@ function togglePersistentInfoBox(icon, infoBox, mapContent) {
 function positionFloatingBox(icon, infoBox, mapContent) {
   if (!infoBox || !mapContent) return;
 
+  // Temporarily show box to calculate position
+  infoBox.style.visibility = 'hidden';
   infoBox.style.display = 'block';
   infoBox.classList.remove('above', 'below');
 
   const iconRect = icon.getBoundingClientRect();
+  const mapRect = mapContent.getBoundingClientRect();
   const boxHeight = infoBox.offsetHeight;
   const spaceBelow = window.innerHeight - iconRect.bottom;
   const spaceAbove = iconRect.top;
 
-  // Pick direction
-  if (spaceBelow >= boxHeight || spaceBelow > spaceAbove) {
-    infoBox.classList.add('below');
-  } else {
-    infoBox.classList.add('above');
-  }
-
-  // Reposition within the map (important!)
-  const mapRect = mapContent.getBoundingClientRect();
-  const relativeTop = iconRect.top - mapRect.top;
   const iconHeight = icon.offsetHeight;
+  const relativeTop = iconRect.top - mapRect.top;
 
   let newTop;
-  if (infoBox.classList.contains('below')) {
+  if (spaceBelow >= boxHeight || spaceBelow > spaceAbove) {
+    infoBox.classList.add('below');
     newTop = relativeTop + iconHeight + 10;
   } else {
+    infoBox.classList.add('above');
     newTop = relativeTop - boxHeight - 10;
   }
 
   infoBox.style.top = `${newTop}px`;
+
+  // Force background rendering in both states
+  infoBox.style.backgroundColor = 'white';
+  infoBox.style.visibility = 'visible';
+  infoBox.style.zIndex = '10000';
+  infoBox.style.position = 'absolute';
+  infoBox.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+  infoBox.style.padding = '1em';
+  infoBox.style.border = '1px solid #ccc';
+  infoBox.style.borderRadius = '6px';
 }

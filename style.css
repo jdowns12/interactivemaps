@@ -146,26 +146,41 @@ body {
 
 /* === FLOATING INFO BOXES === */
 .floating-info-box {
+  display: none;
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  background: white !important; /* Ensures background is visible */
+  background: white !important;
   color: #000;
   padding: 1em;
   border: 1px solid #ccc;
   z-index: 10000;
-  display: none;
   max-width: 300px;
   width: max-content;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  min-width: 200px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   border-radius: 6px;
   font-size: clamp(0.9rem, 1.2vw, 1.1rem);
   white-space: normal;
   overflow: visible;
+  box-sizing: border-box;  /* ✅ Ensure padding is included in size */
+}
+
+.floating-info-box.above,
+.floating-info-box.below,
+.floating-info-box.visible {
+  background: white !important;
+  min-width: 200px;
+  min-height: 80px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  padding: 1em;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  z-index: 10000;
 }
 
 .floating-info-box.above {
-  bottom: calc(100% + 10px);
+
   top: auto;
 }
 
@@ -176,6 +191,13 @@ body {
 
 .floating-info-box.visible {
   display: block !important;
+}
+
+.floating-info-box img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin-top: 5px;
 }
 
 /* === CLOSE BUTTON === */
@@ -194,8 +216,9 @@ body {
 @media (max-width: 768px) {
   .map-container.expanded {
     width: 100vw;
-    left: 0;
-    transform: translateY(-50%);
+    left: 50%;
+    top: 25%;
+    transform: translateX(-50%) translateY(0);
     border-radius: 0;
   }
 }
