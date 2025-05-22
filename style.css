@@ -190,3 +190,12 @@ body {
   cursor: pointer;
   z-index: 4;
 }
+
+@media (max-width: 768px) {
+  .map-container.expanded {
+    width: 100vw;
+    left: 0;
+    transform: translateY(-50%);
+    border-radius: 0;
+  }
+}
