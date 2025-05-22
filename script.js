@@ -135,3 +135,16 @@ function positionFloatingBox(icon, infoBox, mapContent) {
   infoBox.style.border = '1px solid #ccc';
   infoBox.style.borderRadius = '6px';
 }
+
+document.querySelectorAll('.info-close-button').forEach(button => {
+  button.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent the click from expanding or collapsing other stuff
+    const infoBox = button.closest('.floating-info-box');
+    if (infoBox) {
+      infoBox.style.display = 'none';
+      // Remove 'expanded' from the associated icon
+      const icon = document.querySelector(`.location-icon[data-info-id="${infoBox.id}"]`);
+      if (icon) icon.classList.remove('expanded');
+    }
+  });
+});

@@ -213,6 +213,17 @@ body {
   z-index: 4;
 }
 
+.info-close-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #000;
+  z-index: 10;
+}
 @media (max-width: 768px) {
   .map-container.expanded {
     width: 100vw;
