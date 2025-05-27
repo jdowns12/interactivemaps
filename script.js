@@ -1,9 +1,17 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Expand/Collapse Logic
+  const imageModalOverlay = document.getElementById('image-modal-overlay');
+  const imageModalContent = document.getElementById('image-modal-content');
+  const imageModalClose = document.getElementById('image-modal-close');
+  const dimOverlay = document.querySelector('.dim-overlay');
+
+  // Expand/Collapse Logic for maps
   document.querySelectorAll('.map-container').forEach(map => {
     map.addEventListener('click', (e) => {
-      e.stopPropagation();
-      expandOnlyThisMap(map);
+      if (e.target.classList.contains('map-container') || e.target.classList.contains('map-image')) {
+        if (!map.classList.contains('expanded')) {
+            expandOnlyThisMap(map);
+        }
+      }
     });
 
     const closeBtn = map.querySelector('.close-button');
@@ -23,35 +31,113 @@ document.addEventListener("DOMContentLoaded", () => {
 
     icon.addEventListener('click', (e) => {
       e.stopPropagation();
-      togglePersistentInfoBox(icon, infoBox, mapContent);
+      const parentMap = icon.closest('.map-container');
+      if (parentMap && !parentMap.classList.contains('expanded')) {
+        expandOnlyThisMap(parentMap);
+        setTimeout(() => {
+            togglePersistentInfoBox(icon, infoBox, mapContent);
+        }, 50); 
+      } else if (parentMap && parentMap.classList.contains('expanded')) {
+        togglePersistentInfoBox(icon, infoBox, mapContent);
+      }
     });
 
     icon.addEventListener('mouseenter', () => {
-      if (!icon.classList.contains('expanded')) {
-        positionFloatingBox(icon, infoBox, mapContent);
-        infoBox.style.display = 'block';
+      const parentMap = icon.closest('.map-container');
+      if (parentMap && parentMap.classList.contains('expanded')) {
+        if (!icon.classList.contains('expanded')) { 
+          positionFloatingBox(icon, infoBox, mapContent); 
+        }
       }
     });
 
     icon.addEventListener('mouseleave', () => {
-      if (!icon.classList.contains('expanded')) {
+      if (!icon.classList.contains('expanded')) { 
         infoBox.style.display = 'none';
       }
     });
 
-    infoBox.addEventListener('mouseleave', () => {
-      if (!icon.classList.contains('expanded')) {
+    if (infoBox) {
+        infoBox.addEventListener('mouseenter', () => {
+            const parentMap = icon.closest('.map-container');
+            if (parentMap && parentMap.classList.contains('expanded')) {
+                 if (!icon.classList.contains('expanded')) {
+                    positionFloatingBox(icon, infoBox, mapContent);
+                }
+            }
+        });
+        infoBox.addEventListener('mouseleave', () => {
+            if (!icon.classList.contains('expanded')) {
+                infoBox.style.display = 'none';
+            }
+        });
+    }
+  });
+
+  document.querySelectorAll('.floating-info-box img').forEach(infoImage => {
+    infoImage.addEventListener('click', (e) => {
+      e.stopPropagation();
+      imageModalContent.src = infoImage.src;
+      imageModalOverlay.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    });
+  });
+
+  function closeImageModal() {
+    imageModalOverlay.style.display = 'none';
+    imageModalContent.src = "";
+    document.body.style.overflow = '';
+  }
+
+  imageModalClose.addEventListener('click', () => {
+    closeImageModal();
+  });
+
+  imageModalOverlay.addEventListener('click', (e) => {
+    if (e.target === imageModalOverlay) {
+      closeImageModal();
+    }
+  });
+
+  document.querySelectorAll('.info-close-button').forEach(button => {
+    button.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const infoBox = button.closest('.floating-info-box');
+      if (infoBox) {
         infoBox.style.display = 'none';
+        const icon = document.querySelector(`.location-icon[data-info-id="${infoBox.id}"]`);
+        if (icon) icon.classList.remove('expanded');
       }
     });
   });
-});
+
+  dimOverlay.addEventListener('click', () => {
+    const expandedMap = document.querySelector('.map-container.expanded');
+    if (expandedMap) {
+      collapseMap(expandedMap);
+    }
+  });
+}); // End of DOMContentLoaded
 
 function expandOnlyThisMap(selectedMap) {
+  document.querySelectorAll('.floating-info-box').forEach(ib => {
+    ib.style.display = 'none';
+  });
+  document.querySelectorAll('.location-icon.expanded').forEach(ic => ic.classList.remove('expanded'));
+  const imageModalOverlay = document.getElementById('image-modal-overlay');
+  if (imageModalOverlay.style.display === 'flex') {
+    imageModalOverlay.style.display = 'none';
+    document.getElementById('image-modal-content').src = "";
+    document.body.style.overflow = '';
+  }
+
   document.querySelectorAll('.map-container').forEach(map => {
-    map.classList.remove('dimmed');
+    map.classList.remove('dimmed', 'expanded');
     map.style.pointerEvents = 'auto';
   });
+
+  selectedMap.classList.add('expanded');
+  document.body.classList.add('overlay-active');
 
   document.querySelectorAll('.map-container').forEach(map => {
     if (map !== selectedMap) {
@@ -59,11 +145,7 @@ function expandOnlyThisMap(selectedMap) {
       map.style.pointerEvents = 'none';
     }
   });
-
-  selectedMap.classList.add('expanded');
-  document.body.classList.add('overlay-active');
-
-  document.addEventListener('click', closeMapIfClickedOutside);
+  selectedMap.style.pointerEvents = 'auto';
 }
 
 function collapseMap(map) {
@@ -73,78 +155,91 @@ function collapseMap(map) {
     m.classList.remove('dimmed');
     m.style.pointerEvents = 'auto';
   });
-
-  document.removeEventListener('click', closeMapIfClickedOutside);
-}
-
-function closeMapIfClickedOutside(e) {
-  const expandedMap = document.querySelector('.map-container.expanded');
-  if (expandedMap && !expandedMap.contains(e.target)) {
-    collapseMap(expandedMap);
-  }
+  map.querySelectorAll('.floating-info-box').forEach(infoBox => {
+    infoBox.style.display = 'none';
+  });
+  map.querySelectorAll('.location-icon.expanded').forEach(icon => {
+    icon.classList.remove('expanded');
+  });
 }
 
 function togglePersistentInfoBox(icon, infoBox, mapContent) {
-  const isExpanded = icon.classList.contains('expanded');
-  if (isExpanded) {
+  const isCurrentlyExpanded = icon.classList.contains('expanded');
+
+  document.querySelectorAll('.location-icon.expanded').forEach(otherIcon => {
+    if (otherIcon !== icon) {
+      otherIcon.classList.remove('expanded');
+      const otherInfoBoxId = otherIcon.getAttribute('data-info-id');
+      const otherInfoBox = document.getElementById(otherInfoBoxId);
+      if (otherInfoBox) {
+        otherInfoBox.style.display = 'none';
+      }
+    }
+  });
+
+  if (isCurrentlyExpanded) {
     icon.classList.remove('expanded');
     infoBox.style.display = 'none';
   } else {
     icon.classList.add('expanded');
-    positionFloatingBox(icon, infoBox, mapContent);
-    infoBox.style.display = 'block';
+    positionFloatingBox(icon, infoBox, mapContent); 
   }
 }
 
-// 📍 This function is the most important: dynamic above/below placement
 function positionFloatingBox(icon, infoBox, mapContent) {
-  if (!infoBox || !mapContent) return;
+  if (!icon || !infoBox) return;
 
-  // Temporarily show box to calculate position
+  const parentMap = icon.closest('.map-container');
+  if (!parentMap || !parentMap.classList.contains('expanded')) {
+    infoBox.style.display = 'none';
+    return;
+  }
+
   infoBox.style.visibility = 'hidden';
-  infoBox.style.display = 'block';
+  infoBox.style.position = 'fixed'; 
+  infoBox.style.display = 'block';  
   infoBox.classList.remove('above', 'below');
 
-  const iconRect = icon.getBoundingClientRect();
-  const mapRect = mapContent.getBoundingClientRect();
   const boxHeight = infoBox.offsetHeight;
-  const spaceBelow = window.innerHeight - iconRect.bottom;
-  const spaceAbove = iconRect.top;
+  const boxWidth = infoBox.offsetWidth;
 
-  const iconHeight = icon.offsetHeight;
-  const relativeTop = iconRect.top - mapRect.top;
+  // --- X-axis: Center on the viewport ---
+  let newLeft = (window.innerWidth / 2) - (boxWidth / 2);
+
+  // --- Y-axis: Fixed pixel offset above or below the icon ---
+  const iconRect = icon.getBoundingClientRect(); 
+  const verticalOffset = 10; // Using a fixed 10px offset
 
   let newTop;
-  if (spaceBelow >= boxHeight || spaceBelow > spaceAbove) {
+
+  const canFitBelow = (iconRect.bottom + verticalOffset + boxHeight) <= window.innerHeight;
+  const canFitAbove = (iconRect.top - verticalOffset - boxHeight) >= 0;
+
+  if (canFitBelow) {
+    newTop = iconRect.bottom + verticalOffset;
     infoBox.classList.add('below');
-    newTop = relativeTop + iconHeight + 10;
-  } else {
+  } else if (canFitAbove) {
+    newTop = iconRect.top - boxHeight - verticalOffset;
     infoBox.classList.add('above');
-    newTop = relativeTop - boxHeight - 10;
+  } else {
+    if (iconRect.top < (window.innerHeight / 2) ) { 
+      newTop = iconRect.bottom + verticalOffset;
+      infoBox.classList.add('below');
+    } else { 
+      newTop = iconRect.top - boxHeight - verticalOffset;
+      infoBox.classList.add('above');
+    }
   }
 
   infoBox.style.top = `${newTop}px`;
+  infoBox.style.left = `${newLeft}px`;
+  infoBox.style.transform = 'none'; 
 
-  // Force background rendering in both states
-  infoBox.style.backgroundColor = 'white';
   infoBox.style.visibility = 'visible';
-  infoBox.style.zIndex = '10000';
-  infoBox.style.position = 'absolute';
-  infoBox.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
-  infoBox.style.padding = '1em';
-  infoBox.style.border = '1px solid #ccc';
-  infoBox.style.borderRadius = '6px';
-}
 
-document.querySelectorAll('.info-close-button').forEach(button => {
-  button.addEventListener('click', (e) => {
-    e.stopPropagation(); // Prevent the click from expanding or collapsing other stuff
-    const infoBox = button.closest('.floating-info-box');
-    if (infoBox) {
-      infoBox.style.display = 'none';
-      // Remove 'expanded' from the associated icon
-      const icon = document.querySelector(`.location-icon[data-info-id="${infoBox.id}"]`);
-      if (icon) icon.classList.remove('expanded');
-    }
-  });
-});
+  if (icon.classList.contains('expanded')) {
+    infoBox.style.display = 'block'; 
+  } else {
+    infoBox.style.display = 'block';
+  }
+}
