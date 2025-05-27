@@ -34,9 +34,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const parentMap = icon.closest('.map-container');
       if (parentMap && !parentMap.classList.contains('expanded')) {
         expandOnlyThisMap(parentMap);
-        setTimeout(() => {
+        setTimeout(() => { // Allow map to expand before positioning infoBox
             togglePersistentInfoBox(icon, infoBox, mapContent);
-        }, 50); 
+        }, 50);
       } else if (parentMap && parentMap.classList.contains('expanded')) {
         togglePersistentInfoBox(icon, infoBox, mapContent);
       }
@@ -45,14 +45,14 @@ document.addEventListener("DOMContentLoaded", () => {
     icon.addEventListener('mouseenter', () => {
       const parentMap = icon.closest('.map-container');
       if (parentMap && parentMap.classList.contains('expanded')) {
-        if (!icon.classList.contains('expanded')) { 
-          positionFloatingBox(icon, infoBox, mapContent); 
+        if (!icon.classList.contains('expanded')) {
+          positionFloatingBox(icon, infoBox, mapContent);
         }
       }
     });
 
     icon.addEventListener('mouseleave', () => {
-      if (!icon.classList.contains('expanded')) { 
+      if (!icon.classList.contains('expanded')) {
         infoBox.style.display = 'none';
       }
     });
@@ -182,64 +182,45 @@ function togglePersistentInfoBox(icon, infoBox, mapContent) {
     infoBox.style.display = 'none';
   } else {
     icon.classList.add('expanded');
-    positionFloatingBox(icon, infoBox, mapContent); 
+    positionFloatingBox(icon, infoBox, mapContent);
   }
 }
 
 function positionFloatingBox(icon, infoBox, mapContent) {
-  if (!icon || !infoBox) return;
+  if (!icon || !infoBox || !mapContent) return; // mapContent is now important
 
   const parentMap = icon.closest('.map-container');
+  // Only position if the map is expanded
   if (!parentMap || !parentMap.classList.contains('expanded')) {
-    infoBox.style.display = 'none';
+    infoBox.style.display = 'none'; // Ensure it's hidden if map not expanded
     return;
   }
 
+  // Prepare for measurement
   infoBox.style.visibility = 'hidden';
-  infoBox.style.position = 'fixed'; 
-  infoBox.style.display = 'block';  
-  infoBox.classList.remove('above', 'below');
+  infoBox.style.position = 'absolute'; // Position relative to mapContent
+  infoBox.style.display = 'block';
 
   const boxHeight = infoBox.offsetHeight;
   const boxWidth = infoBox.offsetWidth;
 
-  // --- X-axis: Center on the viewport ---
-  let newLeft = (window.innerWidth / 2) - (boxWidth / 2);
+  // Get dimensions of the mapContent area (which fills the expanded map)
+  const contentHeight = mapContent.offsetHeight;
+  const contentWidth = mapContent.offsetWidth;
 
-  // --- Y-axis: Fixed pixel offset above or below the icon ---
-  const iconRect = icon.getBoundingClientRect(); 
-  const verticalOffset = 10; // Using a fixed 10px offset
+  // Calculate top and left to center the infoBox within mapContent
+  let newTop = (contentHeight / 2) - (boxHeight / 2);
+  let newLeft = (contentWidth / 2) - (boxWidth / 2);
 
-  let newTop;
-
-  const canFitBelow = (iconRect.bottom + verticalOffset + boxHeight) <= window.innerHeight;
-  const canFitAbove = (iconRect.top - verticalOffset - boxHeight) >= 0;
-
-  if (canFitBelow) {
-    newTop = iconRect.bottom + verticalOffset;
-    infoBox.classList.add('below');
-  } else if (canFitAbove) {
-    newTop = iconRect.top - boxHeight - verticalOffset;
-    infoBox.classList.add('above');
-  } else {
-    if (iconRect.top < (window.innerHeight / 2) ) { 
-      newTop = iconRect.bottom + verticalOffset;
-      infoBox.classList.add('below');
-    } else { 
-      newTop = iconRect.top - boxHeight - verticalOffset;
-      infoBox.classList.add('above');
-    }
-  }
-
+  // Apply new position
   infoBox.style.top = `${newTop}px`;
   infoBox.style.left = `${newLeft}px`;
-  infoBox.style.transform = 'none'; 
+  infoBox.style.transform = 'none'; // Override any CSS transforms like translateX
 
+  // Make it visible
   infoBox.style.visibility = 'visible';
+  infoBox.style.display = 'block'; // Ensure it stays block
 
-  if (icon.classList.contains('expanded')) {
-    infoBox.style.display = 'block'; 
-  } else {
-    infoBox.style.display = 'block';
-  }
+  // Remove 'above'/'below' classes as they are not used for this positioning logic
+  infoBox.classList.remove('above', 'below');
 }
