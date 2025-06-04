@@ -93,6 +93,7 @@ body.overlay-active .dim-overlay {
   position: absolute;
   top: 0;
   left: 0;
+  z-index: 1; /* Base z-index for the map image */
 }
 
 /* === LABELS === */
@@ -103,7 +104,7 @@ body.overlay-active .dim-overlay {
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 3;
+  z-index: 2; /* Label above map image */
   font-size: clamp(10px, 1.2vw, 14px); 
 }
 
@@ -111,13 +112,13 @@ body.overlay-active .dim-overlay {
 .location-wrapper {
   position: absolute;
   transform: translate(-50%, -50%);
-  z-index: 2;
-  transition: opacity 0.3s ease, visibility 0.3s ease; /* For smooth hide/show */
+  z-index: 3; /* Icons above map label */
+  transition: opacity 0.3s ease, visibility 0.3s ease; 
 }
 .location-wrapper.hidden-by-filter {
     opacity: 0;
     visibility: hidden;
-    pointer-events: none; /* Prevent interaction with hidden icons */
+    pointer-events: none; 
 }
 
 .location-icon {
@@ -134,6 +135,7 @@ body.overlay-active .dim-overlay {
   transition: background-color 0.3s ease, transform 0.2s ease;
   position: relative; 
   border: 1px solid white; 
+  cursor: pointer; /* Ensure icon itself has pointer cursor */
 }
 .location-icon:hover {
     transform: scale(1.1); 
@@ -152,6 +154,7 @@ body.overlay-active .dim-overlay {
   font-weight: bold;
   text-align: center;
   display: block; 
+  pointer-events: none; /* Label text should not interfere with icon clicks */
 }
 
 /* === FLOATING INFO BOXES === */
@@ -164,7 +167,7 @@ body.overlay-active .dim-overlay {
   color: #000;
   padding: 1em;
   border: 1px solid #ccc;
-  z-index: 10000; 
+  z-index: 10000; /* High z-index to be on top of other elements */
   max-width: 300px;
   width: max-content; 
   min-width: 200px; 
@@ -202,7 +205,7 @@ body.overlay-active .dim-overlay {
   height: 30px;
   font-size: 18px;
   cursor: pointer;
-  z-index: 10000; 
+  z-index: 10001; /* Above info boxes if they overlap */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -222,7 +225,7 @@ body.overlay-active .dim-overlay {
   font-size: 1.4rem; 
   cursor: pointer;
   color: #555; 
-  z-index: 10; 
+  z-index: 10; /* Relative to info box content */
   padding: 2px;
   line-height: 1;
 }
@@ -273,45 +276,46 @@ body.overlay-active .dim-overlay {
     background-color: #E87722;
 }
 
-/* === COLOR KEY STYLES (MODIFIED FOR POSITIONING WITHIN MAP-CONTENT) === */
+/* === COLOR KEY STYLES === */
 .color-key {
   position: absolute; 
-  bottom: 10px;      
-  left: 10px;       /* Changed from right to left */
+  bottom: 5px;      /* Further Adjusted for smaller size */
+  left: 5px;       
   background-color: #0C2340; 
   color: white;
-  padding: 10px 15px; 
-  border-radius: 6px;  
-  z-index: 5; 
+  padding: 6px 10px; /* Further Adjusted padding for smaller size */
+  border-radius: 4px;  /* Slightly smaller radius */
+  z-index: 4; /* Below individual icons if they need to overlap key slightly, but above label/image */
   font-family: Arial, sans-serif; 
-  font-size: 12px; 
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  font-size: 10px; /* Further Adjusted font size for smaller key */
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2); /* Slightly reduced shadow */
   opacity: 0.95; 
 }
 .color-key h4 {
     margin-top: 0;
-    margin-bottom: 8px; 
-    font-size: 14px; 
-    border-bottom: 1px solid rgba(255,255,255,0.25); 
-    padding-bottom: 4px; 
+    margin-bottom: 4px; /* Further Adjusted margin */
+    font-size: 12px; /* Further Adjusted font size */
+    border-bottom: 1px solid rgba(255,255,255,0.15); /* Lighter border */
+    padding-bottom: 2px; /* Further Adjusted padding */
 }
-.color-key label { /* Apply to label for better click area and flex alignment */
-  margin: 5px 0; 
+.color-key label { 
+  margin: 3px 0; /* Further Adjusted margin */
   display: flex;
   align-items: center;
   cursor: pointer; 
 }
 .color-key input[type="checkbox"] {
-    margin-right: 8px;
+    margin-right: 5px; /* Further Adjusted margin */
     vertical-align: middle; 
+    transform: scale(0.85); /* Make checkbox slightly smaller */
 }
 .color-key .key-color-box {
   display: inline-block;
-  width: 14px; 
-  height: 14px; 
-  margin-right: 8px; 
-  border: 1px solid rgba(255,255,255,0.6);
-  border-radius: 3px;
+  width: 10px; /* Further Adjusted size */
+  height: 10px; /* Further Adjusted size */
+  margin-right: 5px; /* Further Adjusted margin */
+  border: 1px solid rgba(255,255,255,0.4); /* Lighter border for color box */
+  border-radius: 2px; 
   flex-shrink: 0; 
 }
 .color-key .key-orange { background-color: #E87722; }
@@ -336,22 +340,6 @@ body.overlay-active .dim-overlay {
     min-width: 180px; 
     font-size: clamp(0.8rem, 2.5vw, 1rem);
   }
-  .color-key { 
-    font-size: 11px;
-    padding: 8px 12px;
-    bottom: 8px;
-    left: 8px; /* Adjusted for mobile */
-  }
-  .color-key h4 {
-    font-size: 13px;
-    margin-bottom: 6px;
-  }
-  .color-key .key-color-box {
-    width: 12px;
-    height: 12px;
-    margin-right: 7px;
-  }
-  .color-key label { 
-    padding: 5px 0;
-  }
+  /* Color key adjustments for mobile are now part of the main .color-key styles,
+     but we can add more specific overrides if needed. The current settings aim for compactness. */
 }

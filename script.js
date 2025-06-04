@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (closeBtn) {
       closeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        collapseMap(map);
+        collapseMap(map); // Pass the specific map to collapse
       });
     }
   });
@@ -27,38 +27,61 @@ document.addEventListener("DOMContentLoaded", () => {
     const infoBox = document.getElementById(infoId);
     const mapContent = icon.closest('.map-content');
 
-    // Click to toggle persistent info box
+    // Click on icon to toggle persistent info box
     icon.addEventListener('click', (e) => {
       e.stopPropagation();
-      // If the icon is part of a hidden wrapper (due to filtering), don't show infobox
       if (icon.closest('.location-wrapper.hidden-by-filter')) {
+          return;
+      }
+      if (!infoBox) {
+          console.error('[ICON CLICK] No infoBox found for infoId:', infoId, 'Icon:', icon);
           return;
       }
       togglePersistentInfoBox(icon, infoBox, mapContent);
     });
 
-    // Mouseenter to show info box (if not persistently shown)
+    // Mouseenter on icon to show info box (non-persistent)
     icon.addEventListener('mouseenter', () => {
       if (!icon.classList.contains('expanded') && !icon.closest('.location-wrapper.hidden-by-filter')) {
+        if (!infoBox) {
+          return;
+        }
         positionFloatingBox(icon, infoBox, mapContent);
-        if (infoBox) infoBox.style.display = 'block';
+        infoBox.style.display = 'block';
       }
     });
 
-    // Mouseleave to hide info box (if not persistently shown)
+    // Mouseleave from icon
     icon.addEventListener('mouseleave', () => {
-      if (!icon.classList.contains('expanded')) {
-        if (infoBox) infoBox.style.display = 'none';
-      }
-    });
-
-    // Mouseleave from info box itself (if not persistently shown)
-    if (infoBox) {
-        infoBox.addEventListener('mouseleave', () => {
-          if (!icon.classList.contains('expanded')) {
+      setTimeout(() => {
+        if (!icon.classList.contains('expanded') && infoBox && infoBox.style.display === 'block') {
+          const isMouseOverInfoBox = infoBox.matches(':hover');
+          if (!isMouseOverInfoBox) {
             infoBox.style.display = 'none';
           }
+        }
+      }, 50); 
+    });
+
+    if (infoBox) {
+        // Click on infoBox: if it was only hover-visible, make it persistent.
+        infoBox.addEventListener('click', (e) => {
+            if (!icon.classList.contains('expanded')) {
+                togglePersistentInfoBox(icon, infoBox, mapContent);
+            }
+            e.stopPropagation();
         });
+
+        // Mouseleave from info box itself (if not persistently shown)
+        infoBox.addEventListener('mouseleave', () => {
+          if (!icon.classList.contains('expanded')) {
+            const isMouseOverIcon = icon.matches(':hover');
+            if (!isMouseOverIcon) {
+                 infoBox.style.display = 'none';
+            }
+          }
+        });
+
         // Close button within info box
         const infoCloseBtn = infoBox.querySelector('.info-close-button');
         if (infoCloseBtn) {
@@ -78,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.querySelectorAll('.floating-info-box img').forEach(img => {
     img.addEventListener('click', function(e) {
-      e.stopPropagation(); // Prevent map click or icon click
+      e.stopPropagation(); 
       if (modalOverlay && modalImage) {
         modalImage.src = this.src;
         modalOverlay.style.display = 'flex';
@@ -92,7 +115,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   if (modalOverlay) {
-    // Click on overlay (outside image) to close
     modalOverlay.addEventListener('click', (e) => {
       if (e.target === modalOverlay) { 
         modalOverlay.style.display = 'none';
@@ -116,12 +138,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       locationWrappersInMap5.forEach(wrapper => {
         const wrapperColor = wrapper.dataset.floorColor;
-        // Show if no filters selected OR if wrapper's color is in selected list
         if (selectedColors.length === 0 || selectedColors.includes(wrapperColor)) {
           wrapper.classList.remove('hidden-by-filter');
         } else {
           wrapper.classList.add('hidden-by-filter');
-          // Also hide any active info box associated with a hidden icon
           const icon = wrapper.querySelector('.location-icon');
           if (icon && icon.classList.contains('expanded')) {
               const infoId = icon.getAttribute('data-info-id');
@@ -138,11 +158,36 @@ document.addEventListener("DOMContentLoaded", () => {
     filterCheckboxes.forEach(checkbox => {
       checkbox.addEventListener('change', applyMap5Filter);
     });
-
-    // Initial filter application
     applyMap5Filter();
   }
   // --- END OF SCRIPT FOR MAP 5 COLOR KEY FILTERING ---
+
+  // --- GLOBAL KEYDOWN LISTENER FOR ESCAPE KEY ---
+  document.addEventListener('keydown', function(event) {
+    if (event.key === "Escape" || event.key === "Esc") { 
+      if (modalOverlay && modalOverlay.style.display === 'flex') {
+        modalOverlay.style.display = 'none';
+        return; 
+      }
+      const expandedMap = document.querySelector('.map-container.expanded');
+      if (expandedMap) {
+        collapseMap(expandedMap);
+      }
+    }
+  });
+  // --- END OF GLOBAL KEYDOWN LISTENER ---
+
+  // --- CLICK LISTENER FOR DIM OVERLAY TO CLOSE EXPANDED MAP ---
+  const dimOverlay = document.querySelector('.dim-overlay');
+  if (dimOverlay) {
+    dimOverlay.addEventListener('click', () => {
+      const expandedMap = document.querySelector('.map-container.expanded');
+      if (expandedMap) {
+        collapseMap(expandedMap);
+      }
+    });
+  }
+  // --- END OF DIM OVERLAY CLICK LISTENER ---
 
 }); // End of DOMContentLoaded
 
@@ -155,32 +200,24 @@ function expandOnlyThisMap(selectedMap) {
   document.querySelectorAll('.floating-info-box').forEach(box => box.style.display = 'none');
   document.querySelectorAll('.location-icon.expanded').forEach(icon => icon.classList.remove('expanded'));
 
-  // Reset all maps
-  document.querySelectorAll('.map-container').forEach(map => {
-    map.classList.remove('dimmed', 'expanded'); 
-    map.style.pointerEvents = 'auto';
-  });
-
-  // Expand the selected map
-  selectedMap.classList.add('expanded');
-  document.body.classList.add('overlay-active'); // Activate dim overlay for background
-
-  // Add a one-time click listener to the document to close the map if clicked outside
-  // Store it in a way that it can be removed later to prevent multiple listeners
-  document.closeMapHandler = function(e) {
-    // Check if the click is outside the expanded map and not on an element that should keep it open
-    // (e.g., not on the map itself, or an info box, or an image modal close button)
-    if (!selectedMap.contains(e.target) && 
-        e.target !== selectedMap && 
-        !e.target.closest('.floating-info-box') &&
-        !e.target.closest('#image-modal-overlay')) { 
-      collapseMap(selectedMap);
+  // Reset all maps (collapse any other expanded map)
+  document.querySelectorAll('.map-container.expanded').forEach(map => {
+    if (map !== selectedMap) {
+        collapseMap(map); // Collapse other maps
     }
-  };
-  // Add delay to prevent immediate closing if the click was on the map to expand it
-  setTimeout(() => { 
-      document.addEventListener('click', document.closeMapHandler);
-  }, 0);
+  });
+  // Dim all maps initially
+  document.querySelectorAll('.map-container').forEach(map => {
+    map.classList.add('dimmed');
+    map.style.pointerEvents = 'none'; // Make non-selected maps non-interactive
+  });
+  
+  // Undim and expand the selected map
+  selectedMap.classList.remove('dimmed');
+  selectedMap.classList.add('expanded');
+  selectedMap.style.pointerEvents = 'auto'; // Make selected map interactive
+
+  document.body.classList.add('overlay-active'); // Activate dim overlay for background
 }
 
 /**
@@ -188,23 +225,19 @@ function expandOnlyThisMap(selectedMap) {
  * @param {HTMLElement} map - The map container to collapse.
  */
 function collapseMap(map) {
-  map.classList.remove('expanded');
-  document.body.classList.remove('overlay-active'); // Deactivate dim overlay
-  
-  // Make all maps interactive again
-  document.querySelectorAll('.map-container').forEach(m => {
-    m.classList.remove('dimmed');
-    m.style.pointerEvents = 'auto';
-  });
+  if (map && map.classList.contains('expanded')) { // Check if the map is actually expanded
+    map.classList.remove('expanded');
+    document.body.classList.remove('overlay-active'); // Deactivate dim overlay
+    
+    // Make all maps interactive again and remove dimming
+    document.querySelectorAll('.map-container').forEach(m => {
+      m.classList.remove('dimmed');
+      m.style.pointerEvents = 'auto';
+    });
 
-  // Hide all info boxes when map collapses
-  document.querySelectorAll('.floating-info-box').forEach(box => box.style.display = 'none');
-  document.querySelectorAll('.location-icon.expanded').forEach(icon => icon.classList.remove('expanded'));
-
-  // Remove the specific click listener for closing the map
-  if (document.closeMapHandler) {
-    document.removeEventListener('click', document.closeMapHandler);
-    delete document.closeMapHandler; // Clean up the stored handler
+    // Hide all info boxes when map collapses
+    document.querySelectorAll('.floating-info-box').forEach(box => box.style.display = 'none');
+    document.querySelectorAll('.location-icon.expanded').forEach(icon => icon.classList.remove('expanded'));
   }
 }
 
@@ -215,29 +248,40 @@ function collapseMap(map) {
  * @param {HTMLElement} mapContent - The parent map content area.
  */
 function togglePersistentInfoBox(icon, infoBox, mapContent) {
-  if (!infoBox || !icon || !mapContent) return;
-  const isExpanded = icon.classList.contains('expanded');
+  if (!infoBox) { 
+    console.error('[togglePersistentInfoBox] ERROR: infoBox is null or undefined for icon:', icon.dataset.infoId); 
+    return;
+  }
+  if (!icon || !mapContent) { 
+     console.error('[togglePersistentInfoBox] ERROR: Missing icon or mapContent.', {iconId: icon?.dataset.infoId, mapContentExists: !!mapContent}); 
+    return;
+  }
 
-  // Hide all other info boxes on this map before showing/hiding the current one
-  mapContent.querySelectorAll('.floating-info-box').forEach(visBox => {
-    if (visBox !== infoBox) visBox.style.display = 'none';
-  });
-  mapContent.querySelectorAll('.location-icon.expanded').forEach(expIcon => {
-    if (expIcon !== icon) expIcon.classList.remove('expanded');
+  const wasInitiallyExpanded = icon.classList.contains('expanded');
+
+  // Close OTHERS first within the same mapContent
+  mapContent.querySelectorAll('.location-icon.expanded').forEach(otherIcon => {
+    if (otherIcon !== icon) {
+      otherIcon.classList.remove('expanded');
+      const otherInfoBox = document.getElementById(otherIcon.dataset.infoId);
+      if (otherInfoBox) otherInfoBox.style.display = 'none';
+    }
   });
 
-  if (isExpanded) {
+  if (wasInitiallyExpanded) {
     icon.classList.remove('expanded');
     infoBox.style.display = 'none';
   } else {
     icon.classList.add('expanded');
-    positionFloatingBox(icon, infoBox, mapContent); // Position it first
-    infoBox.style.display = 'block'; // Then display
+    positionFloatingBox(icon, infoBox, mapContent);
+    infoBox.style.display = 'block';
   }
 }
 
+
 /**
  * Positions a floating info box relative to its icon and within the map content.
+ * Ensures the info box does not directly cover the icon that triggered it.
  * @param {HTMLElement} icon - The location icon.
  * @param {HTMLElement} infoBox - The info box to position.
  * @param {HTMLElement} mapContent - The bounding map content area.
@@ -245,72 +289,60 @@ function togglePersistentInfoBox(icon, infoBox, mapContent) {
 function positionFloatingBox(icon, infoBox, mapContent) {
   if (!infoBox || !mapContent || !icon) return;
 
-  // Temporarily make visible to measure, but off-screen or transparent
   infoBox.style.visibility = 'hidden';
   infoBox.style.display = 'block'; 
-  infoBox.classList.remove('above', 'below'); // Reset positioning classes
+  infoBox.classList.remove('above', 'below'); 
 
   const iconRect = icon.getBoundingClientRect();
-  const mapRect = mapContent.getBoundingClientRect(); // Reference for relative positioning
+  const mapRect = mapContent.getBoundingClientRect(); 
   
   const boxHeight = infoBox.offsetHeight;
   const boxWidth = infoBox.offsetWidth;
   
-  // Calculate space available within the viewport relative to the icon's bottom/top
   const spaceBelowViewport = window.innerHeight - iconRect.bottom;
   const spaceAboveViewport = iconRect.top;
   
-  // Calculate icon's center X relative to mapContent for horizontal positioning
   const iconCenterXRel = (iconRect.left + iconRect.width / 2) - mapRect.left;
-  
-  let topPositionRel;
-  // Default to placing below the icon
-  infoBox.classList.add('below');
-  topPositionRel = (iconRect.bottom - mapRect.top) + 10; // 10px offset
+  const offset = 15; 
 
-  // Conditions to place above:
-  // 1. Not enough space below in viewport AND more space above in viewport.
-  // 2. Or, placing below would make it go off the bottom of the mapContent itself.
-  if ( (spaceBelowViewport < boxHeight && spaceAboveViewport > spaceBelowViewport && spaceAboveViewport >= boxHeight) || 
-       (topPositionRel + boxHeight > mapRect.height && (iconRect.top - mapRect.top) - boxHeight - 10 >=0 ) ) {
-    topPositionRel = (iconRect.top - mapRect.top) - boxHeight - 10; // Position above icon with 10px offset
-    infoBox.classList.remove('below');
+  let topPositionRel;
+  
+  if (spaceBelowViewport >= boxHeight + offset || (spaceBelowViewport > spaceAboveViewport && spaceBelowViewport >= boxHeight)) {
+    topPositionRel = (iconRect.bottom - mapRect.top) + offset; 
+    infoBox.classList.add('below');
+  } 
+  else if (spaceAboveViewport >= boxHeight + offset) {
+    topPositionRel = (iconRect.top - mapRect.top) - boxHeight - offset; 
+    infoBox.classList.add('above');
+  }
+  else if (spaceBelowViewport > spaceAboveViewport) {
+    topPositionRel = (iconRect.bottom - mapRect.top) + 5; 
+     infoBox.classList.add('below');
+  } else {
+    topPositionRel = (iconRect.top - mapRect.top) - boxHeight - 5; 
     infoBox.classList.add('above');
   }
   
-  // Horizontal positioning: attempt to center the box over/under the icon
   let leftPositionRel = iconCenterXRel - (boxWidth / 2);
-
-  // Keep infoBox within mapContent horizontally, with a small padding
-  const padding = 5; // 5px padding from edges
+  const padding = 5; 
   if (leftPositionRel < padding) {
     leftPositionRel = padding; 
   } else if (leftPositionRel + boxWidth > mapRect.width - padding) {
     leftPositionRel = mapRect.width - boxWidth - padding; 
   }
   
-  // Ensure infoBox doesn't go above the top of mapContent
-  if (topPositionRel < padding && infoBox.classList.contains('above')) {
+  if (topPositionRel < padding) {
       topPositionRel = padding;
   }
-  // Ensure infoBox doesn't go below the bottom of mapContent
-  if (topPositionRel + boxHeight > mapRect.height - padding && infoBox.classList.contains('below')) {
-      // If it would overflow below, and there was space above, try to flip it
-      if ((iconRect.top - mapRect.top) - boxHeight - 10 >= padding) {
-          topPositionRel = (iconRect.top - mapRect.top) - boxHeight - 10;
-          infoBox.classList.remove('below');
-          infoBox.classList.add('above');
-          // Re-check top boundary after flip
-          if (topPositionRel < padding) topPositionRel = padding;
-      } else { // If still no space above, pin to bottom edge
-          topPositionRel = mapRect.height - boxHeight - padding;
+  if (topPositionRel + boxHeight > mapRect.height - padding) {
+      topPositionRel = mapRect.height - boxHeight - padding;
+      if (infoBox.classList.contains('below') && topPositionRel < (iconRect.bottom - mapRect.top) + 5){
+          // This case is tricky, might mean the box is too tall for the space.
       }
   }
 
   infoBox.style.top = `${topPositionRel}px`;
   infoBox.style.left = `${leftPositionRel}px`;
-  // Reset transform if we manually set left for centering, as it might conflict with other transforms
   infoBox.style.transform = 'translateX(0)'; 
-
-  infoBox.style.visibility = 'visible'; // Make it visible after positioning
+  infoBox.style.visibility = 'visible'; 
 }
