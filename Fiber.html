@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>WEP Venue Maps</title>
+  <!-- Link to your external CSS file -->
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -488,7 +489,7 @@
         <img src="map4.jpg" alt="Map 5" class="map-image" /> 
         
         <!-- Location 1 (5th Floor - Purple) -->
-        <div class="location-wrapper" style="top: 28%; left: 31%;">
+        <div class="location-wrapper" data-floor-color="purple" style="top: 28%; left: 31%;">
           <div class="location-icon map-one-arrows triangle icon-purple" data-info-id="info5.1">
             <span class="icon-label">1</span>
           </div>
@@ -501,7 +502,7 @@
         </div>
 
         <!-- Location 2 (5th Floor - Purple) -->
-        <div class="location-wrapper" style="top: 38%; left: 42%;">
+        <div class="location-wrapper" data-floor-color="purple" style="top: 38%; left: 42%;">
           <div class="location-icon map-one-arrows triangle icon-purple" data-info-id="info5.2">
             <span class="icon-label">2</span>
           </div>
@@ -514,7 +515,7 @@
         </div>
 
         <!-- Location 3 (5th Floor - Purple) -->
-        <div class="location-wrapper" style="top: 38%; left: 35%;">
+        <div class="location-wrapper" data-floor-color="purple" style="top: 38%; left: 35%;">
           <div class="location-icon map-one-arrows triangle icon-purple" data-info-id="info5.3">
             <span class="icon-label">3</span>
           </div>
@@ -527,8 +528,8 @@
         </div>
 
         <!-- Location 4 (1st Floor - Orange/Default) -->
-        <div class="location-wrapper" style="top: 72%; left: 72%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info5.4">
+        <div class="location-wrapper" data-floor-color="orange" style="top: 72%; left: 72%;">
+          <div class="location-icon map-one-arrows triangle icon-orange" data-info-id="info5.4">
             <span class="icon-label">4</span>
           </div>
         </div>
@@ -540,8 +541,8 @@
         </div>  
 
         <!-- Location 5 (1st Floor - Orange/Default) -->
-        <div class="location-wrapper" style="top: 54%; left: 58%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info5.5">
+        <div class="location-wrapper" data-floor-color="orange" style="top: 54%; left: 58%;">
+          <div class="location-icon map-one-arrows triangle icon-orange" data-info-id="info5.5">
             <span class="icon-label">5</span>
           </div>
         </div>
@@ -553,8 +554,8 @@
         </div>
 
         <!-- Location 6 (1st Floor - Orange/Default) -->
-        <div class="location-wrapper" style="top: 52%; left: 66%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info5.6">
+        <div class="location-wrapper" data-floor-color="orange" style="top: 52%; left: 66%;">
+          <div class="location-icon map-one-arrows triangle icon-orange" data-info-id="info5.6">
             <span class="icon-label">6</span>
           </div>
         </div>
@@ -566,8 +567,8 @@
         </div>
 
         <!-- Location 7 (1st Floor - Orange/Default) -->
-        <div class="location-wrapper" style="top: 52%; left: 84%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info5.7">
+        <div class="location-wrapper" data-floor-color="orange" style="top: 52%; left: 84%;">
+          <div class="location-icon map-one-arrows triangle icon-orange" data-info-id="info5.7">
             <span class="icon-label">7</span>
           </div>
         </div>
@@ -579,8 +580,8 @@
         </div>
 
         <!-- Location 8 (1st Floor - Orange/Default) -->
-        <div class="location-wrapper" style="top: 52%; left: 43%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info5.8">
+        <div class="location-wrapper" data-floor-color="orange" style="top: 52%; left: 43%;">
+          <div class="location-icon map-one-arrows triangle icon-orange" data-info-id="info5.8">
             <span class="icon-label">8</span>
           </div>
         </div>
@@ -592,7 +593,7 @@
         </div>  
 
         <!-- Location 9 (2nd Floor - Green) -->
-        <div class="location-wrapper" style="top: 48%; left: 45%;">
+        <div class="location-wrapper" data-floor-color="green" style="top: 48%; left: 45%;">
           <div class="location-icon map-one-arrows triangle icon-green" data-info-id="info5.9">
             <span class="icon-label">9</span>
           </div>
@@ -604,18 +605,448 @@
           <p>6 ST - No Power - Concourse Level - Just off elevator through the TWC doors by the stairs.</p>
         </div>
         
-        <!-- MOVED COLOR KEY INSIDE MAP 5 CONTENT -->
+        <!-- UPDATED COLOR KEY WITH CHECKBOXES -->
         <div class="color-key">
           <h4>Location Key</h4>
-          <p><span class="key-color-box key-orange"></span> 1st Floor - Orange</p>
-          <p><span class="key-color-box key-green"></span> 2nd Floor - Green</p>
-          <p><span class="key-color-box key-purple"></span> 5th Floor - Purple</p>
+          <label>
+            <input type="checkbox" class="color-filter-checkbox" data-filter-color="orange" checked>
+            <span class="key-color-box key-orange"></span> 1st Floor - Orange
+          </label>
+          <label>
+            <input type="checkbox" class="color-filter-checkbox" data-filter-color="green" checked>
+            <span class="key-color-box key-green"></span> 2nd Floor - Green
+          </label>
+          <label>
+            <input type="checkbox" class="color-filter-checkbox" data-filter-color="purple" checked>
+            <span class="key-color-box key-purple"></span> 5th Floor - Purple
+          </label>
         </div>
 
       </div> <!-- closes map-content for map5 -->
     </div> <!-- closes map-container for map5 -->
+
+    <div class="map-container" data-map-id="map6">
+      <div class="map-label">Jordan-Hare Stadium WEP Fiber Only <br>Patches From 1415</div>
+      <div class="map-content">
+        <img src="map2.jpg" alt="Map 6" class="map-image" />
+        <div class="location-wrapper" style="top: 37%; left: 25%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info6.1">
+            <span class="icon-label">1</span>
+          </div>
+        </div>
+        <div id="info6.1" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>Left 25</strong><br>
+          <img src="location6-1.jpg" alt="Location 1" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>12 ST <br>3 SMPTE <br>2 Triax <br>6 XLR <br> Located on the photodeck at the North 25 yd line on the third floor concourse</p>
+        </div>
+
+        <div class="location-wrapper" style="top: 46%; left: 23%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info6.2">
+            <span class="icon-label">2</span>
+          </div>
+        </div>
+        <div id="info6.2" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>50 yd</strong><br>
+          <img src="location6-2.jpg" alt="Location 2" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>12 ST <br>6 SMPTE <br>4 Triax <br>6 XLR <br> Located on the photodeck at the 50 yd line on the third floor concourse</p>
+        </div>
+
+        <div class="location-wrapper" style="top: 55%; left: 25%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info6.3">
+            <span class="icon-label">3</span>
+          </div>
+        </div>
+        <div id="info6.3" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>Right 25</strong><br>
+          <img src="location6-3.jpg" alt="Location 3" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>12 ST <br>3 SMPTE <br>2 Triax <br>6 XLR <br> Located on the photodeck at the South 25 yd line on the third floor concourse</p>
+        </div>
+
+        <div class="location-wrapper" style="top: 35%; left: 22%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info6.4">
+            <span class="icon-label">4</span>
+          </div>
+        </div>
+        <div id="info6.4" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>Booth</strong><br>
+          <img src="location6-4.jpg" alt="Location 4" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>48 ST <br>3 SMPTE <br>2 Triax <br>36 (DT12) XLR <br> Located off the North West elevator - take the last hallway on your right
+          and the room is straight down the hallway from the door.</p>
+        </div>  
+
+        <div class="location-wrapper" style="top: 85%; left: 50%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info6.5">
+            <span class="icon-label">5</span>
+          </div>
+        </div>
+        <div id="info6.5" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>High South EZ</strong><br>
+          <img src="location6-5.jpg" alt="Location 5" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>12 ST <br>3 SMPTE <br>2 Triax <br>6 XLR <br> Located at the top of the South Endzone directly under the VideoBoard clock.</p>
+        </div>
+
+        <div class="location-wrapper" style="top: 5%; left: 50%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info6.6">
+            <span class="icon-label">6</span>
+          </div>
+        </div>
+        <div id="info6.6" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>High North EZ</strong><br>
+          <img src="location6-6.jpg" alt="Location 6" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>12 ST <br>3 SMPTE <br>2 Triax <br>6 XLR <br> Located inside the North ScoreBoard. Enter from the top of the bowl in section 41. </p>
+        </div>
+
+        <div class="location-wrapper" style="top: 42%; left: 11%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info6.7">
+            <span class="icon-label">7</span>
+          </div>
+        </div>
+        <div id="info6.7" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>West Truck Box</strong><br>
+          <img src="location6-7.jpg" alt="Location 7" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>24 LC - Located between the West side elevators - this pedestal holds the connection between 1415 and Truck Pedestal. 
+            It also holds some legacy cables from when this was the main stadium truck pedestal. 
+          </p>
+        </div>
+
+        <div class="location-wrapper" style="top: 52%; left: 22%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info6.8">
+            <span class="icon-label">8</span>
+          </div>
+        </div>
+        <div id="info6.8" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>Official Replay</strong><br>
+          <img src="location6-8.jpg" alt="Location 8" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>12 ST - Take the South West Elevator, take the last door on your left and the official replay room is the 4th door on your right. </p>
+        </div>  
+
+        <!-- <div class="location-wrapper" style="top: 73%; left: 34%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info6.9">
+            <span class="icon-label">9</span>
+          </div>
+        </div>
+        <div id="info6.9" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>1415</strong><br>
+          <img src="location6-9.jpg" alt="Location 9" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>Between section 12 and 13. 1415 is the main fiber hub for all connections that do not originate in the truck pedistal.</p>
+        </div> -->
+      </div> <!-- closes map-content for map6 -->
+    </div> <!-- closes map-container for map6 -->
+
+    <div class="map-container" data-map-id="map7">
+      <div class="map-label">Plainsman Park</div>
+      <div class="map-content">
+        <img src="map5.jpg" alt="Map 7" class="map-image" />
+        <div class="location-wrapper" style="top: 68%; left: 34%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info7.1">
+            <span class="icon-label">1</span>
+          </div>
+        </div>
+        <div id="info7.1" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>Low Third</strong><br>
+          <img src="location7-1.jpg" alt="Location 1" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>12 ST </p>
+        </div>
+
+        <div class="location-wrapper" style="top: 93%; left: 45.5%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info7.2">
+            <span class="icon-label">2</span>
+          </div>
+        </div>
+        <div id="info7.2" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>High Home</strong><br>
+          <img src="location7-2.jpg" alt="Location 2" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>12 ST</p>
+        </div>
+
+        <div class="location-wrapper" style="top: 68%; left: 56%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info7.3">
+            <span class="icon-label">3</span>
+          </div>
+        </div>
+        <div id="info7.3" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>Low First</strong><br>
+          <img src="location7-3.jpg" alt="Location 3" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>12 ST </p>
+        </div>
+
+        <div class="location-wrapper" style="top: 77%; left: 65%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info7.4">
+            <span class="icon-label">4</span>
+          </div>
+        </div>
+        <div id="info7.4" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>High First</strong><br>
+          <img src="location7-4.jpg" alt="Location 4" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>12 ST</p>
+        </div>  
+
+        <div class="location-wrapper" style="top: 93%; left: 40%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info7.5">
+            <span class="icon-label">5</span>
+          </div>
+        </div>
+        <div id="info7.5" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>War Eagle Productions (Booth)</strong><br>
+          <img src="location7-5.jpg" alt="Location 5" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>12 ST</p>
+        </div>
+
+        <div class="location-wrapper" style="top: 5%; left: 42%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info7.6">
+            <span class="icon-label">6</span>
+          </div>
+        </div>
+        <div id="info7.6" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>Centerfield</strong><br>
+          <img src="location7-6.jpg" alt="Location 6" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>24 ST</p>
+        </div>
+
+        <div class="location-wrapper" style="top: 33%; left: 16%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info7.7">
+            <span class="icon-label">7</span>
+          </div>
+        </div>
+        <div id="info7.7" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>Left Field</strong><br>
+          <img src="location7-7.jpg" alt="Location 7" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>12 ST</p>
+        </div>
+
+        <div class="location-wrapper" style="top: 33%; left: 14%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info7.8">
+            <span class="icon-label">8</span>
+          </div>
+        </div>
+        <div id="info7.8" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>Auburn Bullpen</strong><br>
+          <img src="location7-8.jpg" alt="Location 8" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>12 ST</p>
+        </div>  
+
+        <div class="location-wrapper" style="top: 39%; left: 79%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info7.9">
+            <span class="icon-label">9</span>
+          </div>
+        </div>
+        <div id="info7.9" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>PA Room</strong><br>
+          <img src="location7-9.jpg" alt="Location 9" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>24 SC</p>
+        </div>
+
+        <div class="location-wrapper" style="top: 44%; left: 83%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info7.10">
+            <span class="icon-label">2</span>
+          </div>
+        </div>
+        <div id="info7.10" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>PA Room Closet</strong><br>
+          <img src="location7-10.jpg" alt="Location 10" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>24 SC</p>
+        </div>
+
+        <div class="location-wrapper" style="top: 70%; left: 31%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info7.11">
+            <span class="icon-label">11</span>
+          </div>
+        </div>
+        <div id="info7.11" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>Umpire Review Room</strong><br>
+          <img src="location7-11.jpg" alt="Location 11" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>6 ST</p>
+        </div>
+
+        <div class="location-wrapper" style="top: 93%; left: 52.5%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info7.12">
+            <span class="icon-label">12</span>
+          </div>
+        </div>
+        <div id="info7.12" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>Away Radio</strong><br>
+          <img src="location7-12.jpg" alt="Location 12" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>10 ST</p>
+        </div>  
+
+        <div class="location-wrapper" style="top: 94%; left: 50%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info7.13">
+            <span class="icon-label">13</span>
+          </div>
+        </div>
+        <div id="info7.13" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>Auburn Radio</strong><br>
+          <img src="location7-13.jpg" alt="Location 13" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>10 ST</p>
+        </div>
+
+        <div class="location-wrapper" style="top: 32%; left: 3%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info7.14">
+            <span class="icon-label">14</span>
+          </div>
+        </div>
+        <div id="info7.14" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>Truck Pedestal</strong><br>
+          <img src="location7-14.jpg" alt="Location 14" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>tbd</p>
+        </div>
+
+        <div class="location-wrapper" style="top: 49%; left: 82%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info7.15">
+            <span class="icon-label">15</span>
+          </div>
+        </div>
+        <div id="info7.15" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>Concourse</strong><br>
+          <img src="location7-15.jpg" alt="Location 15" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>12 ST</p>
+        </div>
+
+        <div class="location-wrapper" style="top: 97%; left: 40%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info7.16">
+            <span class="icon-label">16</span>
+          </div>
+        </div>
+        <div id="info7.16" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>TV Booth Closet</strong><br>
+          <img src="location7-16.jpg" alt="Location 16" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>6 ST</p>
+        </div>  
+
+        <div class="location-wrapper" style="top: 59%; left: 73%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info7.17">
+            <span class="icon-label">17</span>
+          </div>
+        </div>
+        <div id="info7.17" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>Broadcast Room</strong><br>
+          <img src="location7-17.jpg" alt="Location 17" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>24 SC</p>
+        </div>
+      </div> <!-- closes map-content for map6 -->
+    </div> <!-- closes map-container for map6 -->
+
+    <div class="map-container" data-map-id="map8">
+      <div class="map-label">Jane B. Moore Field</div>
+      <div class="map-content">
+        <img src="map3.jpg" alt="Map 8" class="map-image" />
+
+        <div class="location-wrapper" style="top: 80%; left: 47.2%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info8.1">
+            <span class="icon-label">1</span>
+          </div>
+        </div>
+        <div id="info8.1" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>Low First</strong><br>
+          <img src="location8-1.jpg" alt="Location 1" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>6 ST in the right box. 12 ST in the left box (primarily saved for hawkeye)</p>
+        </div>
+
+        <div class="location-wrapper" style="top: 80%; left: 51%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info8.2">
+            <span class="icon-label">2</span>
+          </div>
+        </div>
+        <div id="info8.2" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>PA Booth</strong><br>
+          <img src="location8-2.jpg" alt="Location 2" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>12 ST in the front left of the PA room. </p>
+        </div>
+
+        <div class="location-wrapper" style="top: 18%; left: 50%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info8.3">
+            <span class="icon-label">3</span>
+          </div>
+        </div>
+        <div id="info8.3" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>Low First</strong><br>
+          <img src="location8-3.jpg" alt="Location 3" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>18 St in the left box. 12 ST in the left box (primarily saved for hawkeye)</p>
+        </div>
+
+        <div class="location-wrapper" style="top: 48%; left: 19%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info8.4">
+            <span class="icon-label">4</span>
+          </div>
+        </div>
+        <div id="info8.4" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>Umpire Review Room</strong><br>
+          <img src="location8-4.jpg" alt="Location 4" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>6 ST - Located on the outside wall of the first base side hitting facility.</p>
+        </div>  
+
+        <div class="location-wrapper" style="top: 48%; left: 81%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info8.5">
+            <span class="icon-label">5</span>
+          </div>
+        </div>
+        <div id="info8.5" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>ESPN Pedestal</strong><br>
+          <img src="location8-5.jpg" alt="Location 5" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>tbd</p>
+        </div>
+
+        <div class="location-wrapper" style="top: 73%; left: 23%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info8.6">
+            <span class="icon-label">6</span>
+          </div>
+        </div>
+        <div id="info8.6" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>Centerfield</strong><br>
+          <img src="location8-6.jpg" alt="Location 6" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>12 ST</p>
+        </div>
+
+        <div class="location-wrapper" style="top: 65%; left: 80%;">
+          <div class="location-icon map-one-arrows triangle" data-info-id="info8.7">
+            <span class="icon-label">7</span>
+          </div>
+        </div>
+        <div id="info8.7" class="floating-info-box">
+          <button class="info-close-button">✕</button>
+          <strong>TV Booth</strong><br>
+          <img src="location8-7.jpg" alt="Location 7" style="max-width: 45%; height: auto; margin-top: 5px;" />
+          <p>12 ST - Under Desk </p>
+        </div>             
+
+        <button class="close-button">✕ Close</button>
+      </div> <!-- closes map-content for map8 -->
+    </div> <!-- closes map-container for map8 -->
   </div> <!-- closes map-row -->
 
+  <!-- Link to your external JS file -->
   <script src="script.js"></script>
 </body>
 </html>
