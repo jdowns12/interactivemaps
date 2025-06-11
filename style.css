@@ -190,6 +190,7 @@ body.overlay-active .dim-overlay {
   display: block;
   margin-top: 5px;
   border-radius: 4px; 
+  overflow: visible;
 }
 
 /* === CLOSE BUTTONS === */
