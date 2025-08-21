@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Athletics Information Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif; /* Assuming Inter is a preferred font, falls back to sans-serif */
+            background-color: #f3f4f6; /* Light gray background */
+            color: #1f2937; /* Dark gray text */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .header {
+            background-color: #0C2340; /* Auburn Navy */
+            color: white;
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+        }
+        .header img {
+            height: 50px;
+            margin-right: 1rem;
+        }
+        .header h1 {
+            font-size: 2.25rem; /* 36px */
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: 0.05em;
+            color: #E86100; /* Auburn Orange */
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 2rem; /* 32px */
+            max-width: 900px; /* Slightly narrower for focused content */
+            margin: 2rem auto; /* Added top/bottom margin */
+            width: 100%;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive grid */
+            gap: 2rem; /* 32px */
+        }
+        .link-card {
+            background-color: white;
+            border-radius: 0.75rem; /* 12px */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #e5e7eb; /* Light border */
+        }
+        .link-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .link-card-content {
+            padding: 1.5rem; /* 24px */
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center content */
+            text-align: center;
+        }
+        .link-card-content h3 {
+            font-size: 1.5rem; /* 24px */
+            font-weight: 600;
+            margin-bottom: 1rem; /* 16px */
+            color: #1f2937; 
+        }
+        .link-card-content p {
+            font-size: 1rem; /* 16px */
+            color: #4b5563; /* Medium gray */
+            margin-bottom: 1.5rem; /* 24px */
+            flex-grow: 1;
+            line-height: 1.6;
+        }
+        .link-button {
+            display: inline-block;
+            background-color: #E86100; /* Auburn Orange */
+            color: white;
+            padding: 0.875rem 2rem; /* 14px 32px */
+            border-radius: 0.5rem; /* 8px */
+            text-decoration: none;
+            font-weight: 600; /* Bolder text */
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-top: auto; /* Pushes button to the bottom */
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .link-button:hover {
+            background-color: #D4531B; /* Darker Auburn Orange for hover */
+            transform: scale(1.05);
+        }
+        .footer {
+            background-color: #0C2340; /* Auburn Navy */
+            color: #d1d5db; /* Light gray text for footer */
+            text-align: center;
+            padding: 1.5rem;
+            font-size: 0.875rem; /* 14px */
+            margin-top: 2rem; /* Space above footer */
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <img src="auburn-logo.png" alt="Auburn Logo">
+        <h1>Athletics Information Hub</h1>
+    </header>
+
+    <main class="main-content">
+        <div class="grid-container">
+            <!-- Link to Athletics Venue Connectivity -->
+            <a href="Fiber.html" class="link-card" style="text-decoration: none;">
+                <div class="link-card-content">
+                    <h3>Athletics Venue Connectivity</h3>
+                    <p>Interactive maps detailing connectivity points and fiber information within athletics venues.</p>
+                    <div class="link-button">View Connectivity Maps</div>
+                </div>
+            </a>
+            <!-- Link to Athletic Venue ESPN Positions -->
+            <a href="ESPN.html" class="link-card" style="text-decoration: none;">
+                <div class="link-card-content">
+                    <h3>ESPN Positions Postions</h3>
+                    <p>Information and diagrams for ESPN patches and camera locations in Auburn's vanues.</p>
+                    <div class="link-button">View Camera Positions</div>
+                </div>
+            </a>
+            <!-- Link to Athletic Venue Camera Positions -->
+            <a href="camera_positions.html" class="link-card" style="text-decoration: none;">
+                <div class="link-card-content">
+                    <h3>Camera Positions Placeholder</h3>
+                    <p>Information and diagrams for standard camera positions across various athletic venues.</p>
+                    <div class="link-button">View Camera Positions</div>
+                </div>
+            </a>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; <span id="currentYear"></span> Auburn Athletics Department. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Set current year in footer
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+    </script>
+
+</body>
+</html>
