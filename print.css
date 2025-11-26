@@ -1,0 +1,190 @@
+/**
+ * Print Stylesheet for WEP Venue Maps
+ * Clean layout for printing venue information
+ */
+
+@media print {
+  /* Hide interactive elements */
+  .site-header,
+  .sidebar,
+  .sidebar-toggle,
+  .nav-toggle,
+  .header-search,
+  .close-button,
+  .info-close-button,
+  .dim-overlay,
+  #image-modal-overlay,
+  .color-key input[type="checkbox"] {
+    display: none !important;
+  }
+
+  /* Reset body */
+  body {
+    background: white !important;
+    margin: 0;
+    padding: 0;
+    font-size: 11pt;
+  }
+
+  /* Show all maps */
+  .map-container {
+    position: relative !important;
+    transform: none !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin-bottom: 2rem;
+    border: 1px solid #ccc;
+    border-radius: 0;
+  }
+
+  .map-container.expanded,
+  .map-container.dimmed {
+    position: relative !important;
+    transform: none !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  /* Grid layout for print */
+  .map-row {
+    display: block !important;
+  }
+
+  /* Map content */
+  .map-content {
+    aspect-ratio: 4 / 3;
+    position: relative;
+  }
+
+  .map-image {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+
+  .map-label {
+    background: #0C2340 !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    padding: 8pt;
+    font-size: 12pt;
+    font-weight: bold;
+  }
+
+  /* Location icons - make them visible */
+  .location-icon {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    width: 20pt !important;
+    height: 20pt !important;
+    font-size: 10pt !important;
+  }
+
+  /* Show all floating info boxes */
+  .floating-info-box {
+    display: block !important;
+    position: relative !important;
+    transform: none !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    left: 0 !important;
+    margin: 1rem 0;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ddd;
+    padding: 12pt;
+  }
+
+  .floating-info-box img {
+    max-width: 200px !important;
+    height: auto;
+  }
+
+  /* Color key for print */
+  .color-key {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    position: relative !important;
+    bottom: auto !important;
+    left: auto !important;
+    margin-top: 1rem;
+  }
+
+  /* Page breaks */
+  .map-container {
+    page-break-after: always;
+  }
+
+  .map-container:last-child {
+    page-break-after: auto;
+  }
+
+  /* Print header */
+  @page {
+    margin: 0.5in;
+    @top-center {
+      content: "Auburn Athletics - WEP Venue Maps";
+    }
+    @bottom-center {
+      content: counter(page);
+    }
+  }
+
+  /* Links */
+  a {
+    color: #0C2340;
+    text-decoration: none;
+  }
+
+  /* Ensure backgrounds print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
+/* Print-specific list view */
+@media print {
+  body.list-view-mode .map-container {
+    display: none;
+  }
+
+  body.list-view-mode .location-list-view {
+    display: block !important;
+  }
+
+  .location-list-view {
+    display: none;
+  }
+
+  .location-list-view table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10pt;
+  }
+
+  .location-list-view th,
+  .location-list-view td {
+    border: 1px solid #ccc;
+    padding: 6pt;
+    text-align: left;
+  }
+
+  .location-list-view th {
+    background: #0C2340;
+    color: white;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .location-list-view tr:nth-child(even) {
+    background: #f5f5f5;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

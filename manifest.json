@@ -1,0 +1,20 @@
+{
+  "name": "Auburn WEP Venue Maps",
+  "short_name": "WEP Maps",
+  "description": "Interactive fiber connectivity and camera position maps for Auburn Athletics venues",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#0C2340",
+  "theme_color": "#0C2340",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "auburn-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities", "sports"],
+  "lang": "en-US"
+}

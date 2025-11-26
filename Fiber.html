@@ -3,17 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>WEP Venue Maps</title>
-  <!-- Link to your external CSS file -->
+  <title>Fiber Connectivity - WEP Venue Maps</title>
+  <meta name="description" content="Fiber connectivity maps for Auburn Athletics venues">
+  <meta name="theme-color" content="#0C2340">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="auburn-logo.png">
+  <!-- Preload critical resources -->
+  <link rel="preload" href="style.css" as="style">
+  <link rel="preload" href="script.js" as="script">
+  <link rel="preload" href="map1.jpg" as="image">
+  <link rel="preload" href="map2.jpg" as="image">
+  <!-- Stylesheets -->
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="print.css" media="print" />
 </head>
 <body>
-  <header style="background-color: #0C2340; display: flex; align-items: center; padding: 1rem 2rem;">
-    <a href="index.html" style="display: flex; align-items: center; text-decoration: none;">
-      <img src="auburn-logo.png" alt="Auburn Logo" style="height: 50px; margin-right: 1rem;">
-      <h1 style="color: #E86100; font-size: 1.75rem; margin: 0;">WEP Venue Maps</h1>
-    </a>
-  </header>
+  <!-- Header will be injected by header.js -->
 
   <div id="image-modal-overlay">
     <span id="image-modal-close">&times;</span>
@@ -865,7 +871,7 @@
 
         <div class="location-wrapper" style="top: 44%; left: 83%;">
           <div class="location-icon map-one-arrows triangle" data-info-id="info7.10">
-            <span class="icon-label">2</span> <!-- Note: Label is 2, ID is info7.10 -->
+            <span class="icon-label">10</span>
           </div>
         </div>
         <div id="info7.10" class="floating-info-box">
@@ -1164,7 +1170,7 @@ From closet by trophy case poolside</div>
       </div> <!-- closes map-content for map9 -->
     </div> <!-- closes map-container for map9 -->
 
- <div class="map-container" data-map-id="map9">
+ <div class="map-container" data-map-id="map10">
       <div class="map-label">Auburn Soccer Complex <br>
       From center of trailer top of bleachers</div>
       <div class="map-content">
@@ -1235,7 +1241,7 @@ From closet by trophy case poolside</div>
     </div> <!-- closes map-container for map10 -->
 
 
-<div class="map-container" data-map-id="map9">
+<div class="map-container" data-map-id="map11">
       <div class="map-label">Equestrian</div>
       <div class="map-content">
         <img src="map11.jpg" alt="Map 11" class="map-image" />
@@ -1293,7 +1299,19 @@ From closet by trophy case poolside</div>
 
   </div> <!-- closes map-row -->
 
-  <!-- Link to your external JS file -->
+  <!-- JavaScript -->
   <script src="script.js"></script>
+  <script src="header.js"></script>
+  <script src="nav.js"></script>
+  <script src="search.js"></script>
+
+  <!-- Register Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('Service Worker registered'))
+        .catch(err => console.log('Service Worker registration failed:', err));
+    }
+  </script>
 </body>
 </html>

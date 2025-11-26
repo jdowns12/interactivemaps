@@ -1,0 +1,450 @@
+{
+  "venues": [
+    {
+      "id": "neville-arena",
+      "name": "Neville Arena",
+      "type": "arena",
+      "maps": [
+        {
+          "id": "map1",
+          "label": "3rd and 4th floor (Concourse Level)",
+          "subtitle": "From Truck Dock",
+          "image": "map1.jpg",
+          "locations": [
+            {
+              "id": "1.1",
+              "number": 1,
+              "name": "Main Left",
+              "position": { "top": "80%", "left": "47.2%" },
+              "image": "location1-1.jpg",
+              "description": "Main Left is at the top of section 102 on the third floor concourse. 12 ST Fiber (6 on the wall, 6 in the loose white box).",
+              "fiber": "12 ST"
+            },
+            {
+              "id": "1.2",
+              "number": 2,
+              "name": "Main Right",
+              "position": { "top": "80%", "left": "51%" },
+              "image": "location1-2.jpg",
+              "description": "Main Right is at the top of section 103 on the third floor concourse. 12 ST Fiber all to the loose white box.",
+              "fiber": "12 ST"
+            },
+            {
+              "id": "1.3",
+              "number": 3,
+              "name": "Main Reverse",
+              "position": { "top": "18%", "left": "50%" },
+              "image": "location1-3.jpg",
+              "description": "Main Reverse is at the top of section 111 on the third floor concourse. 6 ST Fiber",
+              "fiber": "6 ST"
+            },
+            {
+              "id": "1.4",
+              "number": 4,
+              "name": "South Endzone/Sec 116",
+              "position": { "top": "48%", "left": "19%" },
+              "image": "location1-4.jpg",
+              "description": "South Endzone is at the top of Section 116. 6 ST Fiber labeled as Section 116, 12 ST labeled South Endzone.",
+              "fiber": "6 ST + 12 ST"
+            },
+            {
+              "id": "1.5",
+              "number": 5,
+              "name": "North Endzone/Sec 107",
+              "position": { "top": "48%", "left": "81%" },
+              "image": "location1-5.jpg",
+              "description": "North Endzone is at the top of Section 107. 12 ST Fiber.",
+              "fiber": "12 ST"
+            },
+            {
+              "id": "1.6",
+              "number": 6,
+              "name": "Section 118",
+              "position": { "top": "73%", "left": "23%" },
+              "image": "location1-6.jpg",
+              "description": "Section 118 is at the top of Section 118. 12 ST that run to 4440 (Location 8) as SC APC.",
+              "fiber": "12 ST"
+            },
+            {
+              "id": "1.7",
+              "number": 7,
+              "name": "Near Right High Slash/Sec 211",
+              "position": { "top": "65%", "left": "80%" },
+              "image": "location1-7.jpg",
+              "description": "Near Right High Slash is at the top of section 211 on the 4th Floor Concourse. 12 ST Fiber pulled here. 6 ST Fiber labeled Near Right High Slash (FULL) and 6 Labeled New Near Right High Slash.",
+              "fiber": "12 ST"
+            },
+            {
+              "id": "1.8",
+              "number": 8,
+              "name": "4440 (4th floor Storage)",
+              "position": { "top": "88%", "left": "26%" },
+              "image": "location1-8.jpg",
+              "description": "4440 is located behind section 201. A single door to the right of double doors. The fiber in the room is located at the top of the left DAK Rack. 6 ST and 24 SC APC to Truck Dock.",
+              "fiber": "6 ST + 24 SC APC"
+            },
+            {
+              "id": "1.9",
+              "number": 9,
+              "name": "Catwalk",
+              "position": { "top": "49%", "left": "49%" },
+              "image": "location1-9.jpg",
+              "description": "CenterHung is located on the cat walk in the center. Access this by the middle doors on the 4th floor north or south of venue.",
+              "fiber": ""
+            },
+            {
+              "id": "1.10",
+              "number": 10,
+              "name": "Truck Dock",
+              "position": { "top": "15%", "left": "20%" },
+              "image": "location1-10.jpg",
+              "description": "The truck dock is located off of Floor Far Left. All of the Venue IO run through this box.",
+              "fiber": "Venue IO Hub"
+            }
+          ]
+        },
+        {
+          "id": "map2",
+          "label": "Floor Level",
+          "subtitle": "From Truck Dock",
+          "image": "map1.jpg",
+          "locations": [
+            {
+              "id": "2.1",
+              "number": 1,
+              "name": "Floor Far Left",
+              "position": { "top": "30%", "left": "32%" },
+              "image": "location2-1.jpg",
+              "description": "FFL is in the southwest corner of the arena between section K and L.",
+              "fiber": ""
+            },
+            {
+              "id": "2.2",
+              "number": 2,
+              "name": "Floor Far Right",
+              "position": { "top": "37%", "left": "72%" },
+              "image": "location2-2.jpg",
+              "description": "FFR is located in the North West corner of the arena between section F and G.",
+              "fiber": ""
+            },
+            {
+              "id": "2.3",
+              "number": 3,
+              "name": "Floor Near Right",
+              "position": { "top": "68%", "left": "68%" },
+              "image": "location2-3.jpg",
+              "description": "FNR is located in the North East corner of the arena between section C and D.",
+              "fiber": ""
+            },
+            {
+              "id": "2.4",
+              "number": 4,
+              "name": "Floor Near Left",
+              "position": { "top": "61%", "left": "28%" },
+              "image": "location2-4.jpg",
+              "description": "FNL is located in the South East corner of the arena between secton A and N.",
+              "fiber": ""
+            },
+            {
+              "id": "2.5",
+              "number": 5,
+              "name": "Floor Pocket 1",
+              "position": { "top": "60%", "left": "53%" },
+              "image": "location2-5.jpg",
+              "description": "Floor Pocket 1 is located on the near side of the court in front of section B and C.",
+              "fiber": ""
+            },
+            {
+              "id": "2.6",
+              "number": 6,
+              "name": "Floor Pocket 2",
+              "position": { "top": "37%", "left": "53%" },
+              "image": "location2-6.jpg",
+              "description": "Floor Pocket 2 is located on the far side of the court in front of section H.",
+              "fiber": ""
+            },
+            {
+              "id": "2.7",
+              "number": 7,
+              "name": "Auburn Men's Locker Room",
+              "position": { "top": "50%", "left": "27%" },
+              "image": "location2-7.jpg",
+              "description": "The Fiber in the Men's locker room is located under the cabinets inside of their locker room behind section M.",
+              "fiber": ""
+            },
+            {
+              "id": "2.8",
+              "number": 8,
+              "name": "Media Room",
+              "position": { "top": "23%", "left": "31%" },
+              "image": "location2-8.jpg",
+              "description": "Media room is located to the right of the elevator off Floor Far Left area.",
+              "fiber": ""
+            },
+            {
+              "id": "2.9",
+              "number": 9,
+              "name": "Auburn Women's Locker Room",
+              "position": { "top": "35%", "left": "23%" },
+              "image": "location2-9.jpg",
+              "description": "Women's locker room has 2 SDI cables ran to the back of their film review room.",
+              "fiber": "2 SDI"
+            },
+            {
+              "id": "2.10",
+              "number": 10,
+              "name": "Truck Dock",
+              "position": { "top": "15%", "left": "20%" },
+              "image": "location2-10.jpg",
+              "description": "The truck dock is located off of Floor Far Left. All of the Venue IO run through this box.",
+              "fiber": "Venue IO Hub"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jordan-hare",
+      "name": "Jordan-Hare Stadium",
+      "type": "stadium",
+      "maps": [
+        {
+          "id": "map3",
+          "label": "WEP from 1415",
+          "subtitle": "6 ST Fiber & 2 SMPTE",
+          "image": "map2.jpg",
+          "locations": [
+            {
+              "id": "3.1",
+              "number": 1,
+              "name": "Press Level 1",
+              "position": { "top": "48%", "left": "32%" },
+              "image": "location3-1.jpg",
+              "description": "Left silver box on photo deck. Located near south 45 yd line.",
+              "fiber": "6 ST + 2 SMPTE"
+            },
+            {
+              "id": "3.2",
+              "number": 2,
+              "name": "Press Level 2",
+              "position": { "top": "52%", "left": "32%" },
+              "image": "location3-2.jpg",
+              "description": "Right silver box on photo deck. Located near south 45 yd line.",
+              "fiber": "6 ST + 2 SMPTE"
+            },
+            {
+              "id": "3.3",
+              "number": 3,
+              "name": "North Endzone",
+              "position": { "top": "25%", "left": "45%" },
+              "image": "location3-3.jpg",
+              "description": "Silver box on the NorthWest corner on a brick wall at field level. Power is located on the west sideline fence.",
+              "fiber": "6 ST + 2 SMPTE"
+            },
+            {
+              "id": "3.4",
+              "number": 4,
+              "name": "South Endzone",
+              "position": { "top": "64%", "left": "60%" },
+              "image": "location3-4.jpg",
+              "description": "Silver box near the cheer stand on the SouthEast corner on a brick pillar at field level. Power is located on the east sideline fence.",
+              "fiber": "6 ST + 2 SMPTE"
+            },
+            {
+              "id": "3.5",
+              "number": 5,
+              "name": "Tunnel",
+              "position": { "top": "70%", "left": "49%" },
+              "image": "location3-5.jpg",
+              "description": "Silver box under the bleachers on the west side wall of the south tunnel.",
+              "fiber": "6 ST + 2 SMPTE"
+            },
+            {
+              "id": "3.6",
+              "number": 6,
+              "name": "High Right Endzone",
+              "position": { "top": "85%", "left": "50%" },
+              "image": "location3-6.jpg",
+              "description": "Silver box at the top of the south endzone under the videoboard clock.",
+              "fiber": "6 ST + 2 SMPTE"
+            },
+            {
+              "id": "3.7",
+              "number": 7,
+              "name": "1415",
+              "position": { "top": "73%", "left": "34%" },
+              "image": "location3-7.jpg",
+              "description": "Between section 12 and 13. 1415 is the main fiber hub for all connections that do not originate in the truck pedistal.",
+              "fiber": "Main Hub"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "plainsman-park",
+      "name": "Plainsman Park",
+      "type": "field",
+      "maps": [
+        {
+          "id": "map7",
+          "label": "Plainsman Park",
+          "subtitle": "",
+          "image": "map5.jpg",
+          "locations": [
+            {
+              "id": "7.1",
+              "number": 1,
+              "name": "Low Third",
+              "position": { "top": "68%", "left": "34%" },
+              "image": "location7-1.jpg",
+              "description": "",
+              "fiber": "12 ST"
+            },
+            {
+              "id": "7.2",
+              "number": 2,
+              "name": "High Home",
+              "position": { "top": "93%", "left": "45.5%" },
+              "image": "location7-2.jpg",
+              "description": "",
+              "fiber": "12 ST"
+            },
+            {
+              "id": "7.6",
+              "number": 6,
+              "name": "Centerfield",
+              "position": { "top": "5%", "left": "42%" },
+              "image": "location7-6.jpg",
+              "description": "",
+              "fiber": "24 ST"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jane-moore-field",
+      "name": "Jane B. Moore Field",
+      "type": "field",
+      "maps": [
+        {
+          "id": "map8",
+          "label": "Jane B. Moore Field",
+          "subtitle": "",
+          "image": "map3.jpg",
+          "locations": [
+            {
+              "id": "8.1",
+              "number": 1,
+              "name": "Low Third",
+              "position": { "top": "45%", "left": "32%" },
+              "image": "location8-1.jpg",
+              "description": "6 ST in the right box. 12 ST in the left box (primarily saved for hawkeye)",
+              "fiber": "6 ST + 12 ST"
+            },
+            {
+              "id": "8.6",
+              "number": 6,
+              "name": "Centerfield",
+              "position": { "top": "5%", "left": "50%" },
+              "image": "location8-6.jpg",
+              "description": "",
+              "fiber": "12 ST"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "aquatics-center",
+      "name": "James E. Martin Aquatics Center",
+      "type": "arena",
+      "maps": [
+        {
+          "id": "map9",
+          "label": "Aquatics Center",
+          "subtitle": "From closet by trophy case poolside",
+          "image": "map9.jpg",
+          "locations": [
+            {
+              "id": "9.1",
+              "number": 1,
+              "name": "Left Concourse (2nd Floor)",
+              "position": { "top": "60%", "left": "23%" },
+              "image": "location9-1.jpg",
+              "description": "Facing the pool on the 2nd floor concourse, the left camera well is on the far left.",
+              "fiber": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "soccer-complex",
+      "name": "Auburn Soccer Complex",
+      "type": "field",
+      "maps": [
+        {
+          "id": "map10",
+          "label": "Auburn Soccer Complex",
+          "subtitle": "From center of trailer top of bleachers",
+          "image": "map10.jpg",
+          "locations": [
+            {
+              "id": "10.1",
+              "number": 1,
+              "name": "Tower",
+              "position": { "top": "85%", "left": "42%" },
+              "image": "location10-1.jpg",
+              "description": "On top of the booth. Accessed by a ladder on the backside. 12 ST fiber",
+              "fiber": "12 ST"
+            },
+            {
+              "id": "10.2",
+              "number": 2,
+              "name": "Video Board",
+              "position": { "top": "20%", "left": "76%" },
+              "image": "location10-2.jpg",
+              "description": "Directly under the videoboard. 24 ST fiber. The last 6 are hard patched to bench fiber (5).",
+              "fiber": "24 ST"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "equestrian",
+      "name": "Equestrian Center",
+      "type": "arena",
+      "maps": [
+        {
+          "id": "map11",
+          "label": "Equestrian",
+          "subtitle": "",
+          "image": "map11.jpg",
+          "locations": [
+            {
+              "id": "11.1",
+              "number": 1,
+              "name": "Booth",
+              "position": { "top": "55%", "left": "96%" },
+              "image": "location11-1.jpg",
+              "description": "Booth where all the magic happens.",
+              "fiber": ""
+            },
+            {
+              "id": "11.4",
+              "number": 4,
+              "name": "LaDove Lounge",
+              "position": { "top": "45%", "left": "52%" },
+              "image": "location11-4.jpg",
+              "description": "Single Coax converted to SDI from booth (1). This converts to HDMI into extron machine for the TVs in LaDove.",
+              "fiber": "Coax/SDI"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
