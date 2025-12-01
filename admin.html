@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WEP Maps Admin</title>
+    <link rel="stylesheet" href="admin.css">
+    <meta name="robots" content="noindex, nofollow">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-screen">
+        <div class="login-card">
+            <img src="auburn-logo.png" alt="Auburn Logo" class="login-logo">
+            <h1>WEP Maps Admin</h1>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter admin password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+                <p id="login-error" class="error-message"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="admin-dashboard" class="admin-dashboard hidden">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="header-left">
+                <img src="auburn-logo.png" alt="Auburn Logo" class="header-logo">
+                <h1>WEP Maps Admin</h1>
+            </div>
+            <div class="header-right">
+                <a href="index.html" class="btn btn-secondary" target="_blank">View Site</a>
+                <button id="logout-btn" class="btn btn-outline">Logout</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="admin-content">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h2>Navigation</h2>
+                </div>
+
+                <!-- Categories Tree -->
+                <div class="nav-tree" id="nav-tree">
+                    <!-- Populated by JavaScript -->
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="sidebar-actions">
+                    <button id="add-category-btn" class="btn btn-action">+ Add Category</button>
+                    <button id="add-venue-btn" class="btn btn-action">+ Add Venue</button>
+                    <button id="add-map-btn" class="btn btn-action" disabled>+ Add Map</button>
+                </div>
+
+                <!-- Generate HTML -->
+                <div class="sidebar-footer">
+                    <button id="generate-html-btn" class="btn btn-primary btn-full">Generate HTML Files</button>
+                </div>
+            </aside>
+
+            <!-- Main Editor Area -->
+            <main class="editor-main">
+                <!-- Welcome/Empty State -->
+                <div id="empty-state" class="empty-state">
+                    <h2>Welcome to WEP Maps Admin</h2>
+                    <p>Select a map from the sidebar to start editing, or create a new category/venue to get started.</p>
+                </div>
+
+                <!-- Map Editor -->
+                <div id="map-editor" class="map-editor hidden">
+                    <!-- Map Header -->
+                    <div class="editor-header">
+                        <div class="editor-title">
+                            <h2 id="current-venue-name">Venue Name</h2>
+                            <span id="current-map-label" class="map-label">Map Label</span>
+                        </div>
+                        <div class="editor-actions">
+                            <button id="edit-map-btn" class="btn btn-secondary">Edit Map Info</button>
+                            <button id="delete-map-btn" class="btn btn-danger">Delete Map</button>
+                        </div>
+                    </div>
+
+                    <!-- Map Canvas -->
+                    <div class="map-canvas-container">
+                        <div class="map-canvas" id="map-canvas">
+                            <img id="map-image" src="" alt="Map" class="map-image">
+                            <div id="markers-container" class="markers-container">
+                                <!-- Location markers added by JavaScript -->
+                            </div>
+                        </div>
+                        <div class="canvas-instructions">
+                            <p>Click and drag markers to reposition. Double-click on map to add new location.</p>
+                        </div>
+                    </div>
+
+                    <!-- Location Details Panel -->
+                    <div id="location-panel" class="location-panel hidden">
+                        <div class="panel-header">
+                            <h3>Location Details</h3>
+                            <button id="close-panel-btn" class="btn-close">&times;</button>
+                        </div>
+                        <form id="location-form">
+                            <input type="hidden" id="location-id">
+                            <div class="form-group">
+                                <label for="location-number">Number</label>
+                                <input type="number" id="location-number" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="location-name">Name</label>
+                                <input type="text" id="location-name" placeholder="Location name">
+                            </div>
+                            <div class="form-group">
+                                <label for="location-description">Description</label>
+                                <textarea id="location-description" rows="4" placeholder="Location description"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="location-fiber">Fiber Info</label>
+                                <input type="text" id="location-fiber" placeholder="e.g., 12 ST">
+                            </div>
+                            <div class="form-group">
+                                <label>Image</label>
+                                <div class="image-upload">
+                                    <input type="file" id="location-image-input" accept="image/*" hidden>
+                                    <button type="button" id="upload-image-btn" class="btn btn-secondary">Upload Image</button>
+                                    <span id="image-filename" class="filename"></span>
+                                </div>
+                                <div id="image-preview" class="image-preview"></div>
+                            </div>
+                            <div class="form-group coordinates">
+                                <label>Position</label>
+                                <div class="coord-display">
+                                    <span>Top: <strong id="coord-top">0%</strong></span>
+                                    <span>Left: <strong id="coord-left">0%</strong></span>
+                                </div>
+                            </div>
+                            <div class="panel-actions">
+                                <button type="submit" class="btn btn-primary">Save Location</button>
+                                <button type="button" id="delete-location-btn" class="btn btn-danger">Delete</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Category Modal -->
+    <div id="category-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="category-modal-title">Create New Category</h3>
+                <button class="btn-close modal-close">&times;</button>
+            </div>
+            <form id="category-form">
+                <input type="hidden" id="category-id">
+                <div class="form-group">
+                    <label for="category-name">Name</label>
+                    <input type="text" id="category-name" placeholder="e.g., Fiber Connectivity" required>
+                </div>
+                <div class="form-group">
+                    <label for="category-slug">Slug (filename)</label>
+                    <input type="text" id="category-slug" placeholder="e.g., Fiber">
+                    <small>Auto-generated from name if left blank</small>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary modal-close">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Venue Modal -->
+    <div id="venue-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="venue-modal-title">Create New Venue</h3>
+                <button class="btn-close modal-close">&times;</button>
+            </div>
+            <form id="venue-form">
+                <input type="hidden" id="venue-id">
+                <div class="form-group">
+                    <label for="venue-name">Name</label>
+                    <input type="text" id="venue-name" placeholder="e.g., Neville Arena" required>
+                </div>
+                <div class="form-group">
+                    <label for="venue-type">Type</label>
+                    <select id="venue-type">
+                        <option value="arena">Arena</option>
+                        <option value="stadium">Stadium</option>
+                        <option value="field">Field</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="venue-category">Category</label>
+                    <select id="venue-category" required>
+                        <!-- Populated by JavaScript -->
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary modal-close">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Map Modal -->
+    <div id="map-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="map-modal-title">Create New Map</h3>
+                <button class="btn-close modal-close">&times;</button>
+            </div>
+            <form id="map-form">
+                <input type="hidden" id="map-id">
+                <input type="hidden" id="map-venue-id">
+                <div class="form-group">
+                    <label for="map-label">Label</label>
+                    <input type="text" id="map-label" placeholder="e.g., 3rd and 4th floor" required>
+                </div>
+                <div class="form-group">
+                    <label for="map-subtitle">Subtitle</label>
+                    <input type="text" id="map-subtitle" placeholder="e.g., Concourse Level">
+                </div>
+                <div class="form-group">
+                    <label>Map Image</label>
+                    <div class="image-upload">
+                        <input type="file" id="map-image-input" accept="image/*" hidden>
+                        <button type="button" id="upload-map-image-btn" class="btn btn-secondary">Upload Image</button>
+                        <span id="map-image-filename" class="filename"></span>
+                    </div>
+                    <div id="map-image-preview" class="image-preview"></div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary modal-close">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="modal hidden">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3>Confirm Action</h3>
+                <button class="btn-close modal-close">&times;</button>
+            </div>
+            <p id="confirm-message">Are you sure you want to proceed?</p>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary modal-close">Cancel</button>
+                <button type="button" id="confirm-action-btn" class="btn btn-danger">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

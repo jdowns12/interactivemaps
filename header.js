@@ -14,7 +14,8 @@ const HeaderComponent = {
       { href: 'Fiber.html', label: 'Fiber Connectivity' },
       { href: 'ESPN.html', label: 'ESPN Positions' },
       { href: 'camera_positions.html', label: 'Camera Positions' }
-    ]
+    ],
+    adminLink: 'admin.html'
   },
 
   // Generate header HTML
@@ -47,6 +48,7 @@ const HeaderComponent = {
           <input type="search" id="global-search" placeholder="Search locations..." autocomplete="off">
           <div id="search-results" class="search-results"></div>
         </div>
+        <a href="${this.config.adminLink}" class="admin-btn">Admin</a>
       </header>
     `;
   },

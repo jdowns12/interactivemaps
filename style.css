@@ -205,6 +205,29 @@ body {
   width: 280px;
 }
 
+/* Admin Button */
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1.25rem;
+  background-color: #E87722;
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 4px;
+  transition: all 0.2s;
+  margin-left: 1rem;
+  flex-shrink: 0;
+}
+
+.admin-btn:hover {
+  background-color: #d66a1a;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(232, 119, 34, 0.4);
+}
+
 .search-results {
   position: absolute;
   top: 100%;
