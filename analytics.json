@@ -1,0 +1,22 @@
+{
+  "daily": {
+    "2025-12-02": {
+      "sessions": 20,
+      "pageviews": 104
+    },
+    "2025-12-03": {
+      "sessions": 1,
+      "pageviews": 1
+    },
+    "2025-12-06": {
+      "sessions": 1,
+      "pageviews": 2
+    },
+    "2025-12-13": {
+      "sessions": 1,
+      "pageviews": 1
+    }
+  },
+  "total_sessions": 23,
+  "total_pageviews": 108
+}

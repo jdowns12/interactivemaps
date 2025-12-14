@@ -3,7 +3,7 @@
  * Provides offline support and aggressive caching for fast loading
  */
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v4';
 const STATIC_CACHE = `wep-static-${CACHE_VERSION}`;
 const IMAGE_CACHE = `wep-images-${CACHE_VERSION}`;
 
@@ -13,6 +13,7 @@ const STATIC_ASSETS = [
   '/Fiber.html',
   '/ESPN.html',
   '/camera_positions.html',
+  '/test-category.html',
   '/style.css',
   '/script.js',
   '/header.js',

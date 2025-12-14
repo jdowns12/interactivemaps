@@ -236,39 +236,44 @@ const SearchModule = {
 
   // Navigate to a location
   navigateToLocation(mapId, locationId) {
-    // Find the map container
-    const mapContainer = document.querySelector(`[data-map-id="${mapId}"]`);
+    // Find the map panel by ID
+    const mapPanel = document.getElementById(mapId);
+    if (!mapPanel) return;
 
-    if (mapContainer) {
-      // Scroll to map
-      mapContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Find the venue section containing this map
+    const venue = mapPanel.closest('.venue');
+    if (!venue) return;
 
-      // Expand the map after scroll
+    // Activate the correct map tab
+    const tab = venue.querySelector(`[data-map="${mapId}"]`);
+    if (tab) {
+      venue.querySelectorAll('.map-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      venue.querySelectorAll('.map-panel').forEach(p => p.classList.remove('active'));
+      mapPanel.classList.add('active');
+    }
+
+    // Scroll venue into view
+    venue.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Find the location marker and show overlay
+    const marker = mapPanel.querySelector(`[data-location-id="${locationId}"]`);
+    if (marker && window.showLocationOverlay) {
       setTimeout(() => {
-        // Close any open maps first
-        document.querySelectorAll('.map-container.expanded').forEach(m => {
-          m.classList.remove('expanded');
-        });
-        document.querySelectorAll('.map-container.dimmed').forEach(m => {
-          m.classList.remove('dimmed');
-        });
-
-        // Expand this map
-        mapContainer.classList.add('expanded');
-        document.querySelectorAll('.map-container').forEach(m => {
-          if (m !== mapContainer) m.classList.add('dimmed');
-        });
-        document.body.classList.add('overlay-active');
-
-        // Find and click the location icon
-        setTimeout(() => {
-          const infoId = `info${locationId}`;
-          const icon = mapContainer.querySelector(`[data-info-id="${infoId}"]`);
-          if (icon) {
-            icon.click();
-          }
-        }, 400);
-      }, 300);
+        const locationData = {
+          number: marker.dataset.number || '',
+          name: marker.dataset.name || 'Location',
+          description: marker.dataset.description || '',
+          fiber: marker.dataset.fiber || '',
+          image: marker.dataset.image || '',
+          locationId: marker.dataset.locationId || '',
+          venueId: marker.dataset.venueId || '',
+          mapId: marker.dataset.mapId || '',
+          venueName: marker.dataset.venueName || '',
+          mapLabel: marker.dataset.mapLabel || ''
+        };
+        window.showLocationOverlay(locationData);
+      }, 400);
     }
 
     // Hide search results

@@ -1,1317 +1,1525 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Fiber Connectivity - WEP Venue Maps</title>
-  <meta name="description" content="Fiber connectivity maps for Auburn Athletics venues">
-  <meta name="theme-color" content="#0C2340">
-  <!-- PWA Manifest -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="auburn-logo.png">
-  <!-- Preload critical resources -->
-  <link rel="preload" href="style.css" as="style">
-  <link rel="preload" href="script.js" as="script">
-  <link rel="preload" href="map1.jpg" as="image">
-  <link rel="preload" href="map2.jpg" as="image">
-  <!-- Stylesheets -->
-  <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="print.css" media="print" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fiber Connectivity - WEP Venue Maps</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="print.css" media="print">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="auburn-logo.png">
+    <meta name="theme-color" content="#0C2340">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
-  <!-- Header will be injected by header.js -->
+    <script src="header.js"></script>
 
-  <div id="image-modal-overlay">
-    <span id="image-modal-close">&times;</span>
-    <img id="image-modal-content" src="" alt="Expanded Image" />
-  </div>
-  <div class="dim-overlay"></div>
-  <div class="map-row"> <!-- map-row starts -->
-    <div class="map-container" data-map-id="map1">
-      <div class="map-label">Neville Arena 3rd and 4th floor (Concourse Level)<br>
-        From Truck Dock</div>
-      <div class="map-content">
-        <img src="map1.jpg" alt="Map 1" class="map-image" />
-
-        <div class="location-wrapper" style="top: 80%; left: 47.2%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info1.1">
-            <span class="icon-label">1</span>
-          </div>
-        </div>
-        <div id="info1.1" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Main Left</strong><br>
-          <img src="location1-1.jpg" alt="Location 1" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Main Left is at the top of section 102 on the third floor concourse. 12 ST Fiber (6 on the wall, 6 in the loose white box). </p>
+    <main class="container">
+        <div class="page-header">
+            <h1 class="page-title">Fiber Connectivity</h1>
         </div>
 
-        <div class="location-wrapper" style="top: 80%; left: 51%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info1.2">
-            <span class="icon-label">2</span>
-          </div>
-        </div>
-        <div id="info1.2" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Main Right</strong><br>
-          <img src="location1-2.jpg" alt="Location 2" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Main Right is at the top of section 103 on the third floor concourse. 12 ST Fiber all to the loose white box. </p>
-        </div>
-
-        <div class="location-wrapper" style="top: 18%; left: 50%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info1.3">
-            <span class="icon-label">3</span>
-          </div>
-        </div>
-        <div id="info1.3" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Main Reverse</strong><br>
-          <img src="location1-3.jpg" alt="Location 3" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Main Reverse is at the top of section 111 on the third floor concourse. 6 ST Fiber</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 48%; left: 19%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info1.4">
-            <span class="icon-label">4</span>
-          </div>
-        </div>
-        <div id="info1.4" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>South Endzone/Sec 116</strong><br>
-          <img src="location1-4.jpg" alt="Location 4" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>South Endzone is at the top of Section 116. 6 ST Fiber labeled as Section 116, 12 ST labeled South Endzone. </p>
-        </div>  
-
-        <div class="location-wrapper" style="top: 48%; left: 81%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info1.5">
-            <span class="icon-label">5</span>
-          </div>
-        </div>
-        <div id="info1.5" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>North Endzone/Sec 107</strong><br>
-          <img src="location1-5.jpg" alt="Location 5" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>North Endzone is at the top of Section 107. 12 ST Fiber. </p>
-        </div>
-
-        <div class="location-wrapper" style="top: 73%; left: 23%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info1.6">
-            <span class="icon-label">6</span>
-          </div>
-        </div>
-        <div id="info1.6" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Section 118</strong><br>
-          <img src="location1-6.jpg" alt="Location 6" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Section 118 is at the top of Section 118. 12 ST that run to 4440 (Location 8) as SC APC. </p>
-        </div>
-
-        <div class="location-wrapper" style="top: 65%; left: 80%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info1.7">
-            <span class="icon-label">7</span>
-          </div>
-        </div>
-        <div id="info1.7" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Near Right High Slash/Sec 211</strong><br>
-          <img src="location1-7.jpg" alt="Location 7" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Near Right High Slash is at the top of section 211 on the 4th Floor Concourse. 12 ST Fiber pulled here. 6 ST Fiber labeled Near Right High Slash (FULL) and 6 Labeled New Near Right High Slash. </p>
-        </div>
-
-        <div class="location-wrapper" style="top: 88%; left: 26%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info1.8">
-            <span class="icon-label">8</span>
-          </div>
-        </div>
-        <div id="info1.8" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>4440(4th floor Storage)</strong><br>
-          <img src="location1-8.jpg" alt="Location 8" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>4440 is located behind section 201. A single door to the right of double doors. The fiber in the room is located at the top of the left DAK Rack. 6 ST and 24 SC APC to Truck Dock.  </p>
-        </div>  
-
-        <div class="location-wrapper" style="top: 49%; left: 49%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info1.9">
-            <span class="icon-label">9</span>
-          </div>
-        </div>
-        <div id="info1.9" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Catwalk</strong><br>
-          <img src="location1-9.jpg" alt="Location 9" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>CenterHung is located on the cat walk in the center. Access this by the middle doors on the 4th floor north or south of venue. </p>
-        </div>
-
-        <div class="location-wrapper" style="top: 15%; left: 20%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info1.10">
-            <span class="icon-label">10</span>
-          </div>
-        </div>
-        <div id="info1.10" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Truck Dock</strong><br>
-          <img src="location1-10.jpg" alt="Location 10" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>The truck dock is located off of Floor Far Left. All of the Venue IO run through this box.</p>
-        </div>               
-
-        <button class="close-button">✕</button>
-      </div> <!-- closes map-content for map1 -->
-    </div> <!-- closes map-container for map1 -->
-
-    <div class="map-container" data-map-id="map2">
-      <div class="map-label">Neville Arena<br> Floor Level
-        From Truck Dock</div>
-      <div class="map-content">
-        <img src="map1.jpg" alt="Map 2" class="map-image" />
-        <div class="location-wrapper" style="top: 30%; left: 32%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info2.1">
-            <span class="icon-label">1</span>
-          </div>
-        </div>
-        <div id="info2.1" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Floor Far Left</strong><br>
-          <img src="location2-1.jpg" alt="Location 1" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>FFL is in the southwest corner of the arena between section K and L.  </p>
-        </div>
-
-        <div class="location-wrapper" style="top: 37%; left: 72%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info2.2">
-            <span class="icon-label">2</span>
-          </div>
-        </div>
-        <div id="info2.2" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Floor Far Right</strong><br>
-          <img src="location2-2.jpg" alt="Location 2" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>FFR is located in the North West corner of the arena between section F and G.  </p>
-        </div>
-
-        <div class="location-wrapper" style="top: 68%; left: 68%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info2.3">
-            <span class="icon-label">3</span>
-          </div>
-        </div>
-        <div id="info2.3" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Floor Near Right</strong><br>
-          <img src="location2-3.jpg" alt="Location 3" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>FNR is located in the North East corner of the arena between section C and D. </p>
-        </div>
-
-        <div class="location-wrapper" style="top: 61%; left: 28%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info2.4">
-            <span class="icon-label">4</span>
-          </div>
-        </div>
-        <div id="info2.4" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Floor Near Left</strong><br>
-          <img src="location2-4.jpg" alt="Location 4" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>FNL is located in the South East corner of the arena between secton A and N.  </p>
-        </div>  
-
-        <div class="location-wrapper" style="top: 60%; left: 53%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info2.5">
-            <span class="icon-label">5</span>
-          </div>
-        </div>
-        <div id="info2.5" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Floor Pocket 1</strong><br>
-          <img src="location2-5.jpg" alt="Location 5" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Floor Pocket 1 is located on the near side of the court in front of section B and C. </p>
-        </div>
-
-        <div class="location-wrapper" style="top: 37%; left: 53%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info2.6">
-            <span class="icon-label">6</span>
-          </div>
-        </div>
-        <div id="info2.6" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Floor Pocket 2</strong><br>
-          <img src="location2-6.jpg" alt="Location 6" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Floor Pocket 2 is located on the far side of the court in front of section H. </p>
-        </div>
-
-        <div class="location-wrapper" style="top: 50%; left: 27%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info2.7">
-            <span class="icon-label">7</span>
-          </div>
-        </div>
-        <div id="info2.7" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Auburn Men's Locker Room</strong><br>
-          <img src="location2-7.jpg" alt="Location 7" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>The Fiber in the Men's locker room is located under the cabinets inside of their locker room behind section M.  </p>
-        </div>
-
-        <div class="location-wrapper" style="top: 23%; left: 31%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info2.8">
-            <span class="icon-label">8</span>
-          </div>
-        </div>
-        <div id="info2.8" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Media Room</strong><br>
-          <img src="location2-8.jpg" alt="Location 8" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Media room is located to the right of the elevator off Floor Far Left area.   </p>
-        </div>  
-
-        <div class="location-wrapper" style="top: 35%; left: 23%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info2.9">
-            <span class="icon-label">9</span>
-          </div>
-        </div>
-        <div id="info2.9" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Auburn Women's Locker Room</strong><br>
-          <img src="location2-9.jpg" alt="Location 9" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Women's locker room has 2 SDI cables ran to the back of their film review room. </p>
-        </div>
-
-        <div class="location-wrapper" style="top: 15%; left: 20%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info2.10">
-            <span class="icon-label">10</span>
-          </div>
-        </div>
-        <div id="info2.10" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Truck Dock</strong><br>
-          <img src="location2-10.jpg" alt="Location 10" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>The truck dock is located off of Floor Far Left. All of the Venue IO run through this box.</p>
-        </div>               
-
-        <button class="close-button">✕</button>
-      </div> <!-- closes map-content for map2 -->
-    </div> <!-- closes map-container for map2 -->
-
-    <div class="map-container" data-map-id="map3">
-      <div class="map-label">Jordan-Hare Stadium - WEP from 1415 <br>6 ST Fiber & 2 SMPTE</div>
-      <div class="map-content">
-        <img src="map2.jpg" alt="Map 3" class="map-image" /> 
-        <div class="location-wrapper" style="top: 48%; left: 32%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info3.1">
-            <span class="icon-label">1</span>
-          </div>
-        </div>
-        <div id="info3.1" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Press Level 1</strong><br>
-          <img src="location3-1.jpg" alt="Location 1" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Left silver box on photo deck. Located near south 45 yd line.</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 52%; left: 32%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info3.2">
-            <span class="icon-label">2</span>
-          </div>
-        </div>
-        <div id="info3.2" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Press Level 2</strong><br>
-          <img src="location3-2.jpg" alt="Location 2" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Right silver box on photo deck. Located near south 45 yd line.</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 25%; left: 45%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info3.3">
-            <span class="icon-label">3</span>
-          </div>
-        </div>
-        <div id="info3.3" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>North Endzone</strong><br>
-          <img src="location3-3.jpg" alt="Location 3" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Silver box on the NorthWest corner on a brick wall at field level. Power is located on the west sideline fence.</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 64%; left: 60%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info3.4">
-            <span class="icon-label">4</span>
-          </div>
-        </div>
-        <div id="info3.4" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>South Endzone</strong><br>
-          <img src="location3-4.jpg" alt="Location 4" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Silver box near the cheer stand on the SouthEast corner on a brick pillar at field level. Power is located on the east sideline fence.</p>
-        </div>  
-
-        <div class="location-wrapper" style="top: 70%; left: 49%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info3.5">
-            <span class="icon-label">5</span>
-          </div>
-        </div>
-        <div id="info3.5" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Tunnel</strong><br>
-          <img src="location3-5.jpg" alt="Location 5" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Silver box under the bleachers on the west side wall of the south tunnel.</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 85%; left: 50%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info3.6">
-            <span class="icon-label">6</span>
-          </div>
-        </div>
-        <div id="info3.6" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>High Right Endzone</strong><br>
-          <img src="location3-6.jpg" alt="Location 6" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Silver box at the top of the south endzone under the videoboard clock.</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 73%; left: 34%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info3.7">
-            <span class="icon-label">7</span>
-          </div>
-        </div>
-        <div id="info3.7" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>1415</strong><br>
-          <img src="location3-7.jpg" alt="Location 7" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Between section 12 and 13. 1415 is the main fiber hub for all connections that do not originate in the truck pedistal.</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 50%; left: 38%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info3.8">
-            <span class="icon-label">8</span>
-          </div>
-        </div>
-        <div id="info3.8" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>1415</strong><br>
-          <img src="location3-8.jpg" alt="Location 7" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Between section 12 and 13. 1415 is the main fiber hub for all connections that do not originate in the truck pedistal.</p>
-        </div>
-        <button class="close-button">✕</button>
-      </div> <!-- closes map-content for map3 -->
-    </div> <!-- closes map-container for map3 -->
-
-    <div class="map-container" data-map-id="map4">
-      <div class="map-label">Jordan-Hare Stadium WEP Fiber Only <br>Patches From 1415</div>
-      <div class="map-content">
-        <img src="map2.jpg" alt="Map 4" class="map-image" />
-        <div class="location-wrapper" style="top: 74%; left: 56%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info4.1">
-            <span class="icon-label">1</span>
-          </div>
-        </div>
-        <div id="info4.1" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Media Room</strong><br>
-          <img src="location4-1.jpg" alt="Location 1" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Located through the SouthEast tunnel - The media room has 6 ST Fiber.</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 59%; left: 24%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info4.2">
-            <span class="icon-label">2</span>
-          </div>
-        </div>
-        <div id="info4.2" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>PA Room</strong><br>
-          <img src="location4-2.jpg" alt="Location 2" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Take the SouthWest elevator to the third floor, take the last door on the left and its the room 
-            straight ahead. 12 ST Fiber located near the top of the wall in the back of the room.</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 14%; left: 25%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info4.3">
-            <span class="icon-label">3</span>
-          </div>
-        </div>
-        <div id="info4.3" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>North West Ramp</strong><br>
-          <img src="location4-3.jpg" alt="Location 3" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Take the ramp upwards away from the third floor concourse. Silver box on the underside of the ramp - 
-            12 ST Fiber. </p>
-        </div>
-
-        <div class="location-wrapper" style="top: 78%; left: 24%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info4.4">
-            <span class="icon-label">4</span>
-          </div>
-        </div>
-        <div id="info4.4" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>South West Ramp</strong><br>
-          <img src="location4-4.jpg" alt="Location 4" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Take the ramp upwards away from the third floor concourse. Silver box on the underside of the ramp - 
-            12 ST Fiber.</p>
-        </div>  
-
-        <div class="location-wrapper" style="top: 88%; left: 47%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info4.5">
-            <span class="icon-label">5</span>
-          </div>
-        </div>
-        <div id="info4.5" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Top South Videoboard West</strong><br>
-          <img src="location4-5.jpg" alt="Location 5" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Mostly used for team video - 12 ST at the top of the south videoboard. </p>
-        </div>
-
-        <div class="location-wrapper" style="top: 88%; left: 58%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info4.6">
-            <span class="icon-label">6</span>
-          </div>
-        </div>
-        <div id="info4.6" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Top South VideoBoard East</strong><br>
-          <img src="location4-6.jpg" alt="Location 6" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Mostly used for team video - 12 ST at the top of the south videoboard. </p>
-        </div>
-
-        <div class="location-wrapper" style="top: 42%; left: 11%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info4.7">
-            <span class="icon-label">7</span>
-          </div>
-        </div>
-        <div id="info4.7" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>West Truck Dock</strong><br>
-          <img src="location4-7.jpg" alt="Location 7" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>24 LC - Located between the West side elevators - this pedestal holds the connection between 1415 and Truck Pedestal. 
-            It also holds some legacy cables from when this was the main stadium truck pedestal. 
-          </p>
-        </div>
-
-        <div class="location-wrapper" style="top: 46%; left: 24%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info4.8">
-            <span class="icon-label">8</span>
-          </div>
-        </div>
-        <div id="info4.8" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Room 2130F</strong><br>
-          <img src="location4-8.jpg" alt="Location 8" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>36 SC - This room holds some more fiber runs that are solely for team video. </p>
-        </div>  
-
-        <div class="location-wrapper" style="top: 73%; left: 34%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info4.9">
-            <span class="icon-label">9</span>
-          </div>
-        </div>
-        <div id="info4.9" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>1415</strong><br>
-          <img src="location4-9.jpg" alt="Location 9" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Between section 12 and 13. 1415 is the main fiber hub for all connections that do not originate in the truck pedistal.</p>
-        </div>
-        <button class="close-button">✕</button> <!-- ADDED for map4 -->
-      </div> <!-- closes map-content for map4 -->
-    </div> <!-- closes map-container for map4 -->
-
-    <div class="map-container" data-map-id="map5">
-      <div class="map-label">Tiger Walk Club WEP Fiber Only <br>Patches From 1415</div>
-      <div class="map-content">
-        <img src="map4.jpg" alt="Map 5" class="map-image" /> 
+        <div class="venues-container">
+            
+        <section class="venue" id="neville-arena">
+            <h2 class="venue-title">Neville Arena</h2>
+            <div class="map-tabs">
         
-        <!-- Location 1 (5th Floor - Purple) -->
-        <div class="location-wrapper" data-floor-color="purple" style="top: 28%; left: 31%;">
-          <div class="location-icon map-one-arrows triangle icon-purple" data-info-id="info5.1">
-            <span class="icon-label">1</span>
-          </div>
-        </div>
-        <div id="info5.1" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Home Radio</strong><br>
-          <img src="location5-1.jpg" alt="Location 1" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>6 ST - 5th Floor of South West Recruiting Building</p>
-        </div>
+                <button class="map-tab active" data-map="map1">3rd and 4th floor (Concourse Level)</button>
+            
+                <button class="map-tab " data-map="map2">Floor Level</button>
+            </div><div class="maps-container">
+            <div class="map-panel active" id="map1">
+                <div class="map-container">
+                    <img src="map1.jpg" alt="3rd and 4th floor (Concourse Level)" class="map-image">
+            
+                    <div class="location-marker" style="top: 80%; left: 47.2%;"
+                         data-location-id="1.1"
+                         data-venue-id="neville-arena"
+                         data-map-id="map1"
+                         data-name="Main Left"
+                         data-description="Main Left is at the top of section 102 on the third floor concourse. 12 ST Fiber (6 on the wall, 6 in the loose white box)."
+                         data-fiber="12 ST"
+                         data-image="location1-1.jpg"
+                         data-number="1"
+                         data-venue-name="Neville Arena"
+                         data-map-label="3rd and 4th floor (Concourse Level)">
+                        <span class="marker-number">1</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 80%; left: 51%;"
+                         data-location-id="1.2"
+                         data-venue-id="neville-arena"
+                         data-map-id="map1"
+                         data-name="Main Right"
+                         data-description="Main Right is at the top of section 103 on the third floor concourse. 12 ST Fiber all to the loose white box."
+                         data-fiber="12 ST"
+                         data-image="location1-2.jpg"
+                         data-number="2"
+                         data-venue-name="Neville Arena"
+                         data-map-label="3rd and 4th floor (Concourse Level)">
+                        <span class="marker-number">2</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 18%; left: 50%;"
+                         data-location-id="1.3"
+                         data-venue-id="neville-arena"
+                         data-map-id="map1"
+                         data-name="Main Reverse"
+                         data-description="Main Reverse is at the top of section 111 on the third floor concourse. 6 ST Fiber"
+                         data-fiber="6 ST"
+                         data-image="location1-3.jpg"
+                         data-number="3"
+                         data-venue-name="Neville Arena"
+                         data-map-label="3rd and 4th floor (Concourse Level)">
+                        <span class="marker-number">3</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 48%; left: 19%;"
+                         data-location-id="1.4"
+                         data-venue-id="neville-arena"
+                         data-map-id="map1"
+                         data-name="South Endzone/Sec 116"
+                         data-description="South Endzone is at the top of Section 116. 6 ST Fiber labeled as Section 116, 12 ST labeled South Endzone."
+                         data-fiber="6 ST + 12 ST"
+                         data-image="location1-4.jpg"
+                         data-number="4"
+                         data-venue-name="Neville Arena"
+                         data-map-label="3rd and 4th floor (Concourse Level)">
+                        <span class="marker-number">4</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 48%; left: 81%;"
+                         data-location-id="1.5"
+                         data-venue-id="neville-arena"
+                         data-map-id="map1"
+                         data-name="North Endzone/Sec 107"
+                         data-description="North Endzone is at the top of Section 107. 12 ST Fiber."
+                         data-fiber="12 ST"
+                         data-image="location1-5.jpg"
+                         data-number="5"
+                         data-venue-name="Neville Arena"
+                         data-map-label="3rd and 4th floor (Concourse Level)">
+                        <span class="marker-number">5</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 72.593997%; left: 22.998047%;"
+                         data-location-id="1.6"
+                         data-venue-id="neville-arena"
+                         data-map-id="map1"
+                         data-name="Section 118"
+                         data-description="Section 118 is at the top of Section 118. 12 ST that run to 4440 (Location 8) as SC APC."
+                         data-fiber="12 ST"
+                         data-image="location1-6.jpg"
+                         data-number="6"
+                         data-venue-name="Neville Arena"
+                         data-map-label="3rd and 4th floor (Concourse Level)">
+                        <span class="marker-number">6</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 65%; left: 80%;"
+                         data-location-id="1.7"
+                         data-venue-id="neville-arena"
+                         data-map-id="map1"
+                         data-name="Near Right High Slash/Sec 211"
+                         data-description="Near Right High Slash is at the top of section 211 on the 4th Floor Concourse. 12 ST Fiber pulled here. 6 ST Fiber labeled Near Right High Slash (FULL) and 6 Labeled New Near Right High Slash."
+                         data-fiber="12 ST"
+                         data-image="location1-7.jpg"
+                         data-number="7"
+                         data-venue-name="Neville Arena"
+                         data-map-label="3rd and 4th floor (Concourse Level)">
+                        <span class="marker-number">7</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 88%; left: 26%;"
+                         data-location-id="1.8"
+                         data-venue-id="neville-arena"
+                         data-map-id="map1"
+                         data-name="4440 (4th floor Storage)"
+                         data-description="4440 is located behind section 201. A single door to the right of double doors. The fiber in the room is located at the top of the left DAK Rack. 6 ST and 24 SC APC to Truck Dock."
+                         data-fiber="6 ST + 24 SC APC"
+                         data-image="location1-8.jpg"
+                         data-number="8"
+                         data-venue-name="Neville Arena"
+                         data-map-label="3rd and 4th floor (Concourse Level)">
+                        <span class="marker-number">8</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 49%; left: 49%;"
+                         data-location-id="1.9"
+                         data-venue-id="neville-arena"
+                         data-map-id="map1"
+                         data-name="Catwalk"
+                         data-description="CenterHung is located on the cat walk in the center. Access this by the middle doors on the 4th floor north or south of venue."
+                         data-fiber=""
+                         data-image="location1-9.jpg"
+                         data-number="9"
+                         data-venue-name="Neville Arena"
+                         data-map-label="3rd and 4th floor (Concourse Level)">
+                        <span class="marker-number">9</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 15%; left: 20%;"
+                         data-location-id="1.10"
+                         data-venue-id="neville-arena"
+                         data-map-id="map1"
+                         data-name="Truck Dock"
+                         data-description="The truck dock is located off of Floor Far Left. All of the Venue IO run through this box."
+                         data-fiber="Venue IO Hub"
+                         data-image="location1-10.jpg"
+                         data-number="10"
+                         data-venue-name="Neville Arena"
+                         data-map-label="3rd and 4th floor (Concourse Level)">
+                        <span class="marker-number">10</span>
+                    </div>
+                
+                </div>
+            </div>
+            
+            <div class="map-panel " id="map2">
+                <div class="map-container">
+                    <img src="map1.jpg" alt="Floor Level" class="map-image">
+            
+                    <div class="location-marker" style="top: 30%; left: 32%;"
+                         data-location-id="2.1"
+                         data-venue-id="neville-arena"
+                         data-map-id="map2"
+                         data-name="Floor Far Left"
+                         data-description="FFL is in the southwest corner of the arena between section K and L."
+                         data-fiber=""
+                         data-image="location2-1.jpg"
+                         data-number="1"
+                         data-venue-name="Neville Arena"
+                         data-map-label="Floor Level">
+                        <span class="marker-number">1</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 37%; left: 72%;"
+                         data-location-id="2.2"
+                         data-venue-id="neville-arena"
+                         data-map-id="map2"
+                         data-name="Floor Far Right"
+                         data-description="FFR is located in the North West corner of the arena between section F and G."
+                         data-fiber=""
+                         data-image="location2-2.jpg"
+                         data-number="2"
+                         data-venue-name="Neville Arena"
+                         data-map-label="Floor Level">
+                        <span class="marker-number">2</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 68%; left: 68%;"
+                         data-location-id="2.3"
+                         data-venue-id="neville-arena"
+                         data-map-id="map2"
+                         data-name="Floor Near Right"
+                         data-description="FNR is located in the North East corner of the arena between section C and D."
+                         data-fiber=""
+                         data-image="location2-3.jpg"
+                         data-number="3"
+                         data-venue-name="Neville Arena"
+                         data-map-label="Floor Level">
+                        <span class="marker-number">3</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 61%; left: 28%;"
+                         data-location-id="2.4"
+                         data-venue-id="neville-arena"
+                         data-map-id="map2"
+                         data-name="Floor Near Left"
+                         data-description="FNL is located in the South East corner of the arena between secton A and N."
+                         data-fiber=""
+                         data-image="location2-4.jpg"
+                         data-number="4"
+                         data-venue-name="Neville Arena"
+                         data-map-label="Floor Level">
+                        <span class="marker-number">4</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 60%; left: 53%;"
+                         data-location-id="2.5"
+                         data-venue-id="neville-arena"
+                         data-map-id="map2"
+                         data-name="Floor Pocket 1"
+                         data-description="Floor Pocket 1 is located on the near side of the court in front of section B and C."
+                         data-fiber=""
+                         data-image="location2-5.jpg"
+                         data-number="5"
+                         data-venue-name="Neville Arena"
+                         data-map-label="Floor Level">
+                        <span class="marker-number">5</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 37%; left: 53%;"
+                         data-location-id="2.6"
+                         data-venue-id="neville-arena"
+                         data-map-id="map2"
+                         data-name="Floor Pocket 2"
+                         data-description="Floor Pocket 2 is located on the far side of the court in front of section H."
+                         data-fiber=""
+                         data-image="location2-6.jpg"
+                         data-number="6"
+                         data-venue-name="Neville Arena"
+                         data-map-label="Floor Level">
+                        <span class="marker-number">6</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 50%; left: 27%;"
+                         data-location-id="2.7"
+                         data-venue-id="neville-arena"
+                         data-map-id="map2"
+                         data-name="Auburn Men&#x27;s Locker Room"
+                         data-description="The Fiber in the Men&#x27;s locker room is located under the cabinets inside of their locker room behind section M."
+                         data-fiber=""
+                         data-image="location2-7.jpg"
+                         data-number="7"
+                         data-venue-name="Neville Arena"
+                         data-map-label="Floor Level">
+                        <span class="marker-number">7</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 23%; left: 31%;"
+                         data-location-id="2.8"
+                         data-venue-id="neville-arena"
+                         data-map-id="map2"
+                         data-name="Media Room"
+                         data-description="Media room is located to the right of the elevator off Floor Far Left area."
+                         data-fiber=""
+                         data-image="location2-8.jpg"
+                         data-number="8"
+                         data-venue-name="Neville Arena"
+                         data-map-label="Floor Level">
+                        <span class="marker-number">8</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 35%; left: 23%;"
+                         data-location-id="2.9"
+                         data-venue-id="neville-arena"
+                         data-map-id="map2"
+                         data-name="Auburn Women&#x27;s Locker Room"
+                         data-description="Women&#x27;s locker room has 2 SDI cables ran to the back of their film review room."
+                         data-fiber="2 SDI"
+                         data-image="location2-9.jpg"
+                         data-number="9"
+                         data-venue-name="Neville Arena"
+                         data-map-label="Floor Level">
+                        <span class="marker-number">9</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 15%; left: 20%;"
+                         data-location-id="2.10"
+                         data-venue-id="neville-arena"
+                         data-map-id="map2"
+                         data-name="Truck Dock"
+                         data-description="The truck dock is located off of Floor Far Left. All of the Venue IO run through this box."
+                         data-fiber="Venue IO Hub"
+                         data-image="location2-10.jpg"
+                         data-number="10"
+                         data-venue-name="Neville Arena"
+                         data-map-label="Floor Level">
+                        <span class="marker-number">10</span>
+                    </div>
+                
+                </div>
+            </div>
+            </div></section>
 
-        <!-- Location 2 (5th Floor - Purple) -->
-        <div class="location-wrapper" data-floor-color="purple" style="top: 38%; left: 42%;">
-          <div class="location-icon map-one-arrows triangle icon-purple" data-info-id="info5.2">
-            <span class="icon-label">2</span>
-          </div>
-        </div>
-        <div id="info5.2" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Away Radio</strong><br>
-          <img src="location5-2.jpg" alt="Location 2" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>6 ST - 5th Floor of South West Recruiting Building</p>
-        </div>
-
-        <!-- Location 3 (5th Floor - Purple) -->
-        <div class="location-wrapper" data-floor-color="purple" style="top: 38%; left: 35%;">
-          <div class="location-icon map-one-arrows triangle icon-purple" data-info-id="info5.3">
-            <span class="icon-label">3</span>
-          </div>
-        </div>
-        <div id="info5.3" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Press Level on Wall</strong><br>
-          <img src="location5-3.jpg" alt="Location 3" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>12 ST - 5th Floor of South West Recruiting Building</p>
-        </div>
-
-        <!-- Location 4 (1st Floor - Orange/Default) -->
-        <div class="location-wrapper" data-floor-color="orange" style="top: 72%; left: 72%;">
-          <div class="location-icon map-one-arrows triangle icon-orange" data-info-id="info5.4">
-            <span class="icon-label">4</span>
-          </div>
-        </div>
-        <div id="info5.4" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>TWC Front Door Brick Wall</strong><br>
-          <img src="location5-4.jpg" alt="Location 4" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>6 ST - Inside the white box directly to your right when entering the glass doors at main entrance. </p>
-        </div>  
-
-        <!-- Location 5 (1st Floor - Orange/Default) -->
-        <div class="location-wrapper" data-floor-color="orange" style="top: 54%; left: 58%;">
-          <div class="location-icon map-one-arrows triangle icon-orange" data-info-id="info5.5">
-            <span class="icon-label">5</span>
-          </div>
-        </div>
-        <div id="info5.5" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>TWC Main Entrance Blue Wall</strong><br>
-          <img src="location5-5.jpg" alt="Location 5" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>12 ST - Through 1st floor main entrance, the fiber box is near the floor near the blue wall. </p>
-        </div>
-
-        <!-- Location 6 (1st Floor - Orange/Default) -->
-        <div class="location-wrapper" data-floor-color="orange" style="top: 52%; left: 66%;">
-          <div class="location-icon map-one-arrows triangle icon-orange" data-info-id="info5.6">
-            <span class="icon-label">6</span>
-          </div>
-        </div>
-        <div id="info5.6" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>AV Room 0463</strong><br>
-          <img src="location5-6.jpg" alt="Location 6" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>24 SC - Hallway across from the bathrooms on the 1st floor.</p>
-        </div>
-
-        <!-- Location 7 (1st Floor - Orange/Default) -->
-        <div class="location-wrapper" data-floor-color="orange" style="top: 52%; left: 84%;">
-          <div class="location-icon map-one-arrows triangle icon-orange" data-info-id="info5.7">
-            <span class="icon-label">7</span>
-          </div>
-        </div>
-        <div id="info5.7" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Locker Room</strong><br>
-          <img src="location5-7.jpg" alt="Location 7" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>12 ST - Meeting room in the back of the locker room.</p>
-        </div>
-
-        <!-- Location 8 (1st Floor - Orange/Default) -->
-        <div class="location-wrapper" data-floor-color="orange" style="top: 52%; left: 43%;">
-          <div class="location-icon map-one-arrows triangle icon-orange" data-info-id="info5.8">
-            <span class="icon-label">8</span>
-          </div>
-        </div>
-        <div id="info5.8" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>TV Wall</strong><br>
-          <img src="location5-8.jpg" alt="Location 8" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>6 ST - Beside the large video wall on in the 1st floor TWC. </p>
-        </div>  
-
-        <!-- Location 9 (2nd Floor - Green) -->
-        <div class="location-wrapper" data-floor-color="green" style="top: 48%; left: 45%;">
-          <div class="location-icon map-one-arrows triangle icon-green" data-info-id="info5.9">
-            <span class="icon-label">9</span>
-          </div>
-        </div>
-        <div id="info5.9" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>TWC 2nd Floor</strong><br>
-          <img src="location5-9.jpg" alt="Location 9" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>6 ST - No Power - Concourse Level - Just off elevator through the TWC doors by the stairs.</p>
-        </div>
+        <section class="venue" id="jordan-hare">
+            <h2 class="venue-title">Jordan-Hare Stadium</h2>
+            <div class="map-tabs">
         
-        <!-- UPDATED COLOR KEY WITH CHECKBOXES -->
-        <div class="color-key">
-          <h4>Location Key</h4>
-          <label>
-            <input type="checkbox" class="color-filter-checkbox" data-filter-color="orange" checked>
-            <span class="key-color-box key-orange"></span> 1st Floor - Orange
-          </label>
-          <label>
-            <input type="checkbox" class="color-filter-checkbox" data-filter-color="green" checked>
-            <span class="key-color-box key-green"></span> 2nd Floor - Green
-          </label>
-          <label>
-            <input type="checkbox" class="color-filter-checkbox" data-filter-color="purple" checked>
-            <span class="key-color-box key-purple"></span> 5th Floor - Purple
-          </label>
-        </div>
-        <button class="close-button">✕</button> <!-- ADDED for map5 -->
-      </div> <!-- closes map-content for map5 -->
-    </div> <!-- closes map-container for map5 -->
+                <button class="map-tab active" data-map="map3">WEP from 1415</button>
+            
+                <button class="map-tab " data-map="map4">WEP Fiber Only</button>
+            
+                <button class="map-tab " data-map="map5">Tiger Walk Club WEP Fiber Only</button>
+            
+                <button class="map-tab " data-map="map6">Truck Patches</button>
+            </div><div class="maps-container">
+            <div class="map-panel active" id="map3">
+                <div class="map-container">
+                    <img src="map2.jpg" alt="WEP from 1415" class="map-image">
+            
+                    <div class="location-marker" style="top: 48%; left: 32%;"
+                         data-location-id="3.1"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map3"
+                         data-name="Press Level 1"
+                         data-description="Left silver box on photo deck. Located near south 45 yd line."
+                         data-fiber="6 ST + 2 SMPTE"
+                         data-image="location3-1.jpg"
+                         data-number="1"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="WEP from 1415">
+                        <span class="marker-number">1</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 52%; left: 32%;"
+                         data-location-id="3.2"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map3"
+                         data-name="Press Level 2"
+                         data-description="Right silver box on photo deck. Located near south 45 yd line."
+                         data-fiber="6 ST + 2 SMPTE"
+                         data-image="location3-2.jpg"
+                         data-number="2"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="WEP from 1415">
+                        <span class="marker-number">2</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 25%; left: 45%;"
+                         data-location-id="3.3"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map3"
+                         data-name="North Endzone"
+                         data-description="Silver box on the NorthWest corner on a brick wall at field level. Power is located on the west sideline fence."
+                         data-fiber="6 ST + 2 SMPTE"
+                         data-image="location3-3.jpg"
+                         data-number="3"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="WEP from 1415">
+                        <span class="marker-number">3</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 64%; left: 60%;"
+                         data-location-id="3.4"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map3"
+                         data-name="South Endzone"
+                         data-description="Silver box near the cheer stand on the SouthEast corner on a brick pillar at field level. Power is located on the east sideline fence."
+                         data-fiber="6 ST + 2 SMPTE"
+                         data-image="location3-4.jpg"
+                         data-number="4"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="WEP from 1415">
+                        <span class="marker-number">4</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 70%; left: 49%;"
+                         data-location-id="3.5"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map3"
+                         data-name="Tunnel"
+                         data-description="Silver box under the bleachers on the west side wall of the south tunnel."
+                         data-fiber="6 ST + 2 SMPTE"
+                         data-image="location3-5.jpg"
+                         data-number="5"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="WEP from 1415">
+                        <span class="marker-number">5</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 85%; left: 50%;"
+                         data-location-id="3.6"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map3"
+                         data-name="High Right Endzone"
+                         data-description="Silver box at the top of the south endzone under the videoboard clock."
+                         data-fiber="6 ST + 2 SMPTE"
+                         data-image="location3-6.jpg"
+                         data-number="6"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="WEP from 1415">
+                        <span class="marker-number">6</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 73%; left: 34%;"
+                         data-location-id="3.7"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map3"
+                         data-name="1415"
+                         data-description="Between section 12 and 13. 1415 is the main fiber hub for all connections that do not originate in the truck pedistal."
+                         data-fiber="Main Hub"
+                         data-image="location3-7.jpg"
+                         data-number="7"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="WEP from 1415">
+                        <span class="marker-number">7</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 50%; left: 38%;"
+                         data-location-id="3.8"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map3"
+                         data-name="1415"
+                         data-description="Between section 12 and 13. 1415 is the main fiber hub for all connections that do not originate in the truck pedistal."
+                         data-fiber="Main Hub"
+                         data-image="location3-8.jpg"
+                         data-number="8"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="WEP from 1415">
+                        <span class="marker-number">8</span>
+                    </div>
+                
+                </div>
+            </div>
+            
+            <div class="map-panel " id="map4">
+                <div class="map-container">
+                    <img src="map2.jpg" alt="WEP Fiber Only" class="map-image">
+            
+                    <div class="location-marker" style="top: 74%; left: 56%;"
+                         data-location-id="4.1"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map4"
+                         data-name="Media Room"
+                         data-description="Located through the SouthEast tunnel - The media room has 6 ST Fiber."
+                         data-fiber="6 ST"
+                         data-image="location4-1.jpg"
+                         data-number="1"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="WEP Fiber Only">
+                        <span class="marker-number">1</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 59%; left: 24%;"
+                         data-location-id="4.2"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map4"
+                         data-name="PA Room"
+                         data-description="Take the SouthWest elevator to the third floor, take the last door on the left and its the room straight ahead. 12 ST Fiber located near the top of the wall in the back of the room."
+                         data-fiber="12 ST"
+                         data-image="location4-2.jpg"
+                         data-number="2"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="WEP Fiber Only">
+                        <span class="marker-number">2</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 14%; left: 25%;"
+                         data-location-id="4.3"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map4"
+                         data-name="North West Ramp"
+                         data-description="Take the ramp upwards away from the third floor concourse. Silver box on the underside of the ramp - 12 ST Fiber."
+                         data-fiber="12 ST"
+                         data-image="location4-3.jpg"
+                         data-number="3"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="WEP Fiber Only">
+                        <span class="marker-number">3</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 78%; left: 24%;"
+                         data-location-id="4.4"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map4"
+                         data-name="South West Ramp"
+                         data-description="Take the ramp upwards away from the third floor concourse. Silver box on the underside of the ramp - 12 ST Fiber."
+                         data-fiber="12 ST"
+                         data-image="location4-4.jpg"
+                         data-number="4"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="WEP Fiber Only">
+                        <span class="marker-number">4</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 88%; left: 47%;"
+                         data-location-id="4.5"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map4"
+                         data-name="Top South Videoboard West"
+                         data-description="Mostly used for team video - 12 ST at the top of the south videoboard."
+                         data-fiber="12 ST"
+                         data-image="location4-5.jpg"
+                         data-number="5"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="WEP Fiber Only">
+                        <span class="marker-number">5</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 88%; left: 58%;"
+                         data-location-id="4.6"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map4"
+                         data-name="Top South VideoBoard East"
+                         data-description="Mostly used for team video - 12 ST at the top of the south videoboard."
+                         data-fiber="12 ST"
+                         data-image="location4-6.jpg"
+                         data-number="6"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="WEP Fiber Only">
+                        <span class="marker-number">6</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 42%; left: 11%;"
+                         data-location-id="4.7"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map4"
+                         data-name="West Truck Dock"
+                         data-description="24 LC - Located between the West side elevators - this pedestal holds the connection between 1415 and Truck Pedestal. It also holds some legacy cables from when this was the main stadium truck pedestal."
+                         data-fiber="24 LC"
+                         data-image="location4-7.jpg"
+                         data-number="7"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="WEP Fiber Only">
+                        <span class="marker-number">7</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 46%; left: 24%;"
+                         data-location-id="4.8"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map4"
+                         data-name="Room 2130F"
+                         data-description="36 SC - This room holds some more fiber runs that are solely for team video."
+                         data-fiber="36 SC"
+                         data-image="location4-8.jpg"
+                         data-number="8"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="WEP Fiber Only">
+                        <span class="marker-number">8</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 73%; left: 34%;"
+                         data-location-id="4.9"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map4"
+                         data-name="1415"
+                         data-description="Between section 12 and 13. 1415 is the main fiber hub for all connections that do not originate in the truck pedistal."
+                         data-fiber="Main Hub"
+                         data-image="location4-9.jpg"
+                         data-number="9"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="WEP Fiber Only">
+                        <span class="marker-number">9</span>
+                    </div>
+                
+                </div>
+            </div>
+            
+            <div class="map-panel " id="map5">
+                <div class="map-container">
+                    <img src="map4.jpg" alt="Tiger Walk Club WEP Fiber Only" class="map-image">
+            
+                    <div class="location-marker" style="top: 28%; left: 31%;"
+                         data-location-id="5.1"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map5"
+                         data-name="Home Radio"
+                         data-description="6 ST - 5th Floor of South West Recruiting Building"
+                         data-fiber="6 ST"
+                         data-image="location5-1.jpg"
+                         data-number="1"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="Tiger Walk Club WEP Fiber Only">
+                        <span class="marker-number">1</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 38%; left: 42%;"
+                         data-location-id="5.2"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map5"
+                         data-name="Away Radio"
+                         data-description="6 ST - 5th Floor of South West Recruiting Building"
+                         data-fiber="6 ST"
+                         data-image="location5-2.jpg"
+                         data-number="2"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="Tiger Walk Club WEP Fiber Only">
+                        <span class="marker-number">2</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 38%; left: 35%;"
+                         data-location-id="5.3"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map5"
+                         data-name="Press Level on Wall"
+                         data-description="12 ST - 5th Floor of South West Recruiting Building"
+                         data-fiber="12 ST"
+                         data-image="location5-3.jpg"
+                         data-number="3"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="Tiger Walk Club WEP Fiber Only">
+                        <span class="marker-number">3</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 72%; left: 72%;"
+                         data-location-id="5.4"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map5"
+                         data-name="TWC Front Door Brick Wall"
+                         data-description="6 ST - Inside the white box directly to your right when entering the glass doors at main entrance."
+                         data-fiber="6 ST"
+                         data-image="location5-4.jpg"
+                         data-number="4"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="Tiger Walk Club WEP Fiber Only">
+                        <span class="marker-number">4</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 54%; left: 58%;"
+                         data-location-id="5.5"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map5"
+                         data-name="TWC Main Entrance Blue Wall"
+                         data-description="12 ST - Through 1st floor main entrance, the fiber box is near the floor near the blue wall."
+                         data-fiber="12 ST"
+                         data-image="location5-5.jpg"
+                         data-number="5"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="Tiger Walk Club WEP Fiber Only">
+                        <span class="marker-number">5</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 52%; left: 66%;"
+                         data-location-id="5.6"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map5"
+                         data-name="AV Room 0463"
+                         data-description="24 SC - Hallway across from the bathrooms on the 1st floor."
+                         data-fiber="24 SC"
+                         data-image="location5-6.jpg"
+                         data-number="6"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="Tiger Walk Club WEP Fiber Only">
+                        <span class="marker-number">6</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 52%; left: 84%;"
+                         data-location-id="5.7"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map5"
+                         data-name="Locker Room"
+                         data-description="12 ST - Meeting room in the back of the locker room."
+                         data-fiber="12 ST"
+                         data-image="location5-7.jpg"
+                         data-number="7"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="Tiger Walk Club WEP Fiber Only">
+                        <span class="marker-number">7</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 52%; left: 43%;"
+                         data-location-id="5.8"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map5"
+                         data-name="TV Wall"
+                         data-description="6 ST - Beside the large video wall on in the 1st floor TWC."
+                         data-fiber="6 ST"
+                         data-image="location5-8.jpg"
+                         data-number="8"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="Tiger Walk Club WEP Fiber Only">
+                        <span class="marker-number">8</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 48%; left: 45%;"
+                         data-location-id="5.9"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map5"
+                         data-name="TWC 2nd Floor"
+                         data-description="6 ST - No Power - Concourse Level - Just off elevator through the TWC doors by the stairs."
+                         data-fiber="6 ST"
+                         data-image="location5-9.jpg"
+                         data-number="9"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="Tiger Walk Club WEP Fiber Only">
+                        <span class="marker-number">9</span>
+                    </div>
+                
+                </div>
+            </div>
+            
+            <div class="map-panel " id="map6">
+                <div class="map-container">
+                    <img src="map2.jpg" alt="Truck Patches" class="map-image">
+            
+                    <div class="location-marker" style="top: 37%; left: 25%;"
+                         data-location-id="6.1"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map6"
+                         data-name="Left 25"
+                         data-description="12 ST, 3 SMPTE, 2 Triax, 6 XLR - Located on the photodeck at the North 25 yd line on the third floor concourse"
+                         data-fiber="12 ST + 3 SMPTE + 2 Triax + 6 XLR"
+                         data-image="location6-1.jpg"
+                         data-number="1"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="Truck Patches">
+                        <span class="marker-number">1</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 46%; left: 23%;"
+                         data-location-id="6.2"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map6"
+                         data-name="50 yd"
+                         data-description="12 ST, 6 SMPTE, 4 Triax, 6 XLR - Located on the photodeck at the 50 yd line on the third floor concourse"
+                         data-fiber="12 ST + 6 SMPTE + 4 Triax + 6 XLR"
+                         data-image="location6-2.jpg"
+                         data-number="2"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="Truck Patches">
+                        <span class="marker-number">2</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 55%; left: 25%;"
+                         data-location-id="6.3"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map6"
+                         data-name="Right 25"
+                         data-description="12 ST, 3 SMPTE, 2 Triax, 6 XLR - Located on the photodeck at the South 25 yd line on the third floor concourse"
+                         data-fiber="12 ST + 3 SMPTE + 2 Triax + 6 XLR"
+                         data-image="location6-3.jpg"
+                         data-number="3"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="Truck Patches">
+                        <span class="marker-number">3</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 35%; left: 22%;"
+                         data-location-id="6.4"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map6"
+                         data-name="Booth"
+                         data-description="48 ST, 3 SMPTE, 2 Triax, 36 (DT12) XLR - Located off the North West elevator - take the last hallway on your right and the room is straight down the hallway from the door."
+                         data-fiber="48 ST + 3 SMPTE + 2 Triax + 36 XLR"
+                         data-image="location6-4.jpg"
+                         data-number="4"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="Truck Patches">
+                        <span class="marker-number">4</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 85%; left: 50%;"
+                         data-location-id="6.5"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map6"
+                         data-name="High South EZ"
+                         data-description="12 ST, 3 SMPTE, 2 Triax, 6 XLR - Located at the top of the South Endzone directly under the VideoBoard clock."
+                         data-fiber="12 ST + 3 SMPTE + 2 Triax + 6 XLR"
+                         data-image="location6-5.jpg"
+                         data-number="5"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="Truck Patches">
+                        <span class="marker-number">5</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 5%; left: 50%;"
+                         data-location-id="6.6"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map6"
+                         data-name="High North EZ"
+                         data-description="12 ST, 3 SMPTE, 2 Triax, 6 XLR - Located inside the North ScoreBoard. Enter from the top of the bowl in section 41."
+                         data-fiber="12 ST + 3 SMPTE + 2 Triax + 6 XLR"
+                         data-image="location6-6.jpg"
+                         data-number="6"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="Truck Patches">
+                        <span class="marker-number">6</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 42%; left: 11%;"
+                         data-location-id="6.7"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map6"
+                         data-name="West Truck Box"
+                         data-description="24 LC - Located between the West side elevators - this pedestal holds the connection between 1415 and Truck Pedestal. It also holds some legacy cables from when this was the main stadium truck pedestal."
+                         data-fiber="24 LC"
+                         data-image=""
+                         data-number="7"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="Truck Patches">
+                        <span class="marker-number">7</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 52%; left: 22%;"
+                         data-location-id="6.8"
+                         data-venue-id="jordan-hare"
+                         data-map-id="map6"
+                         data-name="Official Replay"
+                         data-description="12 ST - Take the South West Elevator, take the last door on your left and the official replay room is the 4th door on your right."
+                         data-fiber="12 ST"
+                         data-image="location6-8.jpg"
+                         data-number="8"
+                         data-venue-name="Jordan-Hare Stadium"
+                         data-map-label="Truck Patches">
+                        <span class="marker-number">8</span>
+                    </div>
+                
+                </div>
+            </div>
+            </div></section>
 
-    <div class="map-container" data-map-id="map6">
-      <div class="map-label">Jordan-Hare Stadium Tuck <br>Patches From Truck Dock</div>
-      <div class="map-content">
-        <img src="map2.jpg" alt="Map 6" class="map-image" />
-        <div class="location-wrapper" style="top: 37%; left: 25%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info6.1">
-            <span class="icon-label">1</span>
-          </div>
-        </div>
-        <div id="info6.1" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Left 25</strong><br>
-          <img src="location6-1.jpg" alt="Location 1" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>12 ST <br>3 SMPTE <br>2 Triax <br>6 XLR <br> Located on the photodeck at the North 25 yd line on the third floor concourse</p>
-        </div>
+        <section class="venue" id="plainsman-park">
+            <h2 class="venue-title">Plainsman Park</h2>
+            <div class="map-tabs">
+        
+                <button class="map-tab active" data-map="map7">Plainsman Park</button>
+            </div><div class="maps-container">
+            <div class="map-panel active" id="map7">
+                <div class="map-container">
+                    <img src="map5.jpg" alt="Plainsman Park" class="map-image">
+            
+                    <div class="location-marker" style="top: 68%; left: 34%;"
+                         data-location-id="7.1"
+                         data-venue-id="plainsman-park"
+                         data-map-id="map7"
+                         data-name="Low Third"
+                         data-description="12 ST"
+                         data-fiber="12 ST"
+                         data-image=""
+                         data-number="1"
+                         data-venue-name="Plainsman Park"
+                         data-map-label="Plainsman Park">
+                        <span class="marker-number">1</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 93%; left: 45.5%;"
+                         data-location-id="7.2"
+                         data-venue-id="plainsman-park"
+                         data-map-id="map7"
+                         data-name="High Home"
+                         data-description="12 ST"
+                         data-fiber="12 ST"
+                         data-image="location7-2.jpg"
+                         data-number="2"
+                         data-venue-name="Plainsman Park"
+                         data-map-label="Plainsman Park">
+                        <span class="marker-number">2</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 68%; left: 56%;"
+                         data-location-id="7.3"
+                         data-venue-id="plainsman-park"
+                         data-map-id="map7"
+                         data-name="Low First"
+                         data-description="12 ST"
+                         data-fiber="12 ST"
+                         data-image="location7-3.jpg"
+                         data-number="3"
+                         data-venue-name="Plainsman Park"
+                         data-map-label="Plainsman Park">
+                        <span class="marker-number">3</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 77%; left: 65%;"
+                         data-location-id="7.4"
+                         data-venue-id="plainsman-park"
+                         data-map-id="map7"
+                         data-name="High First"
+                         data-description="12 ST"
+                         data-fiber="12 ST"
+                         data-image="location7-4.jpg"
+                         data-number="4"
+                         data-venue-name="Plainsman Park"
+                         data-map-label="Plainsman Park">
+                        <span class="marker-number">4</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 93%; left: 40%;"
+                         data-location-id="7.5"
+                         data-venue-id="plainsman-park"
+                         data-map-id="map7"
+                         data-name="War Eagle Productions (Booth)"
+                         data-description="12 ST"
+                         data-fiber="12 ST"
+                         data-image="location7-5.jpg"
+                         data-number="5"
+                         data-venue-name="Plainsman Park"
+                         data-map-label="Plainsman Park">
+                        <span class="marker-number">5</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 5%; left: 42%;"
+                         data-location-id="7.6"
+                         data-venue-id="plainsman-park"
+                         data-map-id="map7"
+                         data-name="Centerfield"
+                         data-description="24 ST"
+                         data-fiber="24 ST"
+                         data-image="location7-6.jpg"
+                         data-number="6"
+                         data-venue-name="Plainsman Park"
+                         data-map-label="Plainsman Park">
+                        <span class="marker-number">6</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 33%; left: 16%;"
+                         data-location-id="7.7"
+                         data-venue-id="plainsman-park"
+                         data-map-id="map7"
+                         data-name="Left Field"
+                         data-description="12 ST"
+                         data-fiber="12 ST"
+                         data-image="location7-7.jpg"
+                         data-number="7"
+                         data-venue-name="Plainsman Park"
+                         data-map-label="Plainsman Park">
+                        <span class="marker-number">7</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 33%; left: 14%;"
+                         data-location-id="7.8"
+                         data-venue-id="plainsman-park"
+                         data-map-id="map7"
+                         data-name="Auburn Bullpen"
+                         data-description="12 ST"
+                         data-fiber="12 ST"
+                         data-image="location7-8.jpg"
+                         data-number="8"
+                         data-venue-name="Plainsman Park"
+                         data-map-label="Plainsman Park">
+                        <span class="marker-number">8</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 39%; left: 79%;"
+                         data-location-id="7.9"
+                         data-venue-id="plainsman-park"
+                         data-map-id="map7"
+                         data-name="PA Room"
+                         data-description="24 SC"
+                         data-fiber="24 SC"
+                         data-image="location7-9.jpg"
+                         data-number="9"
+                         data-venue-name="Plainsman Park"
+                         data-map-label="Plainsman Park">
+                        <span class="marker-number">9</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 44%; left: 83%;"
+                         data-location-id="7.10"
+                         data-venue-id="plainsman-park"
+                         data-map-id="map7"
+                         data-name="PA Room Closet"
+                         data-description="24 SC"
+                         data-fiber="24 SC"
+                         data-image="location7-10.jpg"
+                         data-number="10"
+                         data-venue-name="Plainsman Park"
+                         data-map-label="Plainsman Park">
+                        <span class="marker-number">10</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 70%; left: 31%;"
+                         data-location-id="7.11"
+                         data-venue-id="plainsman-park"
+                         data-map-id="map7"
+                         data-name="Umpire Review Room"
+                         data-description="6 ST"
+                         data-fiber="6 ST"
+                         data-image="location7-11.jpg"
+                         data-number="11"
+                         data-venue-name="Plainsman Park"
+                         data-map-label="Plainsman Park">
+                        <span class="marker-number">11</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 93%; left: 52.5%;"
+                         data-location-id="7.12"
+                         data-venue-id="plainsman-park"
+                         data-map-id="map7"
+                         data-name="Away Radio"
+                         data-description="10 ST"
+                         data-fiber="10 ST"
+                         data-image="location7-12.jpg"
+                         data-number="12"
+                         data-venue-name="Plainsman Park"
+                         data-map-label="Plainsman Park">
+                        <span class="marker-number">12</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 94%; left: 50%;"
+                         data-location-id="7.13"
+                         data-venue-id="plainsman-park"
+                         data-map-id="map7"
+                         data-name="Auburn Radio"
+                         data-description="10 ST"
+                         data-fiber="10 ST"
+                         data-image="location7-13.jpg"
+                         data-number="13"
+                         data-venue-name="Plainsman Park"
+                         data-map-label="Plainsman Park">
+                        <span class="marker-number">13</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 32%; left: 3%;"
+                         data-location-id="7.14"
+                         data-venue-id="plainsman-park"
+                         data-map-id="map7"
+                         data-name="Truck Pedestal"
+                         data-description="tbd"
+                         data-fiber="TBD"
+                         data-image="location7-14.jpg"
+                         data-number="14"
+                         data-venue-name="Plainsman Park"
+                         data-map-label="Plainsman Park">
+                        <span class="marker-number">14</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 49%; left: 82%;"
+                         data-location-id="7.15"
+                         data-venue-id="plainsman-park"
+                         data-map-id="map7"
+                         data-name="Concourse"
+                         data-description="12 ST"
+                         data-fiber="12 ST"
+                         data-image="location7-15.jpg"
+                         data-number="15"
+                         data-venue-name="Plainsman Park"
+                         data-map-label="Plainsman Park">
+                        <span class="marker-number">15</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 97%; left: 40%;"
+                         data-location-id="7.16"
+                         data-venue-id="plainsman-park"
+                         data-map-id="map7"
+                         data-name="TV Booth Closet"
+                         data-description="6 ST"
+                         data-fiber="6 ST"
+                         data-image="location7-16.jpg"
+                         data-number="16"
+                         data-venue-name="Plainsman Park"
+                         data-map-label="Plainsman Park">
+                        <span class="marker-number">16</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 59%; left: 73%;"
+                         data-location-id="7.17"
+                         data-venue-id="plainsman-park"
+                         data-map-id="map7"
+                         data-name="Broadcast Room"
+                         data-description="24 SC"
+                         data-fiber="24 SC"
+                         data-image="location7-17.jpg"
+                         data-number="17"
+                         data-venue-name="Plainsman Park"
+                         data-map-label="Plainsman Park">
+                        <span class="marker-number">17</span>
+                    </div>
+                
+                </div>
+            </div>
+            </div></section>
 
-        <div class="location-wrapper" style="top: 46%; left: 23%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info6.2">
-            <span class="icon-label">2</span>
-          </div>
-        </div>
-        <div id="info6.2" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>50 yd</strong><br>
-          <img src="location6-2.jpg" alt="Location 2" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>12 ST <br>6 SMPTE <br>4 Triax <br>6 XLR <br> Located on the photodeck at the 50 yd line on the third floor concourse</p>
-        </div>
+        <section class="venue" id="jane-moore-field">
+            <h2 class="venue-title">Jane B. Moore Field</h2>
+            <div class="map-tabs">
+        
+                <button class="map-tab active" data-map="map8">Jane B. Moore Field</button>
+            </div><div class="maps-container">
+            <div class="map-panel active" id="map8">
+                <div class="map-container">
+                    <img src="map3.jpg" alt="Jane B. Moore Field" class="map-image">
+            
+                    <div class="location-marker" style="top: 45%; left: 32%;"
+                         data-location-id="8.1"
+                         data-venue-id="jane-moore-field"
+                         data-map-id="map8"
+                         data-name="Low Third"
+                         data-description="6 ST in the right box. 12 ST in the left box (primarily saved for hawkeye)"
+                         data-fiber="6 ST + 12 ST"
+                         data-image="location8-1.jpg"
+                         data-number="1"
+                         data-venue-name="Jane B. Moore Field"
+                         data-map-label="Jane B. Moore Field">
+                        <span class="marker-number">1</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 66%; left: 49%;"
+                         data-location-id="8.2"
+                         data-venue-id="jane-moore-field"
+                         data-map-id="map8"
+                         data-name="PA Booth"
+                         data-description="12 ST in the front left of the PA room."
+                         data-fiber="12 ST"
+                         data-image="location8-2.jpg"
+                         data-number="2"
+                         data-venue-name="Jane B. Moore Field"
+                         data-map-label="Jane B. Moore Field">
+                        <span class="marker-number">2</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 45%; left: 62%;"
+                         data-location-id="8.3"
+                         data-venue-id="jane-moore-field"
+                         data-map-id="map8"
+                         data-name="Low First"
+                         data-description="18 ST in the left box. 12 ST in the left box (primarily saved for hawkeye)"
+                         data-fiber="18 ST + 12 ST"
+                         data-image="location8-3.jpg"
+                         data-number="3"
+                         data-venue-name="Jane B. Moore Field"
+                         data-map-label="Jane B. Moore Field">
+                        <span class="marker-number">3</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 46%; left: 74%;"
+                         data-location-id="8.4"
+                         data-venue-id="jane-moore-field"
+                         data-map-id="map8"
+                         data-name="Umpire Review Room"
+                         data-description="6 ST - Located on the outside wall of the first base side hitting facility."
+                         data-fiber="6 ST"
+                         data-image="location8-4.jpg"
+                         data-number="4"
+                         data-venue-name="Jane B. Moore Field"
+                         data-map-label="Jane B. Moore Field">
+                        <span class="marker-number">4</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 20%; left: 78%;"
+                         data-location-id="8.5"
+                         data-venue-id="jane-moore-field"
+                         data-map-id="map8"
+                         data-name="ESPN Pedestal"
+                         data-description="tbd"
+                         data-fiber="TBD"
+                         data-image="location8-5.jpg"
+                         data-number="5"
+                         data-venue-name="Jane B. Moore Field"
+                         data-map-label="Jane B. Moore Field">
+                        <span class="marker-number">5</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 5%; left: 50%;"
+                         data-location-id="8.6"
+                         data-venue-id="jane-moore-field"
+                         data-map-id="map8"
+                         data-name="Centerfield"
+                         data-description="12 ST"
+                         data-fiber="12 ST"
+                         data-image="location8-6.jpg"
+                         data-number="6"
+                         data-venue-name="Jane B. Moore Field"
+                         data-map-label="Jane B. Moore Field">
+                        <span class="marker-number">6</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 66%; left: 46%;"
+                         data-location-id="8.7"
+                         data-venue-id="jane-moore-field"
+                         data-map-id="map8"
+                         data-name="TV Booth"
+                         data-description="12 ST - Under Desk"
+                         data-fiber="12 ST"
+                         data-image="location8-7.jpg"
+                         data-number="7"
+                         data-venue-name="Jane B. Moore Field"
+                         data-map-label="Jane B. Moore Field">
+                        <span class="marker-number">7</span>
+                    </div>
+                
+                </div>
+            </div>
+            </div></section>
 
-        <div class="location-wrapper" style="top: 55%; left: 25%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info6.3">
-            <span class="icon-label">3</span>
-          </div>
-        </div>
-        <div id="info6.3" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Right 25</strong><br>
-          <img src="location6-3.jpg" alt="Location 3" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>12 ST <br>3 SMPTE <br>2 Triax <br>6 XLR <br> Located on the photodeck at the South 25 yd line on the third floor concourse</p>
-        </div>
+        <section class="venue" id="aquatics-center">
+            <h2 class="venue-title">James E. Martin Aquatics Center</h2>
+            <div class="map-tabs">
+        
+                <button class="map-tab active" data-map="map9">Aquatics Center</button>
+            </div><div class="maps-container">
+            <div class="map-panel active" id="map9">
+                <div class="map-container">
+                    <img src="map9.jpg" alt="Aquatics Center" class="map-image">
+            
+                    <div class="location-marker" style="top: 60%; left: 23%;"
+                         data-location-id="9.1"
+                         data-venue-id="aquatics-center"
+                         data-map-id="map9"
+                         data-name="Left Concourse (2nd Floor)"
+                         data-description="Facing the pool on the 2nd floor concourse, the left camera well is on the far left."
+                         data-fiber=""
+                         data-image="location9-1.jpg"
+                         data-number="1"
+                         data-venue-name="James E. Martin Aquatics Center"
+                         data-map-label="Aquatics Center">
+                        <span class="marker-number">1</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 60%; left: 35%;"
+                         data-location-id="9.2"
+                         data-venue-id="aquatics-center"
+                         data-map-id="map9"
+                         data-name="Middle Concourse (2nd Floor)"
+                         data-description="Facing the pool on the 2nd floor concourse, the middle camera well is at the middle"
+                         data-fiber=""
+                         data-image="location9-2.jpg"
+                         data-number="2"
+                         data-venue-name="James E. Martin Aquatics Center"
+                         data-map-label="Aquatics Center">
+                        <span class="marker-number">2</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 60%; left: 52%;"
+                         data-location-id="9.3"
+                         data-venue-id="aquatics-center"
+                         data-map-id="map9"
+                         data-name="Right Concourse (2nd Floor)"
+                         data-description="Facing the pool on the 2nd floor concourse, the right camera well is on the far right."
+                         data-fiber=""
+                         data-image="location9-3.jpg"
+                         data-number="3"
+                         data-venue-name="James E. Martin Aquatics Center"
+                         data-map-label="Aquatics Center">
+                        <span class="marker-number">3</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 48%; left: 72%;"
+                         data-location-id="9.4"
+                         data-venue-id="aquatics-center"
+                         data-map-id="map9"
+                         data-name="High Endzone (2nd Floor)"
+                         data-description="Facing the pool on the 2nd level concourse, the high endzone camera well is on the far right of the venue at the top of the stairs."
+                         data-fiber=""
+                         data-image="location9-4.jpg"
+                         data-number="4"
+                         data-venue-name="James E. Martin Aquatics Center"
+                         data-map-label="Aquatics Center">
+                        <span class="marker-number">4</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 52%; left: 23%;"
+                         data-location-id="9.5"
+                         data-venue-id="aquatics-center"
+                         data-map-id="map9"
+                         data-name="Poolside Left"
+                         data-description="Facing the pool on pool level, the poolside left box is on the far left."
+                         data-fiber=""
+                         data-image="location9-5.jpg"
+                         data-number="5"
+                         data-venue-name="James E. Martin Aquatics Center"
+                         data-map-label="Aquatics Center">
+                        <span class="marker-number">5</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 52%; left: 52%;"
+                         data-location-id="9.6"
+                         data-venue-id="aquatics-center"
+                         data-map-id="map9"
+                         data-name="Poolside Right"
+                         data-description="Facing the pool on pool level, the poolside right box is on the far right."
+                         data-fiber=""
+                         data-image="location9-6.jpg"
+                         data-number="6"
+                         data-venue-name="James E. Martin Aquatics Center"
+                         data-map-label="Aquatics Center">
+                        <span class="marker-number">6</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 52%; left: 35%;"
+                         data-location-id="9.7"
+                         data-venue-id="aquatics-center"
+                         data-map-id="map9"
+                         data-name="Poolside Middle"
+                         data-description="Facing the pool on pool level, the poolside middle box is at the middle."
+                         data-fiber=""
+                         data-image="location9-7.jpg"
+                         data-number="7"
+                         data-venue-name="James E. Martin Aquatics Center"
+                         data-map-label="Aquatics Center">
+                        <span class="marker-number">7</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 52%; left: 60%;"
+                         data-location-id="9.8"
+                         data-venue-id="aquatics-center"
+                         data-map-id="map9"
+                         data-name="Closet by trophy case poolside"
+                         data-description="Facing the pool on pool level, the closet by the trophy case is just below the right side camera platform."
+                         data-fiber=""
+                         data-image="location9-8.jpg"
+                         data-number="8"
+                         data-venue-name="James E. Martin Aquatics Center"
+                         data-map-label="Aquatics Center">
+                        <span class="marker-number">8</span>
+                    </div>
+                
+                </div>
+            </div>
+            </div></section>
 
-        <div class="location-wrapper" style="top: 35%; left: 22%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info6.4">
-            <span class="icon-label">4</span>
-          </div>
-        </div>
-        <div id="info6.4" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Booth</strong><br>
-          <img src="location6-4.jpg" alt="Location 4" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>48 ST <br>3 SMPTE <br>2 Triax <br>36 (DT12) XLR <br> Located off the North West elevator - take the last hallway on your right
-          and the room is straight down the hallway from the door.</p>
-        </div>  
+        <section class="venue" id="soccer-complex">
+            <h2 class="venue-title">Auburn Soccer Complex</h2>
+            <div class="map-tabs">
+        
+                <button class="map-tab active" data-map="map10">Auburn Soccer Complex</button>
+            </div><div class="maps-container">
+            <div class="map-panel active" id="map10">
+                <div class="map-container">
+                    <img src="map10.jpg" alt="Auburn Soccer Complex" class="map-image">
+            
+                    <div class="location-marker" style="top: 85%; left: 42%;"
+                         data-location-id="10.1"
+                         data-venue-id="soccer-complex"
+                         data-map-id="map10"
+                         data-name="Tower"
+                         data-description="On top of the booth. Accessed by a ladder on the backside. 12 ST fiber"
+                         data-fiber="12 ST"
+                         data-image="location10-1.jpg"
+                         data-number="1"
+                         data-venue-name="Auburn Soccer Complex"
+                         data-map-label="Auburn Soccer Complex">
+                        <span class="marker-number">1</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 20%; left: 76%;"
+                         data-location-id="10.2"
+                         data-venue-id="soccer-complex"
+                         data-map-id="map10"
+                         data-name="Video Board"
+                         data-description="Directly under the videoboard. 24 ST fiber. The last 6 are hard patched to bench fiber (5)."
+                         data-fiber="24 ST"
+                         data-image="location10-2.jpg"
+                         data-number="2"
+                         data-venue-name="Auburn Soccer Complex"
+                         data-map-label="Auburn Soccer Complex">
+                        <span class="marker-number">2</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 50%; left: 8%;"
+                         data-location-id="10.3"
+                         data-venue-id="soccer-complex"
+                         data-map-id="map10"
+                         data-name="North Endzone"
+                         data-description="Opposite side of the field from the videoboard. Located behind the fence from the goal. 12 ST fiber."
+                         data-fiber="12 ST"
+                         data-image="location10-3.jpg"
+                         data-number="3"
+                         data-venue-name="Auburn Soccer Complex"
+                         data-map-label="Auburn Soccer Complex">
+                        <span class="marker-number">3</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 76%; left: 42%;"
+                         data-location-id="10.4"
+                         data-venue-id="soccer-complex"
+                         data-map-id="map10"
+                         data-name="50 yd Line"
+                         data-description="Hanging on fence in front of bleachers. 12 ST fiber."
+                         data-fiber="12 ST"
+                         data-image="location10-4.jpg"
+                         data-number="4"
+                         data-venue-name="Auburn Soccer Complex"
+                         data-map-label="Auburn Soccer Complex">
+                        <span class="marker-number">4</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 13%; left: 42%;"
+                         data-location-id="10.5"
+                         data-venue-id="soccer-complex"
+                         data-map-id="map10"
+                         data-name="Benches"
+                         data-description="Between the benches under the gazeebo. Usually located in the manhole. Patches from 19-24 of videoboard patches. 6 ST fiber"
+                         data-fiber="6 ST"
+                         data-image="location10-5.jpg"
+                         data-number="5"
+                         data-venue-name="Auburn Soccer Complex"
+                         data-map-label="Auburn Soccer Complex">
+                        <span class="marker-number">5</span>
+                    </div>
+                
+                </div>
+            </div>
+            </div></section>
 
-        <div class="location-wrapper" style="top: 85%; left: 50%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info6.5">
-            <span class="icon-label">5</span>
-          </div>
+        <section class="venue" id="equestrian">
+            <h2 class="venue-title">Equestrian Center</h2>
+            <div class="map-tabs">
+        
+                <button class="map-tab active" data-map="map11">Equestrian</button>
+            </div><div class="maps-container">
+            <div class="map-panel active" id="map11">
+                <div class="map-container">
+                    <img src="map11.jpg" alt="Equestrian" class="map-image">
+            
+                    <div class="location-marker" style="top: 55%; left: 96%;"
+                         data-location-id="11.1"
+                         data-venue-id="equestrian"
+                         data-map-id="map11"
+                         data-name="Booth"
+                         data-description="Booth where all the magic happens."
+                         data-fiber=""
+                         data-image="location11-1.jpg"
+                         data-number="1"
+                         data-venue-name="Equestrian Center"
+                         data-map-label="Equestrian">
+                        <span class="marker-number">1</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 53%; left: 60%;"
+                         data-location-id="11.2"
+                         data-venue-id="equestrian"
+                         data-map-id="map11"
+                         data-name="Covered Arena"
+                         data-description="Near LaDove lounge is a box mounted at feet level. 6 ST"
+                         data-fiber="6 ST"
+                         data-image="location11-2.jpg"
+                         data-number="2"
+                         data-venue-name="Equestrian Center"
+                         data-map-label="Equestrian">
+                        <span class="marker-number">2</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 44%; left: 63%;"
+                         data-location-id="11.3"
+                         data-venue-id="equestrian"
+                         data-map-id="map11"
+                         data-name="CrowsNest"
+                         data-description="Unterminated. Located in the electrical boxes mounted on the deck beside LaDove. 6 strands."
+                         data-fiber="6 strands (unterminated)"
+                         data-image="location11-3.jpg"
+                         data-number="3"
+                         data-venue-name="Equestrian Center"
+                         data-map-label="Equestrian">
+                        <span class="marker-number">3</span>
+                    </div>
+                
+                    <div class="location-marker" style="top: 45%; left: 52%;"
+                         data-location-id="11.4"
+                         data-venue-id="equestrian"
+                         data-map-id="map11"
+                         data-name="LaDove Lounge"
+                         data-description="Single Coax converted to SDI from booth (1). This converts to HDMI into extron machine for the TVs in LaDove."
+                         data-fiber="Coax/SDI"
+                         data-image="location11-4.jpg"
+                         data-number="4"
+                         data-venue-name="Equestrian Center"
+                         data-map-label="Equestrian">
+                        <span class="marker-number">4</span>
+                    </div>
+                
+                </div>
+            </div>
+            </div></section>
         </div>
-        <div id="info6.5" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>High South EZ</strong><br>
-          <img src="location6-5.jpg" alt="Location 5" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>12 ST <br>3 SMPTE <br>2 Triax <br>6 XLR <br> Located at the top of the South Endzone directly under the VideoBoard clock.</p>
-        </div>
+    </main>
 
-        <div class="location-wrapper" style="top: 5%; left: 50%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info6.6">
-            <span class="icon-label">6</span>
-          </div>
+    <!-- Location Detail Modal -->
+    <div id="location-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-content">
+            <button class="modal-close" aria-label="Close modal">&times;</button>
+            <div class="modal-header">
+                <span class="location-number" id="modal-number"></span>
+                <h2 id="modal-title">Location Name</h2>
+            </div>
+            <div class="modal-body">
+                <div class="location-image-container">
+                    <img id="modal-image" src="" alt="Location photo" class="location-image">
+                </div>
+                <div class="location-info">
+                    <p id="modal-description" class="location-description"></p>
+                    <div id="modal-fiber" class="fiber-info"></div>
+                </div>
+            </div>
         </div>
-        <div id="info6.6" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>High North EZ</strong><br>
-          <img src="location6-6.jpg" alt="Location 6" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>12 ST <br>3 SMPTE <br>2 Triax <br>6 XLR <br> Located inside the North ScoreBoard. Enter from the top of the bowl in section 41. </p>
-        </div>
+    </div>
 
-        <div class="location-wrapper" style="top: 42%; left: 11%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info6.7">
-            <span class="icon-label">7</span>
-          </div>
-        </div>
-        <div id="info6.7" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>West Truck Box</strong><br>
-          <img src="location6-7.jpg" alt="Location 7" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>24 LC - Located between the West side elevators - this pedestal holds the connection between 1415 and Truck Pedestal. 
-            It also holds some legacy cables from when this was the main stadium truck pedestal. 
-          </p>
-        </div>
-
-        <div class="location-wrapper" style="top: 52%; left: 22%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info6.8">
-            <span class="icon-label">8</span>
-          </div>
-        </div>
-        <div id="info6.8" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Official Replay</strong><br>
-          <img src="location6-8.jpg" alt="Location 8" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>12 ST - Take the South West Elevator, take the last door on your left and the official replay room is the 4th door on your right. </p>
-        </div>  
-        <button class="close-button">✕</button> <!-- ADDED for map6 -->
-      </div> <!-- closes map-content for map6 -->
-    </div> <!-- closes map-container for map6 -->
-
-    <div class="map-container" data-map-id="map7">
-      <div class="map-label">Plainsman Park</div>
-      <div class="map-content">
-        <img src="map5.jpg" alt="Map 7" class="map-image" />
-        <div class="location-wrapper" style="top: 68%; left: 34%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info7.1">
-            <span class="icon-label">1</span>
-          </div>
-        </div>
-        <div id="info7.1" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Low Third</strong><br>
-          <img src="location7-1.jpg" alt="Location 1" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>12 ST </p>
-        </div>
-
-        <div class="location-wrapper" style="top: 93%; left: 45.5%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info7.2">
-            <span class="icon-label">2</span>
-          </div>
-        </div>
-        <div id="info7.2" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>High Home</strong><br>
-          <img src="location7-2.jpg" alt="Location 2" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>12 ST</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 68%; left: 56%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info7.3">
-            <span class="icon-label">3</span>
-          </div>
-        </div>
-        <div id="info7.3" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Low First</strong><br>
-          <img src="location7-3.jpg" alt="Location 3" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>12 ST </p>
-        </div>
-
-        <div class="location-wrapper" style="top: 77%; left: 65%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info7.4">
-            <span class="icon-label">4</span>
-          </div>
-        </div>
-        <div id="info7.4" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>High First</strong><br>
-          <img src="location7-4.jpg" alt="Location 4" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>12 ST</p>
-        </div>  
-
-        <div class="location-wrapper" style="top: 93%; left: 40%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info7.5">
-            <span class="icon-label">5</span>
-          </div>
-        </div>
-        <div id="info7.5" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>War Eagle Productions (Booth)</strong><br>
-          <img src="location7-5.jpg" alt="Location 5" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>12 ST</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 5%; left: 42%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info7.6">
-            <span class="icon-label">6</span>
-          </div>
-        </div>
-        <div id="info7.6" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Centerfield</strong><br>
-          <img src="location7-6.jpg" alt="Location 6" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>24 ST</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 33%; left: 16%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info7.7">
-            <span class="icon-label">7</span>
-          </div>
-        </div>
-        <div id="info7.7" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Left Field</strong><br>
-          <img src="location7-7.jpg" alt="Location 7" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>12 ST</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 33%; left: 14%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info7.8">
-            <span class="icon-label">8</span>
-          </div>
-        </div>
-        <div id="info7.8" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Auburn Bullpen</strong><br>
-          <img src="location7-8.jpg" alt="Location 8" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>12 ST</p>
-        </div>  
-
-        <div class="location-wrapper" style="top: 39%; left: 79%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info7.9">
-            <span class="icon-label">9</span>
-          </div>
-        </div>
-        <div id="info7.9" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>PA Room</strong><br>
-          <img src="location7-9.jpg" alt="Location 9" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>24 SC</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 44%; left: 83%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info7.10">
-            <span class="icon-label">10</span>
-          </div>
-        </div>
-        <div id="info7.10" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>PA Room Closet</strong><br>
-          <img src="location7-10.jpg" alt="Location 10" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>24 SC</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 70%; left: 31%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info7.11">
-            <span class="icon-label">11</span>
-          </div>
-        </div>
-        <div id="info7.11" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Umpire Review Room</strong><br>
-          <img src="location7-11.jpg" alt="Location 11" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>6 ST</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 93%; left: 52.5%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info7.12">
-            <span class="icon-label">12</span>
-          </div>
-        </div>
-        <div id="info7.12" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Away Radio</strong><br>
-          <img src="location7-12.jpg" alt="Location 12" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>10 ST</p>
-        </div>  
-
-        <div class="location-wrapper" style="top: 94%; left: 50%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info7.13">
-            <span class="icon-label">13</span>
-          </div>
-        </div>
-        <div id="info7.13" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Auburn Radio</strong><br>
-          <img src="location7-13.jpg" alt="Location 13" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>10 ST</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 32%; left: 3%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info7.14">
-            <span class="icon-label">14</span>
-          </div>
-        </div>
-        <div id="info7.14" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Truck Pedestal</strong><br>
-          <img src="location7-14.jpg" alt="Location 14" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>tbd</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 49%; left: 82%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info7.15">
-            <span class="icon-label">15</span>
-          </div>
-        </div>
-        <div id="info7.15" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Concourse</strong><br>
-          <img src="location7-15.jpg" alt="Location 15" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>12 ST</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 97%; left: 40%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info7.16">
-            <span class="icon-label">16</span>
-          </div>
-        </div>
-        <div id="info7.16" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>TV Booth Closet</strong><br>
-          <img src="location7-16.jpg" alt="Location 16" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>6 ST</p>
-        </div>  
-
-        <div class="location-wrapper" style="top: 59%; left: 73%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info7.17">
-            <span class="icon-label">17</span>
-          </div>
-        </div>
-        <div id="info7.17" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Broadcast Room</strong><br>
-          <img src="location7-17.jpg" alt="Location 17" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>24 SC</p>
-        </div>
-        <button class="close-button">✕</button> <!-- ADDED for map7 -->
-      </div> <!-- closes map-content for map7 -->
-    </div> <!-- closes map-container for map7 -->
-
-    <div class="map-container" data-map-id="map8">
-      <div class="map-label">Jane B. Moore Field</div>
-      <div class="map-content">
-        <img src="map3.jpg" alt="Map 8" class="map-image" />
-
-        <div class="location-wrapper" style="top: 45%; left: 32%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info8.1">
-            <span class="icon-label">1</span>
-          </div>
-        </div>
-        <div id="info8.1" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Low Third</strong><br>
-          <img src="location8-1.jpg" alt="Location 1" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>6 ST in the right box. 12 ST in the left box (primarily saved for hawkeye)</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 66%; left: 49%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info8.2">
-            <span class="icon-label">2</span>
-          </div>
-        </div>
-        <div id="info8.2" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>PA Booth</strong><br>
-          <img src="location8-2.jpg" alt="Location 2" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>12 ST in the front left of the PA room. </p>
-        </div>
-
-        <div class="location-wrapper" style="top: 45%; left: 62%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info8.3">
-            <span class="icon-label">3</span>
-          </div>
-        </div>
-        <div id="info8.3" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Low First</strong><br>
-          <img src="location8-3.jpg" alt="Location 3" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>18 St in the left box. 12 ST in the left box (primarily saved for hawkeye)</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 46%; left: 74%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info8.4">
-            <span class="icon-label">4</span>
-          </div>
-        </div>
-        <div id="info8.4" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Umpire Review Room</strong><br>
-          <img src="location8-4.jpg" alt="Location 4" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>6 ST - Located on the outside wall of the first base side hitting facility.</p>
-        </div>  
-
-        <div class="location-wrapper" style="top: 20%; left: 78%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info8.5">
-            <span class="icon-label">5</span>
-          </div>
-        </div>
-        <div id="info8.5" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>ESPN Pedestal</strong><br>
-          <img src="location8-5.jpg" alt="Location 5" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>tbd</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 5%; left: 50%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info8.6">
-            <span class="icon-label">6</span>
-          </div>
-        </div>
-        <div id="info8.6" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Centerfield</strong><br>
-          <img src="location8-6.jpg" alt="Location 6" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>12 ST</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 66%; left: 46%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info8.7">
-            <span class="icon-label">7</span>
-          </div>
-        </div>
-        <div id="info8.7" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>TV Booth</strong><br>
-          <img src="location8-7.jpg" alt="Location 7" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>12 ST - Under Desk </p>
-        </div>             
-
-        <button class="close-button">✕</button>
-      </div> <!-- closes map-content for map8 -->
-    </div> <!-- closes map-container for map8 -->
-
-
-    <div class="map-container" data-map-id="map9">
-      <div class="map-label">James E. Martin Aquatics Center<br>
-From closet by trophy case poolside</div>
-      <div class="map-content">
-        <img src="map9.jpg" alt="Map 9" class="map-image" />
-
-        <div class="location-wrapper" style="top: 60%; left: 23%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info9.1">
-            <span class="icon-label">1</span>
-          </div>
-        </div>
-        <div id="info9.1" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Left Concourse (2nd Floor)</strong><br>
-          <img src="location9-1.jpg" alt="Location 1" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Facing the pool on the 2nd floor concourse, the left camera well is on the far left.</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 60%; left: 35%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info9.2">
-            <span class="icon-label">2</span>
-          </div>
-        </div>
-        <div id="info9.2" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Middle Concourse (2nd Floor)</strong><br>
-          <img src="location9-2.jpg" alt="Location 2" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Facing the pool on the 2nd floor concourse, the middle camera well is at the middle</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 60%; left: 52%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info9.3">
-            <span class="icon-label">3</span>
-          </div>
-        </div>
-        <div id="info9.3" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Right Concourse (2nd Floor)</strong><br>
-          <img src="location9-3.jpg" alt="Location 3" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Facing the pool on the 2nd floor concourse, the right camera well is on the far right.</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 48%; left: 72%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info9.4">
-            <span class="icon-label">4</span>
-          </div>
-        </div>
-        <div id="info9.4" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>High Endzone (2nd Floor)</strong><br>
-          <img src="location9-4.jpg" alt="Location 4" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Facing the pool on the 2nd level concourse, the high endzone camera well is on the far right of the venue at the top of the stairs.</p>
-        </div>  
-
-        <div class="location-wrapper" style="top: 52%; left: 23%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info9.5">
-            <span class="icon-label">5</span>
-          </div>
-        </div>
-        <div id="info9.5" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Poolside Left </strong><br>
-          <img src="location9-5.jpg" alt="Location 5" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Facing the pool on pool level, the poolside left box is on the far left.</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 52%; left: 52%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info9.6">
-            <span class="icon-label">6</span>
-          </div>
-        </div>
-        <div id="info9.6" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Poolside Right</strong><br>
-          <img src="location9-6.jpg" alt="Location 6" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Facing the pool on pool level, the poolside right box is on the far right.</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 52%; left: 35%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info9.7">
-            <span class="icon-label">7</span>
-          </div>
-        </div>
-        <div id="info9.7" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Poolside Middle</strong><br>
-          <img src="location9-7.jpg" alt="Location 7" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Facing the pool on pool level, the poolside middle box is at the middle.</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 52%; left: 60%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info9.8">
-            <span class="icon-label">8</span>
-          </div>
-        </div>
-        <div id="info9.8" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Closet by trophy case poolside</strong><br>
-          <img src="location9-8.jpg" alt="Location 8" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Facing the pool on pool level, the closet by the trophy case is just below the right side camera platform.</p>
-        </div>  
-
-                   
-
-        <button class="close-button">✕</button>
-      </div> <!-- closes map-content for map9 -->
-    </div> <!-- closes map-container for map9 -->
-
- <div class="map-container" data-map-id="map10">
-      <div class="map-label">Auburn Soccer Complex <br>
-      From center of trailer top of bleachers</div>
-      <div class="map-content">
-        <img src="map10.jpg" alt="Map 10" class="map-image" />
-
-        <div class="location-wrapper" style="top: 85%; left: 42%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info10.1">
-            <span class="icon-label">1</span>
-          </div>
-        </div>
-        <div id="info10.1" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Tower</strong><br>
-          <img src="location10-1.jpg" alt="Location 1" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>On top of the booth. Accessed by a ladder on the backside.  12 ST fiber</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 20%; left: 76%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info10.2">
-            <span class="icon-label">2</span>
-          </div>
-        </div>
-        <div id="info10.2" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Video Board</strong><br>
-          <img src="location10-2.jpg" alt="Location 2" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Directly under the videoboard. 24 ST fiber. The last 6 are hard patched to bench fiber (5).</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 50%; left: 8%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info10.3">
-            <span class="icon-label">3</span>
-          </div>
-        </div>
-        <div id="info10.3" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>North Endzone</strong><br>
-          <img src="location10-3.jpg" alt="Location 3" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Opposite side of the field from the videoboard. Located behind the fence from the goal. 12 ST fiber.</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 76%; left: 42%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info10.4">
-            <span class="icon-label">4</span>
-          </div>
-        </div>
-        <div id="info10.4" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>50 yd Line</strong><br>
-          <img src="location10-4.jpg" alt="Location 4" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Hanging on fence in front of bleachers. 12 ST fiber. </p>
-        </div>  
-
-        <div class="location-wrapper" style="top: 13%; left: 42%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info10.5">
-            <span class="icon-label">5</span>
-          </div>
-        </div>
-        <div id="info10.5" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Benches</strong><br>
-          <img src="location10-5.jpg" alt="Location 5" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Between the benches under the gazeebo. Usually located in the manhole. Patches from 19-24 of videoboard patches. 6 ST fiber</p>
-        </div>
-
-        <button class="close-button">✕</button>
-      </div> <!-- closes map-content for map10 -->
-    </div> <!-- closes map-container for map10 -->
-
-
-<div class="map-container" data-map-id="map11">
-      <div class="map-label">Equestrian</div>
-      <div class="map-content">
-        <img src="map11.jpg" alt="Map 11" class="map-image" />
-
-        <div class="location-wrapper" style="top: 55%; left: 96%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info11.1">
-            <span class="icon-label">1</span>
-          </div>
-        </div>
-        <div id="info11.1" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Booth</strong><br>
-          <img src="location11-1.jpg" alt="Location 1" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Booth where all the magic happens.</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 53%; left: 60%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info11.2">
-            <span class="icon-label">2</span>
-          </div>
-        </div>
-        <div id="info11.2" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>Covered Arena</strong><br>
-          <img src="location11-2.jpg" alt="Location 2" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Near LaDove lounge is a box mounted at feet level. 6 ST</p>
-        </div>
-
-        <div class="location-wrapper" style="top: 44%; left: 63%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info11.3">
-            <span class="icon-label">3</span>
-          </div>
-        </div>
-        <div id="info11.3" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>CrowsNest</strong><br>
-          <img src="location11-3.jpg" alt="Location 3" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Unterminated. Located in the electrical boxes mounted on the deck beside LaDove. 6 strands.</p>
-        </div>
-         <div class="location-wrapper" style="top: 45%; left: 52%;">
-          <div class="location-icon map-one-arrows triangle" data-info-id="info11.4">
-            <span class="icon-label">4</span>
-          </div>
-        </div>
-        <div id="info11.4" class="floating-info-box">
-          <button class="info-close-button">✕</button>
-          <strong>LaDove Lounge</strong><br>
-          <img src="location11-4.jpg" alt="Location 4" style="max-width: 45%; height: auto; margin-top: 5px;" />
-          <p>Single Coax converted to SDI from booth (1). This converts to HDMI into extron machine for the TVs in LaDove. </p>
-        </div>
-
-        <button class="close-button">✕</button>
-      </div> <!-- closes map-content for map10 -->
-    </div> <!-- closes map-container for map10 -->
-
-  </div> <!-- closes map-row -->
-
-  <!-- JavaScript -->
-  <script src="script.js"></script>
-  <script src="header.js"></script>
-  <script src="nav.js"></script>
-  <script src="search.js"></script>
-
-  <!-- Register Service Worker -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js')
-        .then(reg => console.log('Service Worker registered'))
-        .catch(err => console.log('Service Worker registration failed:', err));
-    }
-  </script>
+    <script src="nav.js"></script>
+    <script src="script.js"></script>
+    <script src="search.js"></script>
+    <script src="image-zoom.js"></script>
+    <script>
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
+    </script>
 </body>
 </html>

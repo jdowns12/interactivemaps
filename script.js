@@ -1,13 +1,262 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // Track page visit for analytics
+  fetch('/api/track', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ page: window.location.pathname }),
+    credentials: 'include'
+  }).catch(() => {}); // Silently fail if tracking fails
+
   const mapContainers = document.querySelectorAll('.map-container');
   const dimOverlay = document.querySelector('.dim-overlay');
   const imageModalOverlay = document.getElementById('image-modal-overlay');
   const imageModalContent = document.getElementById('image-modal-content');
   const imageModalClose = document.getElementById('image-modal-close');
 
+  // === MAP TABS FUNCTIONALITY ===
+  // Handle clicking on map tabs to switch between different maps within a venue
+  document.querySelectorAll('.map-tab').forEach(tab => {
+    tab.addEventListener('click', (e) => {
+      const mapId = tab.dataset.map;
+      const venue = tab.closest('.venue');
+
+      if (!venue || !mapId) return;
+
+      // Deactivate all tabs in this venue
+      venue.querySelectorAll('.map-tab').forEach(t => t.classList.remove('active'));
+
+      // Activate clicked tab
+      tab.classList.add('active');
+
+      // Hide all map panels in this venue
+      venue.querySelectorAll('.map-panel').forEach(panel => panel.classList.remove('active'));
+
+      // Show the selected map panel
+      const targetPanel = venue.querySelector(`#${mapId}`);
+      if (targetPanel) {
+        targetPanel.classList.add('active');
+      }
+    });
+  });
+
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   const toggledBoxes = new Set();
   const preloadedMaps = new Set();
+
+  // === LOCATION OVERLAY (Full-Page) ===
+  // Create the overlay element
+  const locationOverlay = document.createElement('div');
+  locationOverlay.className = 'location-overlay';
+  locationOverlay.innerHTML = `
+    <div class="location-overlay-content">
+      <div class="location-overlay-header">
+        <span class="location-overlay-number"></span>
+        <div class="location-overlay-title">
+          <h2></h2>
+          <span class="fiber-badge"></span>
+        </div>
+        <button class="location-overlay-close">&times;</button>
+      </div>
+      <div class="location-overlay-body">
+        <p></p>
+      </div>
+      <img class="location-overlay-image" src="" alt="Location image">
+      <div class="photo-placeholder">
+        <div class="photo-placeholder-icon">📷</div>
+        <div class="photo-placeholder-text">Photo Coming Soon</div>
+        <div class="photo-request-form">
+          <label class="upload-photo-label">
+            <input type="file" accept="image/*" class="upload-photo-input" hidden>
+            <span class="upload-photo-btn">📤 Upload a Photo</span>
+          </label>
+          <div class="upload-preview-container" style="display: none;">
+            <img class="upload-preview-img" src="" alt="Preview">
+            <button class="upload-remove-btn" type="button">×</button>
+          </div>
+          <button class="request-photo-btn">Submit Photo Request</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(locationOverlay);
+
+  const overlayNumber = locationOverlay.querySelector('.location-overlay-number');
+  const overlayTitle = locationOverlay.querySelector('.location-overlay-title h2');
+  const overlayFiber = locationOverlay.querySelector('.fiber-badge');
+  const overlayBody = locationOverlay.querySelector('.location-overlay-body p');
+  const overlayImage = locationOverlay.querySelector('.location-overlay-image');
+  const overlayClose = locationOverlay.querySelector('.location-overlay-close');
+  const photoPlaceholder = locationOverlay.querySelector('.photo-placeholder');
+  const requestPhotoBtn = locationOverlay.querySelector('.request-photo-btn');
+  const uploadPhotoInput = locationOverlay.querySelector('.upload-photo-input');
+  const uploadPreviewContainer = locationOverlay.querySelector('.upload-preview-container');
+  const uploadPreviewImg = locationOverlay.querySelector('.upload-preview-img');
+  const uploadRemoveBtn = locationOverlay.querySelector('.upload-remove-btn');
+
+  // Current location data for photo request
+  let currentLocationData = null;
+  let uploadedPhotoFile = null;
+
+  // Handle file selection for photo upload
+  uploadPhotoInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      uploadedPhotoFile = file;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        uploadPreviewImg.src = e.target.result;
+        uploadPreviewContainer.style.display = 'block';
+        requestPhotoBtn.textContent = 'Submit Photo';
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Handle remove uploaded photo
+  uploadRemoveBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    uploadedPhotoFile = null;
+    uploadPhotoInput.value = '';
+    uploadPreviewContainer.style.display = 'none';
+    uploadPreviewImg.src = '';
+    requestPhotoBtn.textContent = 'Submit Photo Request';
+  });
+
+  // Handle photo request button click
+  requestPhotoBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    if (!currentLocationData) return;
+
+    try {
+      requestPhotoBtn.textContent = 'Sending...';
+      requestPhotoBtn.disabled = true;
+
+      const formData = new FormData();
+      formData.append('locationId', currentLocationData.locationId || '');
+      formData.append('locationName', currentLocationData.name || 'Unknown');
+      formData.append('venueName', currentLocationData.venueName || '');
+      formData.append('mapLabel', currentLocationData.mapLabel || '');
+      formData.append('venueId', currentLocationData.venueId || '');
+      formData.append('mapId', currentLocationData.mapId || '');
+
+      if (uploadedPhotoFile) {
+        formData.append('photo', uploadedPhotoFile);
+      }
+
+      const response = await fetch('/api/photo-requests', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (response.ok) {
+        requestPhotoBtn.textContent = uploadedPhotoFile ? 'Photo Submitted!' : 'Request Sent!';
+        requestPhotoBtn.classList.add('sent');
+        // Reset upload state
+        uploadedPhotoFile = null;
+        uploadPhotoInput.value = '';
+        uploadPreviewContainer.style.display = 'none';
+      } else {
+        requestPhotoBtn.textContent = 'Error - Try Again';
+        requestPhotoBtn.disabled = false;
+      }
+    } catch (error) {
+      console.error('Failed to send photo request:', error);
+      requestPhotoBtn.textContent = 'Error - Try Again';
+      requestPhotoBtn.disabled = false;
+    }
+  });
+
+  function showLocationOverlay(locationData) {
+    currentLocationData = locationData;
+    overlayNumber.textContent = locationData.number || '';
+    overlayTitle.textContent = locationData.name || 'Location';
+
+    if (locationData.fiber) {
+      overlayFiber.textContent = locationData.fiber;
+      overlayFiber.style.display = 'inline-block';
+    } else {
+      overlayFiber.style.display = 'none';
+    }
+
+    overlayBody.textContent = locationData.description || '';
+
+    // Reset request button and upload state
+    requestPhotoBtn.textContent = 'Submit Photo Request';
+    requestPhotoBtn.disabled = false;
+    requestPhotoBtn.classList.remove('sent');
+    uploadedPhotoFile = null;
+    uploadPhotoInput.value = '';
+    uploadPreviewContainer.style.display = 'none';
+    uploadPreviewImg.src = '';
+
+    if (locationData.image) {
+      overlayImage.src = locationData.image;
+      overlayImage.style.display = 'block';
+      photoPlaceholder.style.display = 'none';
+    } else {
+      overlayImage.style.display = 'none';
+      photoPlaceholder.style.display = 'flex';
+    }
+
+    locationOverlay.classList.add('visible');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function hideLocationOverlay() {
+    locationOverlay.classList.remove('visible');
+    document.body.style.overflow = '';
+  }
+
+  // Expose showLocationOverlay globally for search.js
+  window.showLocationOverlay = showLocationOverlay;
+
+  // Close overlay handlers
+  overlayClose.addEventListener('click', hideLocationOverlay);
+  locationOverlay.addEventListener('click', (e) => {
+    if (e.target === locationOverlay) {
+      hideLocationOverlay();
+    }
+  });
+
+  // Click image in overlay to open in image modal
+  overlayImage.addEventListener('click', (e) => {
+    e.stopPropagation();
+    imageModalContent.src = overlayImage.src;
+    imageModalOverlay.style.display = 'flex';
+  });
+
+  // Handle image load errors - show placeholder when image fails to load
+  overlayImage.addEventListener('error', () => {
+    overlayImage.style.display = 'none';
+    photoPlaceholder.style.display = 'flex';
+  });
+
+  // Handle successful image load
+  overlayImage.addEventListener('load', () => {
+    overlayImage.style.display = 'block';
+    photoPlaceholder.style.display = 'none';
+  });
+
+  // === LOCATION MARKER CLICK HANDLERS ===
+  document.querySelectorAll('.location-marker').forEach(marker => {
+    marker.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const locationData = {
+        number: marker.dataset.number || '',
+        name: marker.dataset.name || 'Location',
+        description: marker.dataset.description || '',
+        fiber: marker.dataset.fiber || '',
+        image: marker.dataset.image || '',
+        // New fields for photo requests
+        locationId: marker.dataset.locationId || '',
+        venueId: marker.dataset.venueId || '',
+        mapId: marker.dataset.mapId || '',
+        venueName: marker.dataset.venueName || '',
+        mapLabel: marker.dataset.mapLabel || ''
+      };
+      showLocationOverlay(locationData);
+    });
+  });
 
   // === IMAGE PRELOADING ===
   function preloadMapImages(container) {
@@ -197,11 +446,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('overlay-active');
     document.documentElement.classList.add('overlay-active');
 
-    // Apply saved position to prevent jump
-    document.body.style.top = `-${savedScrollPosition}px`;
-
     // Preload all images for this map
     preloadMapImages(container);
+
+    // Create location list
+    createLocationList(container);
 
     // Listen for scroll to hide indicator
     const scrollHandler = () => {
@@ -213,22 +462,114 @@ document.addEventListener('DOMContentLoaded', () => {
     container.addEventListener('scroll', scrollHandler);
   }
 
+  // Global location list element
+  let locationListEl = null;
+
+  // Create location list for expanded maps
+  function createLocationList(container) {
+    // Remove any existing list
+    if (locationListEl) {
+      locationListEl.remove();
+    }
+
+    // Get all markers in this container
+    const markers = container.querySelectorAll('.location-marker');
+    if (markers.length === 0) return;
+
+    // Create the list container
+    locationListEl = document.createElement('div');
+    locationListEl.className = 'location-list visible';
+    locationListEl.innerHTML = `
+      <div class="location-list-header">
+        <span>Locations (${markers.length})</span>
+        <button class="location-list-toggle">Hide List</button>
+      </div>
+      <ul class="location-list-items"></ul>
+    `;
+
+    const listItems = locationListEl.querySelector('.location-list-items');
+    const toggleBtn = locationListEl.querySelector('.location-list-toggle');
+
+    // Sort markers by number
+    const sortedMarkers = Array.from(markers).sort((a, b) => {
+      const numA = parseInt(a.dataset.number) || 0;
+      const numB = parseInt(b.dataset.number) || 0;
+      return numA - numB;
+    });
+
+    // Create list items
+    sortedMarkers.forEach(marker => {
+      const number = marker.dataset.number || '?';
+      const name = marker.dataset.name || 'Location';
+      const fiber = marker.dataset.fiber || '';
+
+      const li = document.createElement('li');
+      li.className = 'location-list-item';
+      li.innerHTML = `
+        <div class="location-list-number">${number}</div>
+        <div class="location-list-info">
+          <div class="location-list-name">${name}</div>
+          ${fiber ? `<div class="location-list-fiber">${fiber}</div>` : ''}
+        </div>
+        <div class="location-list-arrow">›</div>
+      `;
+
+      // Click handler - show the location overlay
+      li.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const locationData = {
+          number: marker.dataset.number || '',
+          name: marker.dataset.name || 'Location',
+          description: marker.dataset.description || '',
+          fiber: marker.dataset.fiber || '',
+          image: marker.dataset.image || '',
+          locationId: marker.dataset.locationId || '',
+          venueId: marker.dataset.venueId || '',
+          mapId: marker.dataset.mapId || '',
+          venueName: marker.dataset.venueName || '',
+          mapLabel: marker.dataset.mapLabel || ''
+        };
+        showLocationOverlay(locationData);
+      });
+
+      listItems.appendChild(li);
+    });
+
+    // Toggle list visibility
+    toggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isHidden = listItems.style.display === 'none';
+      listItems.style.display = isHidden ? '' : 'none';
+      toggleBtn.textContent = isHidden ? 'Hide List' : 'Show List';
+    });
+
+    // Append list to body so it's positioned fixed at bottom
+    document.body.appendChild(locationListEl);
+  }
+
+  // Hide and remove location list
+  function hideLocationList() {
+    if (locationListEl) {
+      locationListEl.remove();
+      locationListEl = null;
+    }
+  }
+
   function closeMapOverlay() {
     mapContainers.forEach(c => c.classList.remove('expanded', 'dimmed'));
     document.body.classList.remove('overlay-active');
     document.documentElement.classList.remove('overlay-active');
-    document.body.style.top = '';
     hideScrollIndicator();
-
-    // Restore scroll position
-    window.scrollTo(0, savedScrollPosition);
+    hideLocationList();
     currentLocationIndex = -1;
   }
 
   mapContainers.forEach(container => {
     container.addEventListener('click', (e) => {
-      // Don't toggle if clicking on info box or close button
-      if (e.target.closest('.floating-info-box') || e.target.closest('.close-button')) {
+      // Don't toggle if clicking on info box, close button, or location marker
+      if (e.target.closest('.floating-info-box') ||
+          e.target.closest('.close-button') ||
+          e.target.closest('.location-marker')) {
         return;
       }
 
@@ -247,89 +588,46 @@ document.addEventListener('DOMContentLoaded', () => {
     closeMapOverlay();
   });
 
+  // Extract location data from info box element
+  function extractLocationData(infoBox, icon) {
+    const nameEl = infoBox.querySelector('strong, h3, h4');
+    const descEl = infoBox.querySelector('p');
+    const imgEl = infoBox.querySelector('img');
+    const fiberEl = infoBox.querySelector('.fiber-info, [class*="fiber"]');
+
+    // Get number from icon text
+    const number = icon.textContent.trim();
+
+    // Try to find fiber info in text
+    let fiber = '';
+    if (fiberEl) {
+      fiber = fiberEl.textContent.trim();
+    } else {
+      // Look for fiber pattern in description
+      const text = infoBox.textContent;
+      const fiberMatch = text.match(/(\d+\s*ST|\d+\s*fiber|fiber:\s*\d+)/i);
+      if (fiberMatch) fiber = fiberMatch[0];
+    }
+
+    return {
+      number: number,
+      name: nameEl ? nameEl.textContent.trim() : 'Location ' + number,
+      description: descEl ? descEl.textContent.trim() : '',
+      image: imgEl ? (imgEl.dataset.src || imgEl.src) : '',
+      fiber: fiber
+    };
+  }
+
   document.querySelectorAll('.location-icon').forEach(icon => {
     const infoId = icon.getAttribute('data-info-id');
     const infoBox = document.getElementById(infoId);
 
-    if (!isTouchDevice) {
-      let hoverTimer;
-
-      icon.addEventListener('mouseenter', () => {
-        if (!toggledBoxes.has(infoId)) {
-          infoBox.classList.add('visible');
-          infoBox.style.pointerEvents = 'none';
-        }
-      });
-
-      icon.addEventListener('mouseleave', () => {
-        hoverTimer = setTimeout(() => {
-          if (!toggledBoxes.has(infoId)) {
-            infoBox.classList.remove('visible');
-            infoBox.style.pointerEvents = '';
-          }
-        }, 200);
-      });
-
-      infoBox.addEventListener('mouseenter', () => {
-        clearTimeout(hoverTimer);
-      });
-
-      infoBox.addEventListener('mouseleave', () => {
-        hoverTimer = setTimeout(() => {
-          if (!toggledBoxes.has(infoId)) {
-            infoBox.classList.remove('visible');
-            infoBox.style.pointerEvents = '';
-          }
-        }, 200);
-      });
-    }
-
     icon.addEventListener('click', e => {
       e.stopPropagation();
-      const isVisible = infoBox.classList.contains('visible');
 
-      document.querySelectorAll('.floating-info-box.visible').forEach(box => {
-        if (box !== infoBox) {
-          box.classList.remove('visible');
-          box.style.pointerEvents = '';
-          toggledBoxes.delete(box.id);
-        }
-      });
-
-      if (isVisible && toggledBoxes.has(infoId)) {
-        infoBox.classList.remove('visible');
-        infoBox.style.pointerEvents = '';
-        toggledBoxes.delete(infoId);
-        hideScrollIndicator();
-      } else {
-        infoBox.classList.add('visible');
-        infoBox.style.pointerEvents = 'auto';
-        toggledBoxes.add(infoId);
-        // Smart positioning after making visible
-        requestAnimationFrame(() => positionInfoBox(infoBox, icon));
-        // Show scroll indicator when info box content loads (on expanded map)
-        if (document.body.classList.contains('overlay-active')) {
-          const img = infoBox.querySelector('img');
-          if (img && !img.complete) {
-            // Wait for image to load
-            img.addEventListener('load', () => {
-              showScrollIndicator();
-              setTimeout(() => hideScrollIndicator(), 3000);
-            }, { once: true });
-            // Also handle if image fails to load
-            img.addEventListener('error', () => {
-              showScrollIndicator();
-              setTimeout(() => hideScrollIndicator(), 3000);
-            }, { once: true });
-          } else {
-            // No image or already loaded - show after short delay for content render
-            setTimeout(() => {
-              showScrollIndicator();
-              setTimeout(() => hideScrollIndicator(), 3000);
-            }, 100);
-          }
-        }
-      }
+      // Extract data and show in overlay
+      const locationData = extractLocationData(infoBox, icon);
+      showLocationOverlay(locationData);
     });
   });
 
@@ -458,15 +756,13 @@ document.addEventListener('DOMContentLoaded', () => {
     currentLocationIndex = index;
     const icon = icons[index];
 
-    // Close all open info boxes first
-    document.querySelectorAll('.floating-info-box.visible').forEach(box => {
-      box.classList.remove('visible');
-      box.style.pointerEvents = '';
-      toggledBoxes.delete(box.id);
-    });
-
-    // Click the icon to show its info
-    icon.click();
+    // Get info box and show overlay
+    const infoId = icon.getAttribute('data-info-id');
+    const infoBox = document.getElementById(infoId);
+    if (infoBox) {
+      const locationData = extractLocationData(infoBox, icon);
+      showLocationOverlay(locationData);
+    }
 
     // Add focus indicator
     icons.forEach(i => i.classList.remove('keyboard-focus'));
@@ -479,12 +775,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (imageModalOverlay.style.display === 'flex') {
         imageModalOverlay.style.display = 'none';
         imageModalContent.src = '';
-      } else if (document.querySelector('.floating-info-box.visible')) {
-        const openBoxes = document.querySelectorAll('.floating-info-box.visible');
-        const lastOpenBox = openBoxes[openBoxes.length - 1];
-        lastOpenBox.classList.remove('visible');
-        lastOpenBox.style.pointerEvents = '';
-        toggledBoxes.delete(lastOpenBox.id);
+      } else if (locationOverlay.classList.contains('visible')) {
+        hideLocationOverlay();
       } else if (document.body.classList.contains('overlay-active')) {
         closeMapOverlay();
       }

@@ -1,6 +1,7 @@
 /**
  * Shared Header Component
  * Injects consistent header across all pages
+ * Dynamically loads categories from data.json
  */
 
 const HeaderComponent = {
@@ -10,17 +11,33 @@ const HeaderComponent = {
     logoAlt: 'Auburn Logo',
     siteName: 'WEP Venue Maps',
     homeLink: 'index.html',
-    navItems: [
-      { href: 'Fiber.html', label: 'Fiber Connectivity' },
-      { href: 'ESPN.html', label: 'ESPN Positions' },
-      { href: 'camera_positions.html', label: 'Camera Positions' }
-    ],
     adminLink: 'admin.html'
+  },
+
+  // Categories loaded from data.json
+  categories: [],
+
+  // Load categories from data.json
+  async loadCategories() {
+    try {
+      const response = await fetch('data.json');
+      const data = await response.json();
+      this.categories = data.categories || [];
+    } catch (error) {
+      console.warn('Could not load categories from data.json:', error);
+      // Fallback to empty - header will still work, just no nav items
+      this.categories = [];
+    }
   },
 
   // Generate header HTML
   render() {
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+
+    const navItems = this.categories.map(cat => ({
+      href: `${cat.slug}.html`,
+      label: cat.name
+    }));
 
     return `
       <header class="site-header">
@@ -35,7 +52,7 @@ const HeaderComponent = {
             <span></span>
           </button>
           <ul class="nav-menu">
-            ${this.config.navItems.map(item => `
+            ${navItems.map(item => `
               <li>
                 <a href="${item.href}" class="nav-link ${currentPage === item.href ? 'active' : ''}">
                   ${item.label}
@@ -54,7 +71,10 @@ const HeaderComponent = {
   },
 
   // Initialize header
-  init() {
+  async init() {
+    // Load categories first
+    await this.loadCategories();
+
     // Find existing header or create container
     const existingHeader = document.querySelector('header');
 
