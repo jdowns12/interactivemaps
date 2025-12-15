@@ -15,8 +15,12 @@
     "2025-12-13": {
       "sessions": 1,
       "pageviews": 1
+    },
+    "2025-12-14": {
+      "sessions": 1,
+      "pageviews": 1
     }
   },
-  "total_sessions": 23,
-  "total_pageviews": 108
+  "total_sessions": 24,
+  "total_pageviews": 109
 }
