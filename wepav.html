@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WEPAV - WEP Venue Maps</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="print.css" media="print">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="auburn-logo.png">
+    <meta name="theme-color" content="#0C2340">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+    <script src="header.js"></script>
+
+    <main class="container">
+        <div class="page-header">
+            <h1 class="page-title">WEPAV</h1>
+        </div>
+
+        <div class="venues-container">
+            
+        <section class="venue" id="8df11522">
+            <h2 class="venue-title">Neville</h2>
+            <div class="map-tabs">
+        
+                <button class="map-tab active" data-map="ab68f1c9">Cat Walk</button>
+            </div><div class="maps-container">
+            <div class="map-panel active" id="ab68f1c9">
+                <div class="map-container">
+                    <img src="uploads/maps/map-20260130131121-b9e7086e.png" alt="Cat Walk" class="map-image">
+            
+                    <div class="location-marker" style="top: 29.51%; left: 18.83%;"
+                         data-location-id="1014568c"
+                         data-venue-id="8df11522"
+                         data-map-id="ab68f1c9"
+                         data-name="CatWalk Far Left "
+                         data-description="Above FFL truck dock area - access from 4th floor middle doubles doors on south side of arena"
+                         data-fiber="2 gang power "
+                         data-image="uploads/location-20260130131350-e2dd85e5.png"
+                         data-number="1"
+                         data-venue-name="Neville"
+                         data-map-label="Cat Walk">
+                        <span class="marker-number">1</span>
+                    </div>
+                
+                </div>
+            </div>
+            </div></section>
+        </div>
+    </main>
+
+    <!-- Location Detail Modal -->
+    <div id="location-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-content">
+            <button class="modal-close" aria-label="Close modal">&times;</button>
+            <div class="modal-header">
+                <span class="location-number" id="modal-number"></span>
+                <h2 id="modal-title">Location Name</h2>
+            </div>
+            <div class="modal-body">
+                <div class="location-image-container">
+                    <img id="modal-image" src="" alt="Location photo" class="location-image">
+                </div>
+                <div class="location-info">
+                    <p id="modal-description" class="location-description"></p>
+                    <div id="modal-fiber" class="fiber-info"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="nav.js"></script>
+    <script src="script.js"></script>
+    <script src="search.js"></script>
+    <script src="image-zoom.js"></script>
+    <script>
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
+    </script>
+</body>
+</html>

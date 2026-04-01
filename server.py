@@ -16,6 +16,12 @@ from flask import Flask, request, jsonify, send_from_directory, session
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
+try:
+    from PIL import Image as PILImage, ExifTags
+    PILLOW_AVAILABLE = True
+except ImportError:
+    PILLOW_AVAILABLE = False
+
 app = Flask(__name__, static_folder='.', static_url_path='')
 app.secret_key = secrets.token_hex(32)
 CORS(app, supports_credentials=True)
@@ -87,6 +93,63 @@ def track_visit(session_id):
 # Helper functions
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def compress_image(filepath, max_dimension=1920, quality=82):
+    """Resize and compress an image using Pillow. Saves in-place as JPEG.
+    Respects EXIF orientation so portrait phone photos come out right-side-up.
+    Returns the final filepath (extension may change to .jpg)."""
+    if not PILLOW_AVAILABLE:
+        return filepath
+
+    try:
+        img = PILImage.open(filepath)
+
+        # Apply EXIF rotation before anything else
+        try:
+            exif = img._getexif()
+            if exif:
+                for tag, value in exif.items():
+                    if ExifTags.TAGS.get(tag) == 'Orientation':
+                        if value == 3:
+                            img = img.rotate(180, expand=True)
+                        elif value == 6:
+                            img = img.rotate(270, expand=True)
+                        elif value == 8:
+                            img = img.rotate(90, expand=True)
+                        break
+        except Exception:
+            pass
+
+        # Convert to RGB (handles PNG with transparency, etc.)
+        if img.mode in ('RGBA', 'P', 'LA'):
+            background = PILImage.new('RGB', img.size, (255, 255, 255))
+            if img.mode == 'RGBA':
+                background.paste(img, mask=img.split()[3])
+            else:
+                background.paste(img)
+            img = background
+        elif img.mode != 'RGB':
+            img = img.convert('RGB')
+
+        # Resize if either dimension exceeds max_dimension
+        w, h = img.size
+        if max(w, h) > max_dimension:
+            scale = max_dimension / max(w, h)
+            img = img.resize((int(w * scale), int(h * scale)), PILImage.LANCZOS)
+
+        # Always save as JPEG for consistency
+        base = os.path.splitext(filepath)[0]
+        out_path = base + '.jpg'
+        img.save(out_path, 'JPEG', quality=quality, optimize=True)
+
+        # Remove original if it had a different extension
+        if out_path != filepath and os.path.exists(filepath):
+            os.remove(filepath)
+
+        return out_path
+    except Exception:
+        # If anything fails, leave the file as-is
+        return filepath
 
 def load_data():
     """Load data from JSON file"""
@@ -448,7 +511,11 @@ def upload_image():
     filepath = os.path.join(UPLOAD_FOLDER, filename)
     file.save(filepath)
 
-    return jsonify({"success": True, "filename": f"uploads/{filename}"})
+    # Compress / resize — phone photos can be 4-6 MB; bring them to ≤1920px
+    final_path = compress_image(filepath)
+    final_filename = os.path.relpath(final_path, '.')
+
+    return jsonify({"success": True, "filename": final_filename})
 
 @app.route('/api/upload/map', methods=['POST'])
 @require_auth
@@ -472,7 +539,11 @@ def upload_map_image():
     filepath = os.path.join(UPLOAD_FOLDER, 'maps', filename)
     file.save(filepath)
 
-    return jsonify({"success": True, "filename": f"uploads/maps/{filename}"})
+    # Compress map images too — keep them crisp but not oversized
+    final_path = compress_image(filepath, max_dimension=2560, quality=88)
+    final_filename = os.path.relpath(final_path, '.')
+
+    return jsonify({"success": True, "filename": final_filename})
 
 # HTML Generation endpoint
 @app.route('/api/generate-html', methods=['POST'])

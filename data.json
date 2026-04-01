@@ -182,7 +182,19 @@
               "number": 10,
               "position": {
                 "left": "20%",
-                "top": "15%"
+                "top": "14.9997%"
+              }
+            },
+            {
+              "description": "testing 123",
+              "fiber": "test again",
+              "id": "3446948f",
+              "image": "uploads/location-20260130125415-2e77d1aa.png",
+              "name": "Test Location",
+              "number": 11,
+              "position": {
+                "left": "72.6316%",
+                "top": "22.6113%"
               }
             }
           ],
@@ -793,7 +805,7 @@
         {
           "id": "map7",
           "image": "map5.jpg",
-          "label": "Plainsman Park",
+          "label": "Baseball",
           "locations": [
             {
               "description": "12 ST",
@@ -803,8 +815,8 @@
               "name": "Low Third",
               "number": 1,
               "position": {
-                "left": "34%",
-                "top": "68%"
+                "top": "67.9995%",
+                "left": "33.9988%"
               }
             },
             {
@@ -1216,16 +1228,16 @@
               }
             },
             {
-              "number": 9,
-              "name": "",
               "description": "",
               "fiber": "",
+              "id": "bf0c7561",
               "image": "",
+              "name": "",
+              "number": 9,
               "position": {
-                "top": "72.45%",
-                "left": "69.95%"
-              },
-              "id": "bf0c7561"
+                "left": "69.95%",
+                "top": "72.45%"
+              }
             }
           ],
           "subtitle": "From closet by trophy case poolside"
@@ -1448,6 +1460,36 @@
         }
       ],
       "name": "Test Venue",
+      "type": "arena"
+    },
+    {
+      "categories": [
+        "38023f2b"
+      ],
+      "id": "8df11522",
+      "maps": [
+        {
+          "id": "ab68f1c9",
+          "image": "uploads/maps/map-20260130131121-b9e7086e.png",
+          "label": "Cat Walk",
+          "locations": [
+            {
+              "description": "Above FFL truck dock area - access from 4th floor middle doubles doors on south side of arena",
+              "fiber": "2 gang power ",
+              "id": "1014568c",
+              "image": "uploads/location-20260130131350-e2dd85e5.png",
+              "name": "CatWalk Far Left ",
+              "number": 1,
+              "position": {
+                "left": "18.83%",
+                "top": "29.51%"
+              }
+            }
+          ],
+          "subtitle": "above floor "
+        }
+      ],
+      "name": "Neville",
       "type": "arena"
     }
   ]

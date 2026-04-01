@@ -3,7 +3,7 @@
  * Provides offline support and aggressive caching for fast loading
  */
 
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v6';
 const STATIC_CACHE = `wep-static-${CACHE_VERSION}`;
 const IMAGE_CACHE = `wep-images-${CACHE_VERSION}`;
 
