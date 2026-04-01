@@ -224,6 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.stopPropagation();
     imageModalContent.src = overlayImage.src;
     imageModalOverlay.style.display = 'flex';
+    locationOverlay.style.visibility = 'hidden';
   });
 
   // Handle image load errors - show placeholder when image fails to load
@@ -667,12 +668,14 @@ document.addEventListener('DOMContentLoaded', () => {
   imageModalClose.addEventListener('click', () => {
     imageModalOverlay.style.display = 'none';
     imageModalContent.src = '';
+    locationOverlay.style.visibility = '';
   });
 
   imageModalOverlay.addEventListener('click', (e) => {
     if (e.target === imageModalOverlay) {
       imageModalOverlay.style.display = 'none';
       imageModalContent.src = '';
+      locationOverlay.style.visibility = '';
     }
   });
 
