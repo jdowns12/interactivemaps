@@ -190,9 +190,10 @@ document.addEventListener('DOMContentLoaded', () => {
     uploadPreviewImg.src = '';
 
     if (locationData.image) {
-      overlayImage.src = locationData.image;
       overlayImage.style.display = 'block';
       photoPlaceholder.style.display = 'none';
+      overlayImage.classList.add('img-loading');
+      overlayImage.src = locationData.image;
     } else {
       overlayImage.style.display = 'none';
       photoPlaceholder.style.display = 'flex';
@@ -227,12 +228,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Handle image load errors - show placeholder when image fails to load
   overlayImage.addEventListener('error', () => {
+    overlayImage.classList.remove('img-loading');
     overlayImage.style.display = 'none';
     photoPlaceholder.style.display = 'flex';
   });
 
   // Handle successful image load
   overlayImage.addEventListener('load', () => {
+    overlayImage.classList.remove('img-loading');
     overlayImage.style.display = 'block';
     photoPlaceholder.style.display = 'none';
   });
@@ -260,24 +263,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // === IMAGE PRELOADING ===
   function preloadMapImages(container) {
-    const mapId = container.querySelector('.map-content')?.id;
-    if (!mapId || preloadedMaps.has(mapId)) return;
+    // Use the container element itself as the key — avoids the old bug where
+    // querying a non-existent .map-content returned undefined and every
+    // container shared the same Set key, so only the first ever preloaded.
+    if (preloadedMaps.has(container)) return;
+    preloadedMaps.add(container);
 
-    preloadedMaps.add(mapId);
-    const images = container.querySelectorAll('.floating-info-box img');
     const imageUrls = [];
-
-    images.forEach(img => {
-      const src = img.dataset.src || img.src;
+    container.querySelectorAll('.location-marker[data-image]').forEach(marker => {
+      const src = marker.dataset.image;
       if (src && !src.startsWith('data:')) {
         imageUrls.push(src);
-        // Preload via Image object for browser cache
         const preloadImg = new Image();
         preloadImg.src = src;
       }
     });
 
-    // Also tell service worker to cache these
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage({
         action: 'precacheImages',
@@ -325,24 +326,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // === LAZY LOAD IMAGES ===
-  const lazyLoadObserver = new IntersectionObserver((entries) => {
+  // === LAZY PRELOAD: kick off image preloading as maps scroll into view ===
+  // Location images live in data-image attrs (not img[data-src]), so they
+  // only load on demand when a marker is clicked. But we can warm the cache
+  // a bit earlier by preloading when the map panel enters the viewport.
+  const mapInViewObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        const img = entry.target;
-        if (img.dataset.src) {
-          img.src = img.dataset.src;
-          img.removeAttribute('data-src');
-          lazyLoadObserver.unobserve(img);
-        }
+        preloadMapImages(entry.target);
+        mapInViewObserver.unobserve(entry.target);
       }
     });
-  }, { rootMargin: '100px' });
+  }, { rootMargin: '200px' });
 
-  // Observe all images with data-src attribute
-  document.querySelectorAll('img[data-src]').forEach(img => {
-    lazyLoadObserver.observe(img);
-  });
+  mapContainers.forEach(c => mapInViewObserver.observe(c));
 
   // === SMART INFO BOX POSITIONING ===
   function positionInfoBox(infoBox, icon) {
@@ -446,7 +443,20 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('overlay-active');
     document.documentElement.classList.add('overlay-active');
 
-    // Preload all images for this map
+    // Add visible close button so it's clear how to dismiss
+    if (!container.querySelector('.map-close-btn')) {
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'close-button map-close-btn';
+      closeBtn.innerHTML = '&times;';
+      closeBtn.setAttribute('aria-label', 'Close map');
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeMapOverlay();
+      });
+      container.appendChild(closeBtn);
+    }
+
+    // Preload all location images for this map in the background
     preloadMapImages(container);
 
     // Create location list
@@ -482,9 +492,9 @@ document.addEventListener('DOMContentLoaded', () => {
     locationListEl.innerHTML = `
       <div class="location-list-header">
         <span>Locations (${markers.length})</span>
-        <button class="location-list-toggle">Hide List</button>
+        <button class="location-list-toggle">Show List</button>
       </div>
-      <ul class="location-list-items"></ul>
+      <ul class="location-list-items" style="display:none"></ul>
     `;
 
     const listItems = locationListEl.querySelector('.location-list-items');
@@ -556,7 +566,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function closeMapOverlay() {
-    mapContainers.forEach(c => c.classList.remove('expanded', 'dimmed'));
+    mapContainers.forEach(c => {
+      c.classList.remove('expanded', 'dimmed');
+      const closeBtn = c.querySelector('.map-close-btn');
+      if (closeBtn) closeBtn.remove();
+    });
     document.body.classList.remove('overlay-active');
     document.documentElement.classList.remove('overlay-active');
     hideScrollIndicator();
@@ -711,15 +725,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Close current and open next
+    const closeBtn = expandedMap.querySelector('.map-close-btn');
+    if (closeBtn) closeBtn.remove();
     expandedMap.classList.remove('expanded');
-    allMaps[nextIndex].classList.add('expanded');
 
-    // Close any open info boxes
-    document.querySelectorAll('.floating-info-box.visible').forEach(box => {
-      box.classList.remove('visible');
-      box.style.pointerEvents = '';
-      toggledBoxes.delete(box.id);
-    });
+    const nextMap = allMaps[nextIndex];
+    nextMap.classList.add('expanded');
+
+    // Add close button to new map
+    if (!nextMap.querySelector('.map-close-btn')) {
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'close-button map-close-btn';
+      closeBtn.innerHTML = '&times;';
+      closeBtn.setAttribute('aria-label', 'Close map');
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeMapOverlay();
+      });
+      nextMap.appendChild(closeBtn);
+    }
+
+    // Preload images for the new map and rebuild location list
+    preloadMapImages(nextMap);
+    createLocationList(nextMap);
   }
 
   // Only add touch listeners on touch devices

@@ -553,14 +553,16 @@ body {
   position: fixed;
   top: 50%;
   left: 50%;
-  width: 90vw;
-  max-width: 1200px;
+  /* width bounded by viewport width, max 1200px, AND the width that would
+     make a 4/3 container exceed 85vh — whichever is smallest.
+     This guarantees aspect-ratio: 4/3 is never overridden by max-height,
+     so marker % positions stay pinned to the right spots. */
+  width: min(90vw, calc(85vh * 4 / 3), 1200px);
   height: auto;
-  max-height: 85vh;
   transform: translate(-50%, -50%);
   z-index: 9999;
   background: #000;
-  overflow: auto !important;
+  overflow: visible !important;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
@@ -624,8 +626,10 @@ body {
 
 @media (max-width: 768px) {
   .map-container.expanded {
-    width: 95vw;
-    max-height: 85vh;
+    /* On mobile the location list takes ~40vh at bottom; keep map above it */
+    width: min(98vw, calc(52vh * 4 / 3));
+    top: 4vh;
+    transform: translateX(-50%);
   }
 }
 
@@ -882,7 +886,7 @@ html.overlay-active {
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 100000;
+  z-index: 100002;
   padding: 20px;
   box-sizing: border-box;
 }
@@ -992,10 +996,9 @@ html.overlay-active {
     padding: 8px;
   }
 
-  /* Touch-friendly expanded map */
+  /* Touch-friendly expanded map — keep consistent with the mobile rule above */
   .map-container.expanded {
-    width: 98vw;
-    max-height: 90vh;
+    width: min(98vw, calc(52vh * 4 / 3));
   }
 }
 
@@ -1148,8 +1151,12 @@ html.overlay-active {
   width: 100%;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-normal);
   box-shadow: var(--shadow-md);
+}
+
+.location-overlay-image.img-loading {
+  opacity: 0.25;
 }
 
 .location-overlay-image:hover {
