@@ -886,7 +886,7 @@ html.overlay-active {
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 100000;
+  z-index: 100002;
   padding: 20px;
   box-sizing: border-box;
 }

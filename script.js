@@ -492,9 +492,9 @@ document.addEventListener('DOMContentLoaded', () => {
     locationListEl.innerHTML = `
       <div class="location-list-header">
         <span>Locations (${markers.length})</span>
-        <button class="location-list-toggle">Hide List</button>
+        <button class="location-list-toggle">Show List</button>
       </div>
-      <ul class="location-list-items"></ul>
+      <ul class="location-list-items" style="display:none"></ul>
     `;
 
     const listItems = locationListEl.querySelector('.location-list-items');
