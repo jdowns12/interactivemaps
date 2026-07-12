@@ -2104,6 +2104,10 @@ const Tutorial = {
         this.backBtn.disabled = index === 0;
         this.nextBtn.textContent = step.buttons?.next || 'Next';
         this.skipBtn.textContent = step.buttons?.skip || 'Skip Tutorial';
+        // Steps gated on a user action advance themselves when the action
+        // happens — hide Next so you can't skip into steps whose anchor
+        // elements don't exist yet
+        this.nextBtn.style.display = step.waitFor ? 'none' : '';
 
         // Handle step type
         if (step.type === 'fullscreen') {
@@ -2141,12 +2145,19 @@ const Tutorial = {
     showHighlight(step) {
         this.popover.className = 'tutorial-popover';
 
-        // Find target element
+        // Find target element (must be present AND visible to anchor to)
         let target = step.targetFn ? step.targetFn() : document.querySelector(step.target);
+        if (target && target.getBoundingClientRect().width === 0) target = null;
 
         if (!target) {
-            // Target not found, show as fullscreen
-            this.showFullscreen(step);
+            // Anchor missing — float the popover centered WITHOUT the
+            // click-blocking backdrop, so the user can still operate the app
+            // (the fullscreen fallback used to trap people here)
+            this.popover.className = 'tutorial-popover fullscreen-mode';
+            this.popover.style.top = '';
+            this.popover.style.left = '';
+            this.backdrop.classList.add('has-spotlight'); // no dim, no click-block
+            this.backdrop.style.boxShadow = 'none';
             return;
         }
 
@@ -2254,6 +2265,13 @@ const Tutorial = {
     },
 
     setupWaitFor(step) {
+        // Never leave a stale observer running — re-entering a step (Back,
+        // re-anchor) would otherwise stack observers and double-advance
+        if (this.waitForObserver) {
+            this.waitForObserver.disconnect();
+            this.waitForObserver = null;
+        }
+
         const waitFor = step.waitFor;
 
         if (waitFor === 'modal-open') {
