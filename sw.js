@@ -3,7 +3,7 @@
  * Provides offline support and aggressive caching for fast loading
  */
 
-const CACHE_VERSION = 'v7';
+const CACHE_VERSION = 'v8';
 const STATIC_CACHE = `wep-static-${CACHE_VERSION}`;
 const IMAGE_CACHE = `wep-images-${CACHE_VERSION}`;
 
@@ -63,6 +63,13 @@ self.addEventListener('fetch', (event) => {
 
   // Skip external requests
   if (url.origin !== location.origin) return;
+
+  // Admin editor files change often and stale JS breaks the editor/tour —
+  // always prefer the network for them
+  if (url.pathname.startsWith('/admin')) {
+    event.respondWith(networkFirstWithCache(request));
+    return;
+  }
 
   // Handle images - cache first, very aggressive
   if (isImageRequest(request)) {
