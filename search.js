@@ -12,8 +12,14 @@ const SearchModule = {
 
   // Initialize search
   async init() {
-    this.searchInput = document.getElementById('global-search');
-    this.resultsContainer = document.getElementById('search-results');
+    // The search elements are injected by header.js after it fetches
+    // data.json, so they may not exist yet on DOMContentLoaded — wait for them.
+    for (let i = 0; i < 50; i++) {
+      this.searchInput = document.getElementById('global-search');
+      this.resultsContainer = document.getElementById('search-results');
+      if (this.searchInput && this.resultsContainer) break;
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
 
     if (!this.searchInput || !this.resultsContainer) {
       console.warn('Search elements not found');

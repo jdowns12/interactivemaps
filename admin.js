@@ -577,6 +577,16 @@ const Admin = {
     // Navigation Tree
     renderNavTree() {
         const tree = document.getElementById('nav-tree');
+
+        // Preserve which categories/venues are expanded across re-renders,
+        // otherwise every save collapses the whole tree
+        this._expandedCategories = new Set(
+            [...tree.querySelectorAll('.tree-category.expanded .tree-category-header[data-category-id]')]
+                .map(h => h.dataset.categoryId));
+        this._expandedVenues = new Set(
+            [...tree.querySelectorAll('.tree-venue.expanded .tree-venue-header[data-venue-id]')]
+                .map(h => h.dataset.venueId));
+
         tree.innerHTML = '';
 
         // Group venues by category (venue can appear in multiple categories)
@@ -622,6 +632,12 @@ const Admin = {
                 categoryEl.classList.toggle('expanded');
                 header.classList.toggle('expanded');
             });
+
+            // Restore expansion state from before the re-render
+            if (this._expandedCategories?.has(category.id)) {
+                categoryEl.classList.add('expanded');
+                header.classList.add('expanded');
+            }
 
             // Category edit/delete
             categoryEl.querySelector('.edit-category').addEventListener('click', () => {
@@ -669,6 +685,7 @@ const Admin = {
     createVenueTreeItem(venue) {
         const venueEl = document.createElement('div');
         venueEl.className = 'tree-venue';
+        if (this._expandedVenues?.has(venue.id)) venueEl.classList.add('expanded');
         venueEl.innerHTML = `
             <div class="tree-venue-header" data-venue-id="${venue.id}">
                 <span class="arrow">&#9654;</span>
@@ -759,9 +776,18 @@ const Admin = {
         document.getElementById('current-venue-name').textContent = this.currentVenue.name;
         document.getElementById('current-map-label').textContent = this.currentMap.label;
 
-        // Load map image
+        // Load map image (or show placeholder canvas when the map has none)
         const mapImage = document.getElementById('map-image');
-        mapImage.src = this.currentMap.image;
+        const canvas = document.getElementById('map-canvas');
+        if (this.currentMap.image) {
+            mapImage.src = this.currentMap.image;
+            mapImage.style.display = '';
+            canvas.classList.remove('no-image');
+        } else {
+            mapImage.removeAttribute('src');
+            mapImage.style.display = 'none';
+            canvas.classList.add('no-image');
+        }
 
         // Render markers
         this.renderMarkers();
@@ -1836,8 +1862,7 @@ const Tutorial = {
             title: 'Step 1: Create a Category',
             content: 'Categories become pages on your site (like Fiber.html or ESPN.html). Click the "+ Add Category" button to create one.',
             position: 'right',
-            waitFor: 'modal-open',
-            prefill: { 'category-name': 'Tutorial Example', 'category-slug': 'tutorial-example' }
+            waitFor: 'modal-open'
         },
         {
             id: 'save-category',
@@ -1847,7 +1872,9 @@ const Tutorial = {
             content: 'The form has been pre-filled with example data. Click "Save" to create your category. This will generate a "Tutorial-Example.html" page.',
             position: 'top',
             waitFor: 'modal-close',
-            trackCreate: 'category'
+            trackCreate: 'category',
+            // Prefill here (not on the previous step): opening the modal resets the form
+            prefill: { 'category-name': 'Tutorial Example', 'category-slug': 'tutorial-example' }
         },
         {
             id: 'create-venue',
@@ -1856,8 +1883,7 @@ const Tutorial = {
             title: 'Step 2: Create a Venue',
             content: 'Venues are physical locations like Jordan-Hare Stadium or Neville Arena. Click "+ Add Venue" to add one.',
             position: 'right',
-            waitFor: 'modal-open',
-            prefill: { 'venue-name': 'Example Venue' }
+            waitFor: 'modal-open'
         },
         {
             id: 'save-venue',
@@ -1868,6 +1894,7 @@ const Tutorial = {
             position: 'top',
             waitFor: 'modal-close',
             trackCreate: 'venue',
+            prefill: { 'venue-name': 'Example Venue' },
             onEnter: () => {
                 // Check the tutorial category checkbox
                 setTimeout(() => {
@@ -1895,7 +1922,23 @@ const Tutorial = {
             title: 'Expand the Venue',
             content: 'Click on your venue to expand it. This reveals the maps inside.',
             position: 'right',
-            waitFor: 'click'
+            waitFor: 'click',
+            onEnter: () => {
+                // New categories render collapsed, hiding the venue this step
+                // points at — expand it, then re-anchor the highlight
+                setTimeout(() => {
+                    document.querySelectorAll('.tree-category').forEach(cat => {
+                        if (cat.querySelector('.category-name')?.textContent === 'Tutorial Example') {
+                            cat.classList.add('expanded');
+                            cat.querySelector('.tree-category-header')?.classList.add('expanded');
+                        }
+                    });
+                    const step = Tutorial.steps[Tutorial.currentStep];
+                    if (Tutorial.active && step?.id === 'expand-venue') {
+                        Tutorial.showHighlight(step);
+                    }
+                }, 150);
+            }
         },
         {
             id: 'create-map',
@@ -1904,8 +1947,7 @@ const Tutorial = {
             title: 'Step 3: Add a Map',
             content: 'Maps are different views or floors of a venue. Click "+ Add Map" to create one.',
             position: 'right',
-            waitFor: 'modal-open',
-            prefill: { 'map-label': 'Main Floor', 'map-subtitle': 'Example Level' }
+            waitFor: 'modal-open'
         },
         {
             id: 'save-map',
@@ -1915,7 +1957,8 @@ const Tutorial = {
             content: 'You can upload a map image later. For now, click "Save" to create the map with the example data.',
             position: 'top',
             waitFor: 'modal-close',
-            trackCreate: 'map'
+            trackCreate: 'map',
+            prefill: { 'map-label': 'Main Floor', 'map-subtitle': 'Example Level' }
         },
         {
             id: 'select-map',
@@ -2237,11 +2280,14 @@ const Tutorial = {
                 const openModal = document.querySelector('.modal:not(.hidden)');
                 if (!openModal && this.active) {
                     observer.disconnect();
-                    // Track created item
-                    if (step.trackCreate) {
-                        this.trackCreatedItem(step.trackCreate);
-                    }
-                    setTimeout(() => this.next(), 500);
+                    setTimeout(() => {
+                        // Track after the delay — the modal closes before the
+                        // save response lands in Admin.data
+                        if (step.trackCreate) {
+                            this.trackCreatedItem(step.trackCreate);
+                        }
+                        this.next();
+                    }, 500);
                 }
             });
             observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
@@ -2267,15 +2313,18 @@ const Tutorial = {
     },
 
     trackCreatedItem(type) {
-        // Track the most recently created item of this type
+        // Track the most recently created item of this type. Search from the
+        // end: an abandoned earlier tour may have left a same-named item
+        // behind, and new items are appended — the last match is ours.
+        const findLast = (arr, pred) => [...arr].reverse().find(pred);
         if (type === 'category' && Admin.data.categories.length > 0) {
-            const cat = Admin.data.categories.find(c => c.name === 'Tutorial Example');
+            const cat = findLast(Admin.data.categories, c => c.name === 'Tutorial Example');
             if (cat) this.tutorialData.categoryId = cat.id;
         } else if (type === 'venue' && Admin.data.venues.length > 0) {
-            const venue = Admin.data.venues.find(v => v.name === 'Example Venue');
+            const venue = findLast(Admin.data.venues, v => v.name === 'Example Venue');
             if (venue) this.tutorialData.venueId = venue.id;
         } else if (type === 'map' && Admin.currentVenue?.maps?.length > 0) {
-            const map = Admin.currentVenue.maps.find(m => m.label === 'Main Floor');
+            const map = findLast(Admin.currentVenue.maps, m => m.label === 'Main Floor');
             if (map) this.tutorialData.mapId = map.id;
         } else if (type === 'location' && Admin.currentMap?.locations?.length > 0) {
             const lastLoc = Admin.currentMap.locations[Admin.currentMap.locations.length - 1];
@@ -2356,6 +2405,18 @@ const Tutorial = {
     // Cleanup example data
     async cleanup() {
         try {
+            // Fallback: creation tracking can miss (timing), so re-resolve the
+            // example items by name — newest match — before deleting
+            const findLast = (arr, pred) => [...arr].reverse().find(pred);
+            if (!this.tutorialData.categoryId) {
+                const cat = findLast(Admin.data.categories || [], c => c.name === 'Tutorial Example');
+                if (cat) this.tutorialData.categoryId = cat.id;
+            }
+            if (!this.tutorialData.venueId) {
+                const venue = findLast(Admin.data.venues || [], v => v.name === 'Example Venue');
+                if (venue) this.tutorialData.venueId = venue.id;
+            }
+
             // Delete category (cascades to remove venue associations)
             if (this.tutorialData.categoryId) {
                 await Admin.api(`/api/categories/${this.tutorialData.categoryId}`, 'DELETE');

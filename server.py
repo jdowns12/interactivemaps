@@ -937,7 +937,7 @@ def generate_venues_html(venues):
         for i, m in enumerate(venue.get('maps', [])):
             active = 'active' if i == 0 else ''
             venue_html += f'''
-                <button class="map-tab {active}" data-map="{m['id']}">{html_escape(m['label'])}</button>
+                <button class="map-tab {active}" data-map="{m['id']}">{html_escape(m.get('label', ''))}</button>
             '''
 
         venue_html += '</div><div class="maps-container">'
@@ -945,10 +945,17 @@ def generate_venues_html(venues):
         # Add maps
         for i, m in enumerate(venue.get('maps', [])):
             active = 'active' if i == 0 else ''
+            map_label = html_escape(m.get('label', ''))
+            # Maps created without an image (e.g. during the tutorial) must not
+            # crash generation — render a placeholder instead of a broken <img>
+            if m.get('image'):
+                map_image_html = f'<img src="{html_escape(m["image"])}" alt="{map_label}" class="map-image">'
+            else:
+                map_image_html = '<div class="map-image map-image-placeholder">Map image coming soon</div>'
             venue_html += f'''
             <div class="map-panel {active}" id="{m['id']}">
                 <div class="map-container">
-                    <img src="{html_escape(m['image'])}" alt="{html_escape(m['label'])}" class="map-image">
+                    {map_image_html}
             '''
 
             # Add location markers with full data attributes

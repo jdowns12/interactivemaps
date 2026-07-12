@@ -538,6 +538,31 @@ body {
     overflow: hidden;
 }
 
+/* Placeholder canvas for maps with no image yet — still lets you place markers */
+.map-canvas.no-image {
+    width: min(900px, 100%);
+    aspect-ratio: 16 / 9;
+    background-color: #f8fafc;
+    background-image:
+        linear-gradient(rgba(12, 35, 64, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(12, 35, 64, 0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+    border: 2px dashed #cbd5e1;
+}
+
+.map-canvas.no-image::before {
+    content: 'No map image yet \2014  double-click to place markers, or upload an image via Edit Map';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.95rem;
+    pointer-events: none;
+}
+
 .map-image {
     display: block;
     max-width: 100%;
@@ -1741,6 +1766,9 @@ body {
 }
 
 /* Tutorial Container */
+/* The container never captures clicks itself — only its children opt in.
+   Otherwise the full-viewport layer blocks the very elements the tour
+   highlights and asks the user to click. */
 .tutorial-container {
     position: fixed;
     top: 0;
@@ -1749,10 +1777,6 @@ body {
     bottom: 0;
     z-index: 1100;
     pointer-events: none;
-}
-
-.tutorial-container:not(.hidden) {
-    pointer-events: auto;
 }
 
 /* Dark Backdrop */
@@ -1764,11 +1788,15 @@ body {
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.7);
     transition: opacity 0.3s ease;
+    pointer-events: auto; /* blocks the page on fullscreen steps (welcome/complete) */
 }
 
 /* Spotlight Cutout - applied via box-shadow on backdrop */
 .tutorial-backdrop.has-spotlight {
     background: none;
+    /* On highlight steps the backdrop sits directly over the target element —
+       let clicks pass through so the user can actually follow the instruction */
+    pointer-events: none;
 }
 
 /* Spotlight Element Highlight */
@@ -1792,6 +1820,7 @@ body {
 /* Popover Box */
 .tutorial-popover {
     position: absolute;
+    pointer-events: auto; /* container is pointer-events:none; popover stays clickable */
     background-color: var(--card-white);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg), 0 0 0 1px var(--accent-orange);
