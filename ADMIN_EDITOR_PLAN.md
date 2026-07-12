@@ -8,7 +8,7 @@ Build a password-protected admin page for the WEP Venue Maps that allows visual 
 ## Architecture
 
 ### Frontend (Admin Page)
-- Password-protected access (VideoProd2020!)
+- Password-protected access (password: salted hash in .env)
 - Visual map editor with drag-and-drop
 - CRUD operations for locations, maps, venues, and categories
 - Image upload interface
@@ -116,7 +116,7 @@ GET  /api/auth              # Verify admin password
 
 ### 2.1 Login Page
 - Simple password field (no username needed)
-- Password: `VideoProd2020!`
+- Password: stored as salted hash in `.env` (`ADMIN_PASSWORD_HASH`)
 - Store auth token in sessionStorage
 - Auto-logout on browser close
 - Admin link in header (top-right corner)
