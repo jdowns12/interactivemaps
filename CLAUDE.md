@@ -1,11 +1,12 @@
 # Interactive Maps - Auburn Athletics
 
 ## Quick Reference
-- **Port**: 8080
-- **Manual Start**: `python3 server.py`
-- **Local**: http://192.168.1.5:8080
+- **Port**: 8081
+- **Run/Restart**: `sudo systemctl restart interactivemaps` (systemd service, auto-restarts)
+- **Local**: http://192.168.1.5:8081
+- **Public**: https://wepmaps.gumdrop.space (Cloudflare Tunnel → localhost:8081)
 - **GitHub**: https://github.com/jdowns12/interactivemaps
-- **Admin Password**: VideoProd2020!
+- **Admin Password**: salted hash in `.env` (`ADMIN_PASSWORD_HASH`, gitignored) — see `.env.example`
 
 ## Purpose
 Interactive venue maps for Auburn Athletics with fiber connectivity, ESPN camera positions, and venue information.
@@ -53,6 +54,7 @@ Interactive venue maps for Auburn Athletics with fiber connectivity, ESPN camera
 - Need to commit and push
 
 ## Notes
-- No systemd service (manual start)
+- Runs as systemd service `interactivemaps.service` (enabled, auto-restart)
+- Reads `.env` at startup for `ADMIN_PASSWORD_HASH` (and optional `PORT`)
 - PWA enabled for offline access
 - Admin sessions: 24-hour expiration

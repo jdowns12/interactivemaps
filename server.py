@@ -7,20 +7,36 @@ Provides API endpoints for the admin editor
 import os
 import json
 import uuid
-import hashlib
 import secrets
+import threading
 from html import escape as html_escape
 from datetime import datetime, timedelta
 from functools import wraps
-from flask import Flask, request, jsonify, send_from_directory, session
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
+from werkzeug.security import check_password_hash
+from werkzeug.exceptions import HTTPException
 
 try:
     from PIL import Image as PILImage, ExifTags
     PILLOW_AVAILABLE = True
 except ImportError:
     PILLOW_AVAILABLE = False
+
+def load_dotenv(path='.env'):
+    """Load KEY=VALUE pairs from a .env file into os.environ (no dependency needed)."""
+    try:
+        with open(path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    os.environ.setdefault(key.strip(), value.strip())
+    except FileNotFoundError:
+        pass
+
+load_dotenv()
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 app.secret_key = secrets.token_hex(32)
@@ -32,12 +48,23 @@ UPLOAD_FOLDER = 'uploads'
 ANALYTICS_FILE = 'analytics.json'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'gif'}
 MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB max file size
+app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 
-# Admin password (hashed)
-ADMIN_PASSWORD_HASH = hashlib.sha256('VideoProd2020!'.encode()).hexdigest()
+# Admin password: salted hash loaded from .env (never stored in source).
+# Generate a new one with:
+#   python -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('newpass', method='pbkdf2:sha256:600000'))"
+ADMIN_PASSWORD_HASH = os.environ.get('ADMIN_PASSWORD_HASH', '')
 
 # Session storage (in-memory for simplicity)
 sessions = {}
+
+# Login rate limiting: per-IP timestamps of recent failed attempts
+LOGIN_MAX_FAILURES = 5
+LOGIN_WINDOW_SECONDS = 15 * 60
+failed_logins = {}
+
+# Serialize JSON file writes (Flask dev server handles requests on threads)
+file_write_lock = threading.Lock()
 
 # Analytics - track unique sessions per day
 visitor_sessions = set()  # Track session IDs seen today
@@ -57,9 +84,12 @@ def load_analytics():
         return {"daily": {}, "total_sessions": 0, "total_pageviews": 0}
 
 def save_analytics(data):
-    """Save analytics data to JSON file"""
-    with open(ANALYTICS_FILE, 'w') as f:
-        json.dump(data, f, indent=2)
+    """Save analytics data to JSON file (atomic write, serialized)"""
+    with file_write_lock:
+        tmp = ANALYTICS_FILE + '.tmp'
+        with open(tmp, 'w') as f:
+            json.dump(data, f, indent=2)
+        os.replace(tmp, ANALYTICS_FILE)
 
 def track_visit(session_id):
     """Track a page visit"""
@@ -162,9 +192,12 @@ def load_data():
         return {"categories": [], "venues": []}
 
 def save_data(data):
-    """Save data to JSON file"""
-    with open(DATA_FILE, 'w') as f:
-        json.dump(data, f, indent=2)
+    """Save data to JSON file (atomic write, serialized)"""
+    with file_write_lock:
+        tmp = DATA_FILE + '.tmp'
+        with open(tmp, 'w') as f:
+            json.dump(data, f, indent=2)
+        os.replace(tmp, DATA_FILE)
 
 def require_auth(f):
     """Decorator to require authentication"""
@@ -185,17 +218,16 @@ def generate_id():
     return str(uuid.uuid4())[:8]
 
 def delete_image_file(image_path):
-    """Delete an image file if it exists"""
+    """Delete an image file, but only if it really lives inside the uploads folder"""
     if not image_path:
         return
-    # Handle both 'uploads/file.jpg' and 'file.jpg' formats
-    if image_path.startswith('uploads/'):
-        filepath = image_path
-    else:
-        filepath = image_path
+    # Resolve symlinks/'..' so a path like 'uploads/../data.json' can't escape
+    filepath = os.path.realpath(image_path)
+    uploads_root = os.path.realpath(UPLOAD_FOLDER)
+    if not filepath.startswith(uploads_root + os.sep):
+        return
 
-    # Make sure we're only deleting from uploads folder
-    if os.path.exists(filepath) and 'uploads' in filepath:
+    if os.path.exists(filepath):
         try:
             os.remove(filepath)
             print(f"[Cleanup] Deleted: {filepath}")
@@ -222,7 +254,17 @@ def login():
     data = request.get_json()
     password = data.get('password', '')
 
-    if hashlib.sha256(password.encode()).hexdigest() == ADMIN_PASSWORD_HASH:
+    # Rate limit: block an IP after too many recent failures
+    ip = request.remote_addr or 'unknown'
+    now = datetime.now()
+    recent = [t for t in failed_logins.get(ip, [])
+              if (now - t).total_seconds() < LOGIN_WINDOW_SECONDS]
+    failed_logins[ip] = recent
+    if len(recent) >= LOGIN_MAX_FAILURES:
+        return jsonify({"success": False, "error": "Too many attempts. Try again later."}), 429
+
+    if ADMIN_PASSWORD_HASH and check_password_hash(ADMIN_PASSWORD_HASH, password):
+        failed_logins.pop(ip, None)
         token = secrets.token_hex(32)
         sessions[token] = {
             'created': datetime.now(),
@@ -230,6 +272,7 @@ def login():
         }
         return jsonify({"success": True, "token": token})
 
+    failed_logins[ip].append(now)
     return jsonify({"success": False, "error": "Invalid password"}), 401
 
 @app.route('/api/auth/logout', methods=['POST'])
@@ -605,7 +648,7 @@ def generate_html():
 
 def generate_index_html(landing_page, categories):
     """Generate index.html from landingPage config"""
-    title = landing_page.get('title', 'Athletics Information Hub')
+    title = html_escape(landing_page.get('title', 'Athletics Information Hub'))
     cards = landing_page.get('cards', [])
 
     # Filter visible cards and sort by order
@@ -623,13 +666,13 @@ def generate_index_html(landing_page, categories):
             href = f"{category['slug']}.html" if category else '#'
 
         cards_html += f'''
-            <a href="{href}" class="link-card">
+            <a href="{html_escape(href)}" class="link-card">
                 <div class="card-accent"></div>
                 <div class="link-card-content">
-                    <h3>{card.get('title', '')}</h3>
-                    <p>{card.get('description', '')}</p>
+                    <h3>{html_escape(card.get('title', ''))}</h3>
+                    <p>{html_escape(card.get('description', ''))}</p>
                     <div class="link-button">
-                        <span>{card.get('buttonText', 'View')}</span>
+                        <span>{html_escape(card.get('buttonText', 'View'))}</span>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M5 12h14M12 5l7 7-7 7"/>
                         </svg>
@@ -886,7 +929,7 @@ def generate_venues_html(venues):
     for venue in venues:
         venue_html = f'''
         <section class="venue" id="{venue['id']}">
-            <h2 class="venue-title">{venue['name']}</h2>
+            <h2 class="venue-title">{html_escape(venue['name'])}</h2>
             <div class="map-tabs">
         '''
 
@@ -894,7 +937,7 @@ def generate_venues_html(venues):
         for i, m in enumerate(venue.get('maps', [])):
             active = 'active' if i == 0 else ''
             venue_html += f'''
-                <button class="map-tab {active}" data-map="{m['id']}">{m['label']}</button>
+                <button class="map-tab {active}" data-map="{m['id']}">{html_escape(m['label'])}</button>
             '''
 
         venue_html += '</div><div class="maps-container">'
@@ -905,7 +948,7 @@ def generate_venues_html(venues):
             venue_html += f'''
             <div class="map-panel {active}" id="{m['id']}">
                 <div class="map-container">
-                    <img src="{m['image']}" alt="{m['label']}" class="map-image">
+                    <img src="{html_escape(m['image'])}" alt="{html_escape(m['label'])}" class="map-image">
             '''
 
             # Add location markers with full data attributes
@@ -916,7 +959,7 @@ def generate_venues_html(venues):
                 name = html_escape(loc.get('name', ''))
                 description = html_escape(loc.get('description', ''))
                 fiber = html_escape(loc.get('fiber', ''))
-                image = loc.get('image', '')
+                image = html_escape(loc.get('image', ''))
                 number = loc.get('number', '')
                 map_label = html_escape(m.get('label', ''))
                 venue_name = html_escape(venue.get('name', ''))
@@ -994,6 +1037,8 @@ def create_photo_request():
         save_data(data)
 
         return jsonify({"success": True, "request": photo_request}), 201
+    except HTTPException:
+        raise  # let Flask return the proper status (e.g. 413 for oversized uploads)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -1154,10 +1199,13 @@ def server_error(e):
     return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 8081))
     print("=" * 50)
     print("WEP Venue Maps Server")
     print("=" * 50)
-    print(f"Server running at: http://0.0.0.0:8081")
-    print(f"Admin page: http://[your-ip]:8081/admin.html")
+    print(f"Server running at: http://0.0.0.0:{port}")
+    print(f"Admin page: http://[your-ip]:{port}/admin.html")
+    if not ADMIN_PASSWORD_HASH:
+        print("WARNING: ADMIN_PASSWORD_HASH not set in .env — admin login is disabled")
     print("=" * 50)
-    app.run(host='0.0.0.0', port=8081, debug=False)
+    app.run(host='0.0.0.0', port=port, debug=False)
