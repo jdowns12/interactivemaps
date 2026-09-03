@@ -10,7 +10,7 @@ import uuid
 import secrets
 import threading
 from html import escape as html_escape
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 from flask import Flask, request, jsonify, send_from_directory, abort
 from flask_cors import CORS
@@ -314,34 +314,110 @@ def normalize_location_images(loc):
     loc['image'] = images[0] if images else ''
     return loc
 
+CANVAS_RATIOS = {
+    '16:9': (16, 9),
+    '4:3': (4, 3),
+    '1:1': (1, 1),
+    '3:4': (3, 4),
+}
+DEFAULT_CANVAS = '16:9'
+
+def utc_now_iso():
+    """Current UTC time as an ISO-8601 string with microseconds and offset."""
+    return datetime.now(timezone.utc).isoformat()
+
+def parse_iso(value):
+    """Parse an ISO-8601 string to an aware datetime; None if missing/invalid."""
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
+
+def normalize_meta(data):
+    """Ensure data['meta'] exists with lastModified / lastPublished keys."""
+    meta = data.get('meta')
+    if not isinstance(meta, dict):
+        meta = {}
+    meta.setdefault('lastModified', None)
+    meta.setdefault('lastPublished', None)
+    data['meta'] = meta
+    return meta
+
+def normalize_map_canvas(m):
+    """Every map carries a `canvas` ratio (only meaningful without an image)."""
+    if isinstance(m, dict) and not is_valid_canvas(m.get('canvas')):
+        m['canvas'] = DEFAULT_CANVAS
+    return m
+
+def is_valid_canvas(value):
+    return isinstance(value, str) and value in CANVAS_RATIOS
+
+def validate_canvas(body):
+    """Return an error string if `canvas` is present in body and invalid."""
+    if 'canvas' in body and not is_valid_canvas(body['canvas']):
+        return "canvas must be one of: " + ", ".join(CANVAS_RATIOS)
+    return None
+
 def normalize_data(data):
     """Migrate/normalize the whole dataset in place and return it."""
     if not isinstance(data, dict):
         data = {}
     data.setdefault('categories', [])
     data.setdefault('venues', [])
+    normalize_meta(data)
     for venue in data.get('venues', []) or []:
         for m in venue.get('maps', []) or []:
+            normalize_map_canvas(m)
             for loc in m.get('locations', []) or []:
                 normalize_location_images(loc)
     return data
 
 def load_data():
-    """Load data from JSON file (normalized per the images contract)."""
+    """Load data from JSON file (normalized per the images/meta contract)."""
     try:
         with open(DATA_FILE, 'r') as f:
-            return normalize_data(json.load(f))
+            data = normalize_data(json.load(f))
     except (FileNotFoundError, json.JSONDecodeError):
-        return {"categories": [], "venues": []}
+        return normalize_data({"categories": [], "venues": []})
+    if not data['meta'].get('lastModified'):
+        # Pre-meta data file: the file's mtime is the best "last modified" we have
+        try:
+            mtime = os.path.getmtime(DATA_FILE)
+            data['meta']['lastModified'] = datetime.fromtimestamp(mtime, timezone.utc).isoformat()
+        except OSError:
+            data['meta']['lastModified'] = utc_now_iso()
+    return data
 
-def save_data(data):
-    """Save data to JSON file (atomic write, serialized)"""
+def save_data(data, touch=True):
+    """Save data to JSON file (atomic write, serialized).
+
+    `touch=True` (every content write) stamps meta.lastModified. Publishing
+    passes touch=False so recording lastPublished never makes the data dirty."""
     normalize_data(data)
+    if touch:
+        data['meta']['lastModified'] = utc_now_iso()
     with file_write_lock:
         tmp = DATA_FILE + '.tmp'
         with open(tmp, 'w') as f:
             json.dump(data, f, indent=2)
         os.replace(tmp, DATA_FILE)
+
+def publish_status(data):
+    """{lastModified, lastPublished, dirty} for the given dataset."""
+    meta = normalize_meta(data)
+    modified = parse_iso(meta.get('lastModified'))
+    published = parse_iso(meta.get('lastPublished'))
+    dirty = published is None or (modified is not None and published < modified)
+    return {
+        "lastModified": meta.get('lastModified'),
+        "lastPublished": meta.get('lastPublished'),
+        "dirty": dirty,
+    }
 
 def with_data(mutator):
     """Run load -> mutator(data) -> save atomically under the file lock.
@@ -494,6 +570,12 @@ def get_data():
     """Get all venue data"""
     return jsonify(load_data())
 
+@app.route('/api/publish-status', methods=['GET'])
+@require_auth
+def get_publish_status():
+    """Whether the generated pages are behind data.json"""
+    return jsonify(publish_status(load_data()))
+
 @app.route('/api/data', methods=['POST'])
 @require_auth
 def save_all_data():
@@ -502,6 +584,8 @@ def save_all_data():
     if data is None:
         return jsonify({"error": "Expected a JSON object"}), 400
     with file_write_lock:
+        # meta is owned by the server: keep our publish record, restamp modified
+        data['meta'] = load_data()['meta']
         save_data(data)
     return jsonify({"success": True})
 
@@ -512,6 +596,11 @@ def update_landing_page():
     landing = get_json_object()
     if landing is None:
         return jsonify({"error": "Expected a JSON object"}), 400
+    # Accept both the bare object {"title", "cards"} and the wrapped form
+    # {"landingPage": {...}} so a client sending either never nests the
+    # landing page inside itself (which would wipe the cards on reload).
+    if 'cards' not in landing and isinstance(landing.get('landingPage'), dict):
+        landing = landing['landingPage']
 
     def mutate(data):
         data['landingPage'] = landing
@@ -636,8 +725,12 @@ def create_map(venue_id):
     new_map = get_json_object()
     if new_map is None:
         return jsonify({"error": "Expected a JSON object"}), 400
+    err = validate_canvas(new_map)
+    if err:
+        return jsonify({"error": err}), 400
     new_map['id'] = generate_id()
     new_map['locations'] = []
+    normalize_map_canvas(new_map)
 
     def mutate(data):
         for venue in data['venues']:
@@ -654,13 +747,16 @@ def update_map(venue_id, map_id):
     updated = get_json_object()
     if updated is None:
         return jsonify({"error": "Expected a JSON object"}), 400
+    err = validate_canvas(updated)
+    if err:
+        return jsonify({"error": err}), 400
 
     def mutate(data):
         for venue in data['venues']:
             if venue['id'] == venue_id:
                 for i, m in enumerate(venue['maps']):
                     if m['id'] == map_id:
-                        venue['maps'][i] = {**m, **updated, 'id': map_id}
+                        venue['maps'][i] = normalize_map_canvas({**m, **updated, 'id': map_id})
                         return jsonify(venue['maps'][i])
         return jsonify({"error": "Map not found"}), 404
     return with_data(mutate)
@@ -892,7 +988,12 @@ def generate_html():
                     f.write(index_html)
                 generated_files.append('index.html')
 
-        return jsonify({"success": True, "files": generated_files})
+            # Files are on disk: record the publish without touching lastModified
+            data['meta']['lastPublished'] = utc_now_iso()
+            save_data(data, touch=False)
+
+        return jsonify({"success": True, "files": generated_files,
+                        "status": publish_status(data)})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -1199,13 +1300,21 @@ def generate_venues_html(venues):
             map_label = html_escape(m.get('label', ''))
             # Maps created without an image (e.g. during the tutorial) must not
             # crash generation — render a placeholder instead of a broken <img>
+            container_class = 'map-container'
+            container_style = ''
             if m.get('image'):
                 map_image_html = f'<img src="{html_escape(m["image"])}" alt="{map_label}" class="map-image">'
             else:
+                # Blank canvas map: the container takes the admin's canvas ratio
+                # so marker percentages land at the same relative positions
+                canvas = m.get('canvas') if is_valid_canvas(m.get('canvas')) else DEFAULT_CANVAS
+                w, h = CANVAS_RATIOS[canvas]
+                container_class += ' map-container-blank'
+                container_style = f' style="aspect-ratio: {w} / {h}" data-canvas="{canvas}"'
                 map_image_html = '<div class="map-image map-image-placeholder">Map image coming soon</div>'
             venue_html += f'''
             <div class="map-panel {active}" id="{m['id']}">
-                <div class="map-container">
+                <div class="{container_class}"{container_style}>
                     {map_image_html}
             '''
 

@@ -244,7 +244,8 @@
               ]
             }
           ],
-          "subtitle": "From Truck Dock"
+          "subtitle": "From Truck Dock",
+          "canvas": "16:9"
         },
         {
           "id": "map2",
@@ -402,7 +403,8 @@
               ]
             }
           ],
-          "subtitle": "From Truck Dock"
+          "subtitle": "From Truck Dock",
+          "canvas": "16:9"
         }
       ],
       "name": "Neville Arena",
@@ -564,7 +566,8 @@
               "images": []
             }
           ],
-          "subtitle": "6 ST Fiber & 2 SMPTE"
+          "subtitle": "6 ST Fiber & 2 SMPTE",
+          "canvas": "16:9"
         },
         {
           "id": "map4",
@@ -691,7 +694,8 @@
               "images": []
             }
           ],
-          "subtitle": "Patches From 1415"
+          "subtitle": "Patches From 1415",
+          "canvas": "16:9"
         },
         {
           "colorKey": {
@@ -848,7 +852,8 @@
               ]
             }
           ],
-          "subtitle": "Patches From 1415"
+          "subtitle": "Patches From 1415",
+          "canvas": "16:9"
         },
         {
           "id": "map6",
@@ -968,7 +973,8 @@
               ]
             }
           ],
-          "subtitle": "From Truck Dock"
+          "subtitle": "From Truck Dock",
+          "canvas": "16:9"
         }
       ],
       "name": "Jordan-Hare Stadium",
@@ -1207,7 +1213,8 @@
               "images": []
             }
           ],
-          "subtitle": ""
+          "subtitle": "",
+          "canvas": "16:9"
         }
       ],
       "name": "Plainsman Park",
@@ -1330,7 +1337,8 @@
               ]
             }
           ],
-          "subtitle": ""
+          "subtitle": "",
+          "canvas": "16:9"
         }
       ],
       "name": "Jane B. Moore Field",
@@ -1481,7 +1489,8 @@
               "images": []
             }
           ],
-          "subtitle": "From closet by trophy case poolside"
+          "subtitle": "From closet by trophy case poolside",
+          "canvas": "16:9"
         }
       ],
       "name": "James E. Martin Aquatics Center",
@@ -1574,7 +1583,8 @@
               ]
             }
           ],
-          "subtitle": "From center of trailer top of bleachers"
+          "subtitle": "From center of trailer top of bleachers",
+          "canvas": "16:9"
         }
       ],
       "name": "Auburn Soccer Complex",
@@ -1648,7 +1658,8 @@
               ]
             }
           ],
-          "subtitle": ""
+          "subtitle": "",
+          "canvas": "16:9"
         }
       ],
       "name": "Equestrian Center",
@@ -1681,7 +1692,8 @@
               ]
             }
           ],
-          "subtitle": "Test level "
+          "subtitle": "Test level ",
+          "canvas": "16:9"
         }
       ],
       "name": "Test venue",
@@ -1727,7 +1739,8 @@
               "images": []
             }
           ],
-          "subtitle": "1"
+          "subtitle": "1",
+          "canvas": "16:9"
         }
       ],
       "name": "Test Venue",
@@ -1760,11 +1773,16 @@
               ]
             }
           ],
-          "subtitle": "above floor "
+          "subtitle": "above floor ",
+          "canvas": "16:9"
         }
       ],
       "name": "Neville",
       "type": "arena"
     }
-  ]
+  ],
+  "meta": {
+    "lastModified": "2026-09-03T22:28:03.644893+00:00",
+    "lastPublished": "2026-09-03T23:35:34.743136+00:00"
+  }
 }

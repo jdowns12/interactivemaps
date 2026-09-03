@@ -535,6 +535,11 @@ body {
   position: relative;
   transition: all var(--transition-normal);
   cursor: pointer;
+  /* Default map shape. Imageless maps override this with an inline
+     style="aspect-ratio: W / H" emitted by the server; script.js copies that
+     ratio into --map-ar-w / --map-ar-h so the expanded width below fits too. */
+  --map-ar-w: 4;
+  --map-ar-h: 3;
   aspect-ratio: 4 / 3;
   z-index: 1;
   width: 100%;
@@ -557,7 +562,7 @@ body {
      make a 4/3 container exceed 85vh — whichever is smallest.
      This guarantees aspect-ratio: 4/3 is never overridden by max-height,
      so marker % positions stay pinned to the right spots. */
-  width: min(90vw, calc(85vh * 4 / 3), 1200px);
+  width: min(90vw, calc(85vh * var(--map-ar-w) / var(--map-ar-h)), 1200px);
   height: auto;
   transform: translate(-50%, -50%);
   z-index: 9999;
@@ -627,7 +632,7 @@ body {
 @media (max-width: 768px) {
   .map-container.expanded {
     /* On mobile the location list takes ~40vh at bottom; keep map above it */
-    width: min(98vw, calc(52vh * 4 / 3));
+    width: min(98vw, calc(52vh * var(--map-ar-w) / var(--map-ar-h)));
     top: 4vh;
     transform: translateX(-50%);
   }
@@ -686,6 +691,28 @@ html.overlay-active {
   top: 0;
   left: 0;
   z-index: 1;
+}
+
+/* Map with no image yet ("build your own map"): light grid canvas matching the
+   admin's blank canvas so markers placed there land in the same spots here. */
+.map-image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 1rem;
+  text-align: center;
+  color: #94a3b8;
+  font-size: clamp(0.8rem, 1.2vw, 0.95rem);
+  font-weight: 500;
+  background-color: #f8fafc;
+  background-image:
+    linear-gradient(rgba(12, 35, 64, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(12, 35, 64, 0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+  border: 2px dashed #cbd5e1;
+  border-radius: inherit;
+  user-select: none;
 }
 
 /* === LABELS === */
@@ -998,7 +1025,7 @@ html.overlay-active {
 
   /* Touch-friendly expanded map — keep consistent with the mobile rule above */
   .map-container.expanded {
-    width: min(98vw, calc(52vh * 4 / 3));
+    width: min(98vw, calc(52vh * var(--map-ar-w) / var(--map-ar-h)));
   }
 }
 

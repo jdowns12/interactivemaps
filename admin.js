@@ -21,10 +21,21 @@ const Admin = {
     // Photo requests
     photoRequests: [],
 
+    // Tap-to-place, pinch zoom, and auto-publish state
+    placing: false,
+    zoom: { scale: 1, tx: 0, ty: 0 },
+    MIN_ZOOM: 1,
+    MAX_ZOOM: 4,
+    publish: { state: 'unknown', lastPublished: null, inFlight: false, queued: false, error: null },
+    PUBLISH_DEBOUNCE_MS: 1500,
+    LANDING_KEY: 'adminLandingExpanded',
+    CAMERA_SVG: '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>',
+
     // Initialize
     init() {
         this.token = sessionStorage.getItem('adminToken');
         this.bindEvents();
+        this.restoreLandingState();
 
         if (this.token) {
             this.verifyAuth();
@@ -49,11 +60,29 @@ const Admin = {
         document.getElementById('add-category-btn').addEventListener('click', () => this.showCategoryModal());
         document.getElementById('add-venue-btn').addEventListener('click', () => this.showVenueModal());
         document.getElementById('add-map-btn').addEventListener('click', () => this.showMapModal());
-        document.getElementById('generate-html-btn').addEventListener('click', () => this.generateHTML());
+        document.getElementById('publish-status').addEventListener('click', () => this.generateHTML({ manual: true }));
 
         // Map editor buttons
         document.getElementById('edit-map-btn').addEventListener('click', () => this.showMapModal(true));
-        document.getElementById('delete-map-btn').addEventListener('click', () => this.confirmDeleteMap());
+
+        // Destructive actions live at the bottom of the edit modals
+        document.getElementById('delete-map-btn').addEventListener('click', () => {
+            this.closeModals();
+            this.confirmDeleteMap();
+        });
+        document.getElementById('delete-venue-btn').addEventListener('click', () => {
+            const venueId = document.getElementById('venue-id').value;
+            const venue = this.data.venues.find(v => v.id === venueId);
+            if (!venue) return;
+            this.closeModals();
+            this.confirmDeleteVenue(venue.id, venue.name);
+        });
+        document.getElementById('delete-category-btn').addEventListener('click', () => {
+            const categoryId = document.getElementById('category-id').value;
+            if (!categoryId) return;
+            this.closeModals();
+            this.confirmDeleteCategory(categoryId);
+        });
 
         // Location panel
         document.getElementById('close-panel-btn').addEventListener('click', () => this.closeLocationPanel());
@@ -111,19 +140,42 @@ const Admin = {
             e.target.dataset.manual = true;
         });
 
-        // Map canvas double-click to add location
-        document.getElementById('map-canvas').addEventListener('dblclick', (e) => this.addLocationAtPosition(e));
+        // Map canvas: double-click still adds a location on desktop; the
+        // "+ Add Location" button arms tap-to-place; pinch/pan zoom on touch
+        document.getElementById('map-canvas').addEventListener('dblclick', (e) => {
+            if (e.target.closest('.location-marker')) return;
+            this.addLocationAtPosition(e);
+        });
+        document.getElementById('add-location-btn').addEventListener('click', () => this.togglePlacement());
+        document.getElementById('reset-zoom-btn').addEventListener('click', () => this.resetZoom());
+        this.bindCanvasGestures();
 
         // Location list panel events
         document.getElementById('renumber-btn').addEventListener('click', () => this.renumberLocations());
-        document.getElementById('location-search').addEventListener('input', (e) => this.filterLocationList(e.target.value));
+        document.getElementById('location-search').addEventListener('input', () => this.applyLocationFilters());
+        document.getElementById('needs-photos-filter').addEventListener('change', () => this.applyLocationFilters());
 
-        // Landing page section
+        // Photos needed view
+        document.getElementById('photos-needed-nav').addEventListener('click', () => this.showPhotosNeededView());
+        document.getElementById('photos-needed-file-input').addEventListener('change', (e) => this.handlePhotosNeededUpload(e));
+
+        // Phone drawer
+        document.getElementById('sidebar-menu-btn').addEventListener('click', () => this.openDrawer());
+        document.getElementById('sidebar-close-btn').addEventListener('click', () => this.closeDrawer());
+        document.getElementById('sidebar-scrim').addEventListener('click', () => this.closeDrawer());
+        window.addEventListener('resize', () => {
+            if (!this.isPhone()) this.closeDrawer();
+        });
+
+        // Keyboard: Escape cancels placement / collapses details, Enter saves
+        document.addEventListener('keydown', (e) => this.handleKeydown(e));
+
+        // Landing page section (collapsed by default, remembered per browser)
         document.getElementById('landing-page-toggle').addEventListener('click', () => {
             const section = document.querySelector('.landing-page-section');
-            const toggle = document.getElementById('landing-page-toggle');
-            section.classList.toggle('expanded');
-            toggle.classList.toggle('expanded');
+            const expanded = !section.classList.contains('expanded');
+            this.setLandingExpanded(expanded);
+            try { localStorage.setItem(this.LANDING_KEY, expanded ? '1' : '0'); } catch (e) { /* storage unavailable */ }
         });
 
         document.getElementById('add-card-btn').addEventListener('click', () => this.showCardModal());
@@ -198,11 +250,14 @@ const Admin = {
     showLogin() {
         document.getElementById('login-screen').classList.remove('hidden');
         document.getElementById('admin-dashboard').classList.add('hidden');
+        this.stopPublishPolling();
+        this.closeDrawer();
     },
 
     showDashboard() {
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('admin-dashboard').classList.remove('hidden');
+        this.startPublishPolling();
     },
 
     // API Helper
@@ -295,6 +350,10 @@ const Admin = {
             this.renderNavTree();
             this.renderLandingPageCards();
             this.updateVenueCategoryCheckboxes();
+            this.updatePhotosNeededBadge();
+            if (!document.getElementById('photos-needed-view').classList.contains('hidden')) {
+                this.renderPhotosNeeded();
+            }
 
             // Load photo requests
             await this.loadPhotoRequests();
@@ -522,11 +581,13 @@ const Admin = {
     },
 
     // PUT /api/landing-page replaces only the landingPage key on the server.
+    // The body is the bare {title, cards} object (never wrapped as {landingPage}).
     // Local state is updated only after the server confirms.
     async saveLandingPage(landingPage) {
-        await this.api('/api/landing-page', 'PUT', { landingPage });
+        await this.api('/api/landing-page', 'PUT', landingPage);
         this.data.landingPage = landingPage;
         this.saveDraft();
+        this.schedulePublish();
     },
 
     async saveCard() {
@@ -670,8 +731,7 @@ const Admin = {
                     <span class="arrow">&#9654;</span>
                     <span class="category-name">${this.escapeHtml(category.name)}</span>
                     <div class="category-actions">
-                        <button class="edit-category" title="Edit">&#9998;</button>
-                        <button class="delete-category" title="Delete">&times;</button>
+                        <button class="edit-category" title="Edit category" aria-label="Edit category">&#9998;</button>
                     </div>
                 </div>
                 <div class="tree-venues"></div>
@@ -691,12 +751,9 @@ const Admin = {
                 header.classList.add('expanded');
             }
 
-            // Category edit/delete
+            // Category edit (delete lives inside the edit modal)
             categoryEl.querySelector('.edit-category').addEventListener('click', () => {
                 this.showCategoryModal(category);
-            });
-            categoryEl.querySelector('.delete-category').addEventListener('click', () => {
-                this.confirmDeleteCategory(category.id);
             });
 
             // Add venues
@@ -743,8 +800,7 @@ const Admin = {
                 <span class="arrow">&#9654;</span>
                 <span class="venue-name">${this.escapeHtml(venue.name)}</span>
                 <div class="venue-actions">
-                    <button class="edit-venue" title="Edit">&#9998;</button>
-                    <button class="delete-venue" title="Delete">&times;</button>
+                    <button class="edit-venue" title="Edit venue" aria-label="Edit venue">&#9998;</button>
                 </div>
             </div>
             <div class="tree-maps"></div>
@@ -765,12 +821,6 @@ const Admin = {
             this.showVenueModal(venue);
         });
 
-        // Delete venue
-        venueEl.querySelector('.delete-venue').addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.confirmDeleteVenue(venue.id, venue.name);
-        });
-
         const mapsContainer = venueEl.querySelector('.tree-maps');
         (venue.maps || []).forEach(map => {
             const mapEl = document.createElement('div');
@@ -780,8 +830,7 @@ const Admin = {
             mapEl.innerHTML = `
                 <span class="map-label">${this.escapeHtml(map.label)}</span>
                 <div class="map-actions">
-                    <button class="edit-map-btn" title="Edit">&#9998;</button>
-                    <button class="delete-map-btn" title="Delete">&times;</button>
+                    <button class="edit-map-btn" title="Edit map" aria-label="Edit map">&#9998;</button>
                 </div>
             `;
 
@@ -799,14 +848,6 @@ const Admin = {
                 this.showMapModal(true);
             });
 
-            // Delete map from sidebar
-            mapEl.querySelector('.delete-map-btn').addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.currentVenue = venue;
-                this.currentMap = map;
-                this.confirmDeleteMap();
-            });
-
             mapsContainer.appendChild(mapEl);
         });
 
@@ -822,8 +863,13 @@ const Admin = {
 
         // Update UI
         document.getElementById('empty-state').classList.add('hidden');
+        document.getElementById('photos-needed-view').classList.add('hidden');
+        document.getElementById('photos-needed-nav').classList.remove('active');
         document.getElementById('map-editor').classList.remove('hidden');
         document.getElementById('add-map-btn').disabled = false;
+        document.querySelectorAll('.tree-map').forEach(el => {
+            el.classList.toggle('active', el.dataset.venueId === venueId && el.dataset.mapId === mapId);
+        });
 
         document.getElementById('current-venue-name').textContent = this.currentVenue.name;
         document.getElementById('current-map-label').textContent = this.currentMap.label;
@@ -835,15 +881,36 @@ const Admin = {
             mapImage.src = this.currentMap.image;
             mapImage.style.display = '';
             canvas.classList.remove('no-image');
+            canvas.style.removeProperty('--canvas-ratio');
         } else {
             mapImage.removeAttribute('src');
             mapImage.style.display = 'none';
             canvas.classList.add('no-image');
+            canvas.style.setProperty('--canvas-ratio', this.canvasRatioCss(this.currentMap.canvas));
         }
+
+        // Fresh map: no placement armed, no zoom carried over
+        this.disarmPlacement();
+        this.resetZoom();
+        document.getElementById('needs-photos-filter').checked = false;
 
         // Render markers
         this.renderMarkers();
         this.closeLocationPanel();
+
+        // On phones the sidebar is a drawer: close it and bring the editor up
+        if (this.isPhone()) {
+            this.closeDrawer();
+            requestAnimationFrame(() => {
+                document.getElementById('map-editor').scrollIntoView({ block: 'start', behavior: 'smooth' });
+            });
+        }
+    },
+
+    // "16:9" -> "16 / 9" for the CSS aspect-ratio property
+    canvasRatioCss(canvas) {
+        const m = /^(\d+):(\d+)$/.exec(canvas || '');
+        return m ? `${m[1]} / ${m[2]}` : '16 / 9';
     },
 
     // Marker Rendering
@@ -863,12 +930,15 @@ const Admin = {
     },
 
     // Location List Panel
+    // The details form (#location-panel) is moved beneath the selected <li>,
+    // so it must be parked back in its home before the list is wiped.
     renderLocationList() {
         const list = document.getElementById('location-list');
+        this.parkLocationPanel();
         list.innerHTML = '';
 
         if (!this.currentMap || !this.currentMap.locations.length) {
-            list.innerHTML = '<li class="location-list-empty">No locations yet. Double-click on map to add.</li>';
+            list.innerHTML = '<li class="location-list-empty">No locations yet. Use + Add Location, then tap the map.</li>';
             return;
         }
 
@@ -879,27 +949,46 @@ const Admin = {
             const item = document.createElement('li');
             item.className = 'location-list-item';
             item.dataset.locationId = location.id;
-            item.draggable = true;
+            // Draggable only while the grip is pressed: a permanently
+            // draggable <li> would swallow mouse text selection inside the
+            // details form that opens under it
+            item.draggable = false;
             item.innerHTML = `
-                <span class="location-list-drag">&#9776;</span>
-                <span class="location-list-number">${location.number || ''}</span>
-                <span class="location-list-name">${this.escapeHtml(location.name) || 'Unnamed'}</span>
+                <div class="location-list-row">
+                    <span class="location-list-drag" title="Drag to reorder">&#9776;</span>
+                    <span class="location-list-number">${location.number || ''}</span>
+                    <span class="location-list-name">${this.escapeHtml(location.name) || 'Unnamed'}</span>
+                    ${this.photoBadgeHtml(location)}
+                </div>
             `;
 
-            // Click to select
-            item.addEventListener('click', () => {
+            // Click the row to expand; clicking it again collapses
+            item.addEventListener('click', (e) => {
+                if (e.target.closest('#location-panel')) return;
+                if (this.selectedLocation?.id === location.id) {
+                    this.closeLocationPanel();
+                    return;
+                }
                 this.selectLocation(location.id);
                 this.highlightMarkerOnMap(location.id);
             });
 
-            // Drag events for reordering
+            // Drag events for reordering (armed from the grip handle only)
+            const grip = item.querySelector('.location-list-drag');
+            grip.addEventListener('mousedown', () => { item.draggable = true; });
+            grip.addEventListener('mouseup', () => { item.draggable = false; });
             item.addEventListener('dragstart', (e) => {
+                if (e.target.closest && e.target.closest('#location-panel')) {
+                    e.preventDefault();
+                    return;
+                }
                 item.classList.add('dragging');
                 e.dataTransfer.setData('text/plain', location.id);
             });
 
             item.addEventListener('dragend', () => {
                 item.classList.remove('dragging');
+                item.draggable = false;
             });
 
             item.addEventListener('dragover', (e) => {
@@ -916,40 +1005,74 @@ const Admin = {
                 }
             });
 
-            // Hover to highlight marker
+            // Hover to highlight marker (a class, so the zoom counter-scale
+            // in CSS keeps working)
             item.addEventListener('mouseenter', () => {
-                const marker = document.querySelector(`[data-location-id="${location.id}"]`);
-                if (marker) marker.style.transform = 'translate(-50%, -50%) scale(1.2)';
+                const marker = document.querySelector(`.location-marker[data-location-id="${location.id}"]`);
+                if (marker) marker.classList.add('hover');
             });
 
             item.addEventListener('mouseleave', () => {
-                const marker = document.querySelector(`[data-location-id="${location.id}"]`);
-                if (marker && !marker.classList.contains('selected')) {
-                    marker.style.transform = '';
-                }
+                const marker = document.querySelector(`.location-marker[data-location-id="${location.id}"]`);
+                if (marker) marker.classList.remove('hover');
             });
 
             list.appendChild(item);
         });
+
+        // Keep the accordion open on the selected item across re-renders
+        if (this.selectedLocation && this.currentMap.locations.some(l => l.id === this.selectedLocation.id)) {
+            this.showLocationPanel();
+        }
+
+        this.applyLocationFilters();
+    },
+
+    photoBadgeHtml(location) {
+        const count = this.getLocationImages(location).length;
+        const label = `${count} photo${count === 1 ? '' : 's'}`;
+        return `<span class="photo-badge${count === 0 ? ' none' : ''}" title="${label}" aria-label="${label}">${this.CAMERA_SVG}<span class="photo-badge-count">${count}</span></span>`;
+    },
+
+    // Refresh one list item's camera badge in place (after a photo change)
+    updateLocationBadge(location) {
+        const item = document.querySelector(`.location-list-item[data-location-id="${location.id}"]`);
+        if (!item) return;
+        const old = item.querySelector('.photo-badge');
+        if (!old) return;
+        const tmp = document.createElement('div');
+        tmp.innerHTML = this.photoBadgeHtml(location);
+        old.replaceWith(tmp.firstElementChild);
+        this.applyLocationFilters();
     },
 
     highlightMarkerOnMap(locationId) {
-        const marker = document.querySelector(`[data-location-id="${locationId}"]`);
+        const marker = document.querySelector(`.location-marker[data-location-id="${locationId}"]`);
         if (marker) {
             marker.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     },
 
-    filterLocationList(searchText) {
+    // Search text and the "Needs photos" toggle combine; the expanded item
+    // always stays visible so the form never disappears under the user
+    applyLocationFilters() {
+        const search = (document.getElementById('location-search').value || '').toLowerCase();
+        const needsOnly = document.getElementById('needs-photos-filter').checked;
         const items = document.querySelectorAll('.location-list-item');
-        const search = searchText.toLowerCase();
 
         items.forEach(item => {
             const name = item.querySelector('.location-list-name')?.textContent.toLowerCase() || '';
             const number = item.querySelector('.location-list-number')?.textContent || '';
-            const matches = name.includes(search) || number.includes(search);
-            item.style.display = matches ? '' : 'none';
+            const count = parseInt(item.querySelector('.photo-badge-count')?.textContent || '0', 10) || 0;
+            const matches = (name.includes(search) || number.includes(search))
+                && (!needsOnly || count === 0);
+            item.style.display = (matches || item.classList.contains('expanded')) ? '' : 'none';
         });
+    },
+
+    filterLocationList(searchText) {
+        document.getElementById('location-search').value = searchText || '';
+        this.applyLocationFilters();
     },
 
     async renumberLocations() {
@@ -990,8 +1113,10 @@ const Admin = {
             }
             this.renderMarkers();
             this.toast(`Renumbered ${saved} locations`, 'success');
+            this.schedulePublish();
         } catch (error) {
             this.renderMarkers();
+            if (saved > 0) this.schedulePublish();
             this.toast(`Failed to renumber locations: ${error.message}`, 'error');
         }
     },
@@ -1056,6 +1181,8 @@ const Admin = {
             const moveClientX = moveEvent.type === 'touchmove' ? moveEvent.touches[0].clientX : moveEvent.clientX;
             const moveClientY = moveEvent.type === 'touchmove' ? moveEvent.touches[0].clientY : moveEvent.clientY;
 
+            // getBoundingClientRect() reflects the pinch-zoom transform, so
+            // dividing by it converts screen pixels straight to canvas percent
             const canvas = document.getElementById('map-canvas');
             const canvasRect = canvas.getBoundingClientRect();
 
@@ -1123,6 +1250,7 @@ const Admin = {
                 'PUT',
                 { position }
             );
+            this.schedulePublish();
             return true;
         } catch (error) {
             this.toast(`Failed to save position: ${error.message}`, 'error');
@@ -1145,15 +1273,31 @@ const Admin = {
             item.classList.toggle('selected', item.dataset.locationId === locationId);
         });
 
-        // Show panel with location data
+        // Show the details accordion under the selected item
         this.showLocationPanel();
     },
 
+    // Move the details form under the selected list item (accordion). The
+    // form element itself is never rebuilt, so ids and handlers stay intact.
     showLocationPanel() {
         const panel = document.getElementById('location-panel');
+        const loc = this.selectedLocation;
+        if (!loc) return;
+
+        document.querySelectorAll('.location-list-item.expanded').forEach(i => i.classList.remove('expanded'));
+        const item = document.querySelector(`.location-list-item[data-location-id="${loc.id}"]`);
+        if (item) {
+            if (panel.parentNode !== item) item.appendChild(panel);
+            item.classList.add('expanded');
+            item.style.display = '';
+        } else {
+            document.getElementById('location-panel-home').appendChild(panel);
+        }
         panel.classList.remove('hidden');
 
-        const loc = this.selectedLocation;
+        if (item) {
+            requestAnimationFrame(() => item.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
+        }
         document.getElementById('location-id').value = loc.id;
         document.getElementById('location-number').value = loc.number || '';
         document.getElementById('location-name').value = loc.name || '';
@@ -1170,21 +1314,37 @@ const Admin = {
         this.renderPhotoRow();
     },
 
-    closeLocationPanel() {
-        document.getElementById('location-panel').classList.add('hidden');
-        document.querySelectorAll('.location-marker').forEach(m => m.classList.remove('selected'));
-        this.selectedLocation = null;
+    // Hide the form and return it to its off-list home so a list re-render
+    // (innerHTML = '') cannot destroy it
+    parkLocationPanel() {
+        const panel = document.getElementById('location-panel');
+        const home = document.getElementById('location-panel-home');
+        panel.classList.add('hidden');
+        if (panel.parentNode !== home) home.appendChild(panel);
+        document.querySelectorAll('.location-list-item.expanded').forEach(i => i.classList.remove('expanded'));
     },
 
-    // Add Location
+    closeLocationPanel() {
+        this.parkLocationPanel();
+        document.querySelectorAll('.location-marker').forEach(m => m.classList.remove('selected'));
+        document.querySelectorAll('.location-list-item.selected').forEach(i => i.classList.remove('selected'));
+        this.selectedLocation = null;
+        this.applyLocationFilters();
+    },
+
+    // Add Location at a screen point (double-click event or a tap while
+    // placement mode is armed). The canvas rect already includes any pinch
+    // zoom transform, so the percentage is correct at every zoom level.
     addLocationAtPosition(e) {
         if (!this.currentMap) return;
 
         const canvas = document.getElementById('map-canvas');
         const rect = canvas.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
 
-        const left = ((e.clientX - rect.left) / rect.width * 100).toFixed(2) + '%';
-        const top = ((e.clientY - rect.top) / rect.height * 100).toFixed(2) + '%';
+        const clamp = (v) => Math.max(0, Math.min(100, v));
+        const left = clamp((e.clientX - rect.left) / rect.width * 100).toFixed(2) + '%';
+        const top = clamp((e.clientY - rect.top) / rect.height * 100).toFixed(2) + '%';
 
         // Find next available number
         const existingNumbers = this.currentMap.locations.map(l => l.number || 0);
@@ -1212,14 +1372,18 @@ const Admin = {
             // Add to local data
             this.currentMap.locations.push(response);
 
-            // Render new marker
+            // Render new marker and list row
             const container = document.getElementById('markers-container');
             container.appendChild(this.createMarker(response));
+            this.renderLocationList();
 
-            // Select it
+            // Select it (opens its details under the list row)
             this.selectLocation(response.id);
+            this.updatePhotosNeededBadge();
+            this.schedulePublish();
 
             this.toast('Location added', 'success');
+            document.dispatchEvent(new CustomEvent('admin:location-created', { detail: { id: response.id } }));
         } catch (error) {
             this.toast(`Failed to add location: ${error.message}`, 'error');
         }
@@ -1246,13 +1410,19 @@ const Admin = {
             // Update local data
             Object.assign(this.selectedLocation, response);
 
-            // Update marker number
-            const marker = document.querySelector(`[data-location-id="${this.selectedLocation.id}"]`);
+            // Update marker number and the list row
+            const marker = document.querySelector(`.location-marker[data-location-id="${this.selectedLocation.id}"]`);
             if (marker) {
                 marker.querySelector('.marker-number').textContent = response.number || '';
             }
+            const item = document.querySelector(`.location-list-item[data-location-id="${this.selectedLocation.id}"]`);
+            if (item) {
+                item.querySelector('.location-list-number').textContent = response.number || '';
+                item.querySelector('.location-list-name').textContent = response.name || 'Unnamed';
+            }
 
             this.toast('Location saved', 'success');
+            this.schedulePublish();
         } catch (error) {
             this.toast(`Failed to save location: ${error.message}`, 'error');
         }
@@ -1279,14 +1449,15 @@ const Admin = {
             this.currentMap.locations = this.currentMap.locations.filter(l => l.id !== this.selectedLocation.id);
 
             // Remove marker
-            const marker = document.querySelector(`[data-location-id="${this.selectedLocation.id}"]`);
+            const marker = document.querySelector(`.location-marker[data-location-id="${this.selectedLocation.id}"]`);
             if (marker) marker.remove();
 
             this.closeLocationPanel();
             this.renderLocationList();
+            this.updatePhotosNeededBadge();
             this.toast('Location deleted', 'success');
-            // Auto-regenerate HTML pages, then resync with the server
-            await this.generateHTML();
+            // Publish (debounced), then resync with the server
+            this.schedulePublish();
             await this.reloadAndReselectMap();
         } catch (error) {
             this.toast(`Failed to delete location: ${error.message}`, 'error');
@@ -1331,6 +1502,8 @@ const Admin = {
         loc.images = Array.isArray(response?.images) ? response.images : images.slice();
         loc.image = typeof response?.image === 'string' ? response.image : (loc.images[0] || '');
         if (this.selectedLocation === loc) this.renderPhotoRow();
+        this.updateLocationBadge(loc);
+        this.updatePhotosNeededBadge();
     },
 
     renderPhotoRow() {
@@ -1453,7 +1626,7 @@ const Admin = {
             try {
                 await this.saveLocationImages(newOrder, target);
                 this.toast('Photos reordered', 'success');
-                await this.generateHTML();
+                this.schedulePublish();
             } catch (error) {
                 this.renderPhotoRow();
                 this.toast(`Failed to reorder photos: ${error.message}`, 'error');
@@ -1473,25 +1646,33 @@ const Admin = {
         if (!target) return;
         const loc = target.loc;
 
-        const uploadBtn = document.getElementById('upload-image-btn');
-        uploadBtn.disabled = true;
+        await this.uploadPhotosToLocation(target, files, document.getElementById('upload-image-btn'), {
+            // Stop if the admin selects a different location mid-upload
+            abortIf: () => this.selectedLocation !== loc,
+            idleLabel: 'Add Photos'
+        });
+    },
+
+    // Shared shrink-and-upload path for the details form and the Photos
+    // needed view. Uploads one file at a time; each success is appended to
+    // the location's images and saved before the next starts, so a failure
+    // part-way keeps what already landed. Returns the number added.
+    async uploadPhotosToLocation(target, files, button, { abortIf = null, idleLabel = 'Add Photos' } = {}) {
+        const loc = target.loc;
+        if (button) button.disabled = true;
 
         let added = 0;
         try {
-            // Upload one at a time; each success is appended and saved before
-            // the next starts, so a failure part-way keeps what already landed.
-            // Every save targets the location captured above, and the loop
-            // stops if the admin selects a different location mid-upload.
             for (let i = 0; i < files.length; i++) {
-                if (this.selectedLocation !== loc) {
+                if (abortIf && abortIf()) {
                     throw new Error('Location changed during upload; remaining photos were not added');
                 }
-                uploadBtn.textContent = `Preparing ${i + 1} of ${files.length}...`;
+                if (button) button.textContent = `Preparing ${i + 1} of ${files.length}...`;
                 const prepared = await this.shrinkImageForUpload(files[i]);
                 if (prepared.size > this.MAX_UPLOAD_BYTES) {
                     throw new Error(`${files[i].name} is ${(prepared.size / 1048576).toFixed(1)} MB; the limit is 25 MB`);
                 }
-                uploadBtn.textContent = `Uploading ${i + 1} of ${files.length}...`;
+                if (button) button.textContent = `Uploading ${i + 1} of ${files.length}...`;
                 const response = await this.apiUpload('/api/upload', prepared);
                 if (!response || !response.success || !response.filename) {
                     throw new Error((response && response.error) || 'Upload failed');
@@ -1502,15 +1683,20 @@ const Admin = {
             }
             this.toast(added === 1 ? 'Photo added' : `${added} photos added`, 'success');
         } catch (error) {
-            this.toast(`Failed to upload image: ${error.message}`, 'error');
+            if (error.message !== 'Session expired') {
+                this.toast(`Failed to upload image: ${error.message}`, 'error');
+            }
         } finally {
-            uploadBtn.disabled = false;
-            uploadBtn.textContent = 'Add Photos';
+            if (button) {
+                button.disabled = false;
+                button.textContent = idleLabel;
+            }
         }
 
         if (added > 0) {
-            await this.generateHTML();
+            this.schedulePublish();
         }
+        return added;
     },
 
     MAX_UPLOAD_BYTES: 25 * 1024 * 1024,
@@ -1572,7 +1758,7 @@ const Admin = {
         }
 
         this.toast('Photo removed', 'success');
-        await this.generateHTML();
+        this.schedulePublish();
     },
 
     // Legacy single-image delete: kept as an alias for the multi-photo flow
@@ -1614,6 +1800,7 @@ const Admin = {
                 document.getElementById('map-image-preview').innerHTML = `<img src="${this.escapeHtml(response.filename)}" alt="Map image">`;
                 document.getElementById('map-image-filename').textContent = response.filename;
                 document.getElementById('map-form').dataset.newImage = response.filename;
+                this.updateMapCanvasGroup();
                 this.toast('Map image uploaded', 'success');
             } else {
                 this.toast(response.error || 'Upload failed', 'error');
@@ -1643,6 +1830,7 @@ const Admin = {
             document.getElementById('category-id').value = '';
             delete document.getElementById('category-slug').dataset.manual;
         }
+        document.getElementById('delete-category-btn').classList.toggle('hidden', !category);
 
         modal.classList.remove('hidden');
     },
@@ -1664,14 +1852,17 @@ const Admin = {
             this.closeModals();
             await this.loadData();
             this.toast(id ? 'Category updated' : 'Category created', 'success');
+            this.schedulePublish();
         } catch (error) {
             this.toast(`Failed to save category: ${error.message}`, 'error');
         }
     },
 
     confirmDeleteCategory(categoryId) {
+        const category = this.data.categories.find(c => c.id === categoryId);
+        const name = category?.name || 'this category';
         this.showConfirmModal(
-            'Are you sure you want to delete this category? Venues will become uncategorized.',
+            `Delete the category "${name}"? Its page comes off the site and its venues become uncategorized. No maps or locations are removed.`,
             () => this.deleteCategory(categoryId)
         );
     },
@@ -1681,8 +1872,7 @@ const Admin = {
             await this.api(`/api/categories/${categoryId}`, 'DELETE');
             await this.loadData();
             this.toast('Category deleted', 'success');
-            // Auto-regenerate HTML pages
-            await this.generateHTML();
+            this.schedulePublish();
         } catch (error) {
             this.toast(`Failed to delete category: ${error.message}`, 'error');
         }
@@ -1716,6 +1906,7 @@ const Admin = {
                 cb.checked = false;
             });
         }
+        document.getElementById('delete-venue-btn').classList.toggle('hidden', !venue);
 
         modal.classList.remove('hidden');
     },
@@ -1760,14 +1951,19 @@ const Admin = {
             this.closeModals();
             await this.loadData();
             this.toast(id ? 'Venue updated' : 'Venue created', 'success');
+            this.schedulePublish();
         } catch (error) {
             this.toast(`Failed to save venue: ${error.message}`, 'error');
         }
     },
 
     confirmDeleteVenue(venueId, venueName) {
+        const venue = this.data.venues.find(v => v.id === venueId);
+        const maps = venue?.maps || [];
+        const locations = maps.reduce((n, m) => n + (m.locations || []).length, 0);
+        const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
         this.showConfirmModal(
-            `Are you sure you want to delete "${venueName}"? All maps and locations will be lost.`,
+            `Delete the venue "${venueName || venue?.name || 'this venue'}"? ${plural(maps.length, 'map')} and ${plural(locations, 'location')} will be removed.`,
             () => this.deleteVenue(venueId)
         );
     },
@@ -1786,8 +1982,7 @@ const Admin = {
 
             await this.loadData();
             this.toast('Venue deleted', 'success');
-            // Auto-regenerate HTML pages
-            await this.generateHTML();
+            this.schedulePublish();
         } catch (error) {
             this.toast(`Failed to delete venue: ${error.message}`, 'error');
         }
@@ -1803,12 +1998,14 @@ const Admin = {
         document.getElementById('map-image-filename').textContent = '';
         delete form.dataset.newImage;
 
-        if (edit && this.currentMap) {
-            title.textContent = 'Edit Map';
+        const editing = !!(edit && this.currentMap);
+        if (editing) {
+            title.textContent = 'Edit Map Info';
             document.getElementById('map-id').value = this.currentMap.id;
             document.getElementById('map-venue-id').value = this.currentVenue.id;
             document.getElementById('map-label').value = this.currentMap.label;
             document.getElementById('map-subtitle').value = this.currentMap.subtitle || '';
+            document.getElementById('map-canvas-shape').value = this.currentMap.canvas || '16:9';
 
             if (this.currentMap.image) {
                 document.getElementById('map-image-preview').innerHTML = `<img src="${this.escapeHtml(this.currentMap.image)}" alt="Map image">`;
@@ -1819,9 +2016,20 @@ const Admin = {
             form.reset();
             document.getElementById('map-id').value = '';
             document.getElementById('map-venue-id').value = this.currentVenue?.id || '';
+            document.getElementById('map-canvas-shape').value = '16:9';
         }
+        document.getElementById('delete-map-btn').classList.toggle('hidden', !editing);
+        this.updateMapCanvasGroup();
 
         modal.classList.remove('hidden');
+    },
+
+    // The canvas-shape selector only matters while the map has no image
+    updateMapCanvasGroup() {
+        const form = document.getElementById('map-form');
+        const editing = !!document.getElementById('map-id').value;
+        const hasImage = !!form.dataset.newImage || (editing && !!this.currentMap?.image);
+        document.getElementById('map-canvas-group').classList.toggle('hidden', hasImage);
     },
 
     async saveMap() {
@@ -1831,7 +2039,8 @@ const Admin = {
 
         const data = {
             label: document.getElementById('map-label').value,
-            subtitle: document.getElementById('map-subtitle').value
+            subtitle: document.getElementById('map-subtitle').value,
+            canvas: document.getElementById('map-canvas-shape').value || '16:9'
         };
 
         if (form.dataset.newImage) {
@@ -1854,6 +2063,7 @@ const Admin = {
             }
 
             this.toast(id ? 'Map updated' : 'Map created', 'success');
+            this.schedulePublish();
         } catch (error) {
             this.toast(`Failed to save map: ${error.message}`, 'error');
         }
@@ -1862,8 +2072,9 @@ const Admin = {
     confirmDeleteMap() {
         if (!this.currentMap) return;
 
+        const n = (this.currentMap.locations || []).length;
         this.showConfirmModal(
-            `Are you sure you want to delete "${this.currentMap.label}"? All locations will be lost.`,
+            `Delete the map "${this.currentMap.label}"? ${n} location${n === 1 ? '' : 's'} on it will be removed.`,
             () => this.deleteMap()
         );
     },
@@ -1881,26 +2092,553 @@ const Admin = {
 
             await this.loadData();
             this.toast('Map deleted', 'success');
-            // Auto-regenerate HTML pages
-            await this.generateHTML();
+            this.schedulePublish();
         } catch (error) {
             this.toast(`Failed to delete map: ${error.message}`, 'error');
         }
     },
 
-    // HTML Generation (Publish)
-    async generateHTML() {
+    // ------------------------------------------------------------------
+    // Auto-publish and the status strip
+    // ------------------------------------------------------------------
+
+    // Every successful save calls this. One generate-html runs 1.5 s after
+    // the last save, so a drag or a burst of edits publishes once.
+    schedulePublish() {
+        if (this._publishTimer) clearTimeout(this._publishTimer);
+        if (!this.publish.inFlight) {
+            this.publish.state = 'dirty';
+            this.publish.error = null;
+            this.renderPublishStatus();
+        }
+        this._publishTimer = setTimeout(() => {
+            this._publishTimer = null;
+            this.generateHTML();
+        }, this.PUBLISH_DEBOUNCE_MS);
+    },
+
+    // HTML Generation (Publish). `manual` publishes come from the status
+    // strip and get a toast; automatic ones only update the strip.
+    async generateHTML({ manual = false } = {}) {
+        if (this._publishTimer) {
+            clearTimeout(this._publishTimer);
+            this._publishTimer = null;
+        }
+        if (this.publish.inFlight) {
+            // A save landed mid-publish: run once more when this one finishes
+            this.publish.queued = true;
+            return;
+        }
+
+        this.publish.inFlight = true;
+        this.publish.state = 'busy';
+        this.renderPublishStatus();
+
         try {
             const response = await this.api('/api/generate-html', 'POST');
-            if (response.success) {
+            if (response && response.success) {
                 // Clear draft after successful publish
                 this.clearDraft();
-                this.toast(`Published: ${response.files.join(', ')}`, 'success');
+                this.publish.lastPublished = response.status?.lastPublished || new Date().toISOString();
+                // A save that landed during this publish is still unpublished
+                this.publish.state = (this._publishTimer || this.publish.queued) ? 'dirty' : 'ok';
+                this.publish.error = null;
+                if (manual) {
+                    this.toast(`Published: ${(response.files || []).join(', ')}`, 'success');
+                }
             } else {
-                this.toast(response.error || 'Generation failed', 'error');
+                throw new Error((response && response.error) || 'Generation failed');
             }
         } catch (error) {
-            this.toast(`Failed to publish: ${error.message}`, 'error');
+            this.publish.state = 'dirty';
+            this.publish.error = error.message;
+            if (error.message !== 'Session expired') {
+                this.toast(`Failed to publish: ${error.message}`, 'error');
+            }
+        } finally {
+            this.publish.inFlight = false;
+            this.renderPublishStatus();
+            if (this.publish.queued) {
+                this.publish.queued = false;
+                this.generateHTML();
+            }
+        }
+    },
+
+    startPublishPolling() {
+        if (this._publishPoll) return;
+        this.refreshPublishStatus();
+        this._publishPoll = setInterval(() => this.refreshPublishStatus(), 60000);
+        this._publishAge = setInterval(() => this.renderPublishStatus(), 30000);
+    },
+
+    stopPublishPolling() {
+        if (this._publishPoll) clearInterval(this._publishPoll);
+        if (this._publishAge) clearInterval(this._publishAge);
+        this._publishPoll = null;
+        this._publishAge = null;
+    },
+
+    // GET /api/publish-status -> {lastModified, lastPublished, dirty}. A
+    // server without the endpoint (404) leaves the strip in "unknown".
+    async refreshPublishStatus() {
+        if (!this.token) return;
+        try {
+            const status = await this.api('/api/publish-status');
+            if (status && typeof status === 'object') {
+                this.publish.lastPublished = status.lastPublished || null;
+                if (!this.publish.inFlight && !this._publishTimer) {
+                    this.publish.state = status.dirty ? 'dirty' : 'ok';
+                    if (!status.dirty) this.publish.error = null;
+                }
+            }
+        } catch (error) {
+            if (error.message === 'Session expired') return;
+            if (!this.publish.inFlight && this.publish.state !== 'dirty') {
+                this.publish.state = 'unknown';
+            }
+        }
+        this.renderPublishStatus();
+    },
+
+    renderPublishStatus() {
+        const btn = document.getElementById('publish-status');
+        const text = document.getElementById('publish-status-text');
+        const action = document.getElementById('publish-status-action');
+        if (!btn) return;
+
+        const p = this.publish;
+        btn.classList.remove('state-ok', 'state-dirty', 'state-busy', 'state-unknown');
+        btn.classList.add(`state-${p.state}`);
+        btn.disabled = p.state === 'busy';
+
+        if (p.state === 'busy') {
+            text.textContent = 'Publishing...';
+            action.textContent = '';
+            btn.title = 'Publishing the public pages';
+        } else if (p.state === 'ok') {
+            text.textContent = `Published ${this.formatPublishAge(p.lastPublished)}`;
+            action.textContent = 'Republish';
+            btn.title = 'Site is up to date. Click to republish anyway.';
+        } else if (p.state === 'dirty') {
+            text.textContent = p.error ? 'Publish failed' : 'Unpublished changes';
+            action.textContent = 'Republish';
+            btn.title = p.error ? `Last publish failed: ${p.error}. Click to retry.` : 'Click to publish now';
+        } else {
+            text.textContent = 'Publish status unknown';
+            action.textContent = 'Publish';
+            btn.title = 'Click to publish the public pages';
+        }
+    },
+
+    formatPublishAge(iso) {
+        if (!iso) return 'just now';
+        const then = new Date(iso).getTime();
+        if (Number.isNaN(then)) return 'just now';
+        const secs = Math.max(0, Math.round((Date.now() - then) / 1000));
+        if (secs < 45) return 'just now';
+        const mins = Math.round(secs / 60);
+        if (mins < 60) return `${mins} min ago`;
+        const hours = Math.round(mins / 60);
+        if (hours < 24) return `${hours} hr ago`;
+        const days = Math.round(hours / 24);
+        if (days < 7) return `${days} day${days === 1 ? '' : 's'} ago`;
+        return new Date(iso).toLocaleDateString();
+    },
+
+    // ------------------------------------------------------------------
+    // Phone drawer + landing page section state
+    // ------------------------------------------------------------------
+
+    isPhone() {
+        return window.matchMedia('(max-width: 768px)').matches;
+    },
+
+    openDrawer() {
+        document.getElementById('sidebar').classList.add('open');
+        document.getElementById('sidebar-scrim').hidden = false;
+        document.getElementById('sidebar-menu-btn').setAttribute('aria-expanded', 'true');
+        document.body.classList.add('drawer-open');
+    },
+
+    closeDrawer() {
+        const sidebar = document.getElementById('sidebar');
+        if (!sidebar) return;
+        sidebar.classList.remove('open');
+        document.getElementById('sidebar-scrim').hidden = true;
+        document.getElementById('sidebar-menu-btn').setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('drawer-open');
+    },
+
+    setLandingExpanded(expanded) {
+        document.querySelector('.landing-page-section').classList.toggle('expanded', expanded);
+        document.getElementById('landing-page-toggle').classList.toggle('expanded', expanded);
+    },
+
+    restoreLandingState() {
+        let expanded = false;
+        try { expanded = localStorage.getItem(this.LANDING_KEY) === '1'; } catch (e) { expanded = false; }
+        this.setLandingExpanded(expanded);
+    },
+
+    // ------------------------------------------------------------------
+    // Tap-to-place (Add Location button)
+    // ------------------------------------------------------------------
+
+    togglePlacement() {
+        if (this.placing) this.disarmPlacement();
+        else this.armPlacement();
+    },
+
+    armPlacement() {
+        if (!this.currentMap) return;
+        this.placing = true;
+        document.getElementById('map-canvas').classList.add('placing');
+        document.getElementById('map-viewport').classList.add('placing');
+        document.getElementById('placing-hint').hidden = false;
+        const btn = document.getElementById('add-location-btn');
+        btn.classList.add('active');
+        btn.setAttribute('aria-pressed', 'true');
+        btn.textContent = 'Cancel';
+        if (this.isPhone()) {
+            document.getElementById('map-viewport').scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+    },
+
+    disarmPlacement() {
+        this.placing = false;
+        const canvas = document.getElementById('map-canvas');
+        if (!canvas) return;
+        canvas.classList.remove('placing');
+        document.getElementById('map-viewport').classList.remove('placing');
+        document.getElementById('placing-hint').hidden = true;
+        const btn = document.getElementById('add-location-btn');
+        btn.classList.remove('active');
+        btn.setAttribute('aria-pressed', 'false');
+        btn.textContent = '+ Add Location';
+    },
+
+    // ------------------------------------------------------------------
+    // Canvas gestures: tap-to-place, pinch zoom, two-finger pan
+    // ------------------------------------------------------------------
+
+    bindCanvasGestures() {
+        const viewport = document.getElementById('map-viewport');
+        const gesture = { tap: null, pinch: null, pan: null, multi: false, ignore: false };
+        this._gesture = gesture;
+
+        const dist = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+        const mid = (t) => {
+            const r = viewport.getBoundingClientRect();
+            return { x: (t[0].clientX + t[1].clientX) / 2 - r.left, y: (t[0].clientY + t[1].clientY) / 2 - r.top };
+        };
+
+        // Pointer events (mouse + touch) decide whether a press was a tap
+        viewport.addEventListener('pointerdown', (e) => {
+            if (e.target.closest('.location-marker') || e.target.closest('.reset-zoom-btn')) {
+                gesture.tap = null;
+                return;
+            }
+            gesture.tap = { id: e.pointerId, x: e.clientX, y: e.clientY };
+        });
+        viewport.addEventListener('pointerup', (e) => {
+            const tap = gesture.tap;
+            gesture.tap = null;
+            if (!tap || tap.id !== e.pointerId) return;
+            if (!this.placing || gesture.multi) return;
+            if (Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 10) return;
+            this.placeLocationAt(e.clientX, e.clientY);
+        });
+        viewport.addEventListener('pointercancel', () => { gesture.tap = null; });
+
+        // Touch events carry the multi-touch geometry for pinch and pan
+        viewport.addEventListener('touchstart', (e) => {
+            if (e.target.closest('.location-marker')) {
+                gesture.ignore = true;
+                return;
+            }
+            gesture.ignore = false;
+            if (e.touches.length >= 2) {
+                if (e.cancelable) e.preventDefault();
+                gesture.multi = true;
+                gesture.pan = null;
+                gesture.pinch = {
+                    d0: dist(e.touches),
+                    mid0: mid(e.touches),
+                    scale0: this.zoom.scale,
+                    tx0: this.zoom.tx,
+                    ty0: this.zoom.ty
+                };
+            } else if (e.touches.length === 1 && this.zoom.scale > 1 && !this.placing) {
+                gesture.pan = { x: e.touches[0].clientX, y: e.touches[0].clientY, tx0: this.zoom.tx, ty0: this.zoom.ty };
+            }
+        }, { passive: false });
+
+        viewport.addEventListener('touchmove', (e) => {
+            if (gesture.ignore) return;
+            if (e.touches.length >= 2 && gesture.pinch) {
+                if (e.cancelable) e.preventDefault();
+                const p = gesture.pinch;
+                const m = mid(e.touches);
+                const scale = this.clampZoom(p.scale0 * (dist(e.touches) / p.d0));
+                // Keep the canvas point that was under the first midpoint
+                // under the current midpoint (transform-origin is 0 0)
+                const cx = (p.mid0.x - p.tx0) / p.scale0;
+                const cy = (p.mid0.y - p.ty0) / p.scale0;
+                this.setZoom(scale, m.x - scale * cx, m.y - scale * cy);
+            } else if (e.touches.length === 1 && gesture.pan) {
+                if (e.cancelable) e.preventDefault();
+                const dx = e.touches[0].clientX - gesture.pan.x;
+                const dy = e.touches[0].clientY - gesture.pan.y;
+                this.setZoom(this.zoom.scale, gesture.pan.tx0 + dx, gesture.pan.ty0 + dy);
+            }
+        }, { passive: false });
+
+        const onTouchEnd = (e) => {
+            if (e.touches.length < 2) gesture.pinch = null;
+            if (e.touches.length === 1 && this.zoom.scale > 1 && !gesture.ignore) {
+                gesture.pan = { x: e.touches[0].clientX, y: e.touches[0].clientY, tx0: this.zoom.tx, ty0: this.zoom.ty };
+            }
+            if (e.touches.length === 0) {
+                gesture.pan = null;
+                gesture.ignore = false;
+                // Let the trailing pointerup see that this was a pinch
+                setTimeout(() => { gesture.multi = false; }, 80);
+            }
+        };
+        viewport.addEventListener('touchend', onTouchEnd);
+        viewport.addEventListener('touchcancel', onTouchEnd);
+
+        // Trackpad / ctrl+wheel zoom on desktop, centred on the cursor
+        viewport.addEventListener('wheel', (e) => {
+            if (!e.ctrlKey && !e.metaKey) return;
+            e.preventDefault();
+            const r = viewport.getBoundingClientRect();
+            const px = e.clientX - r.left;
+            const py = e.clientY - r.top;
+            const scale = this.clampZoom(this.zoom.scale * (e.deltaY < 0 ? 1.15 : 1 / 1.15));
+            const cx = (px - this.zoom.tx) / this.zoom.scale;
+            const cy = (py - this.zoom.ty) / this.zoom.scale;
+            this.setZoom(scale, px - scale * cx, py - scale * cy);
+        }, { passive: false });
+
+        // Mouse drag pans when zoomed (markers handle their own drag)
+        viewport.addEventListener('mousedown', (e) => {
+            if (e.button !== 0 || this.zoom.scale === 1 || this.placing) return;
+            if (e.target.closest('.location-marker') || e.target.closest('.reset-zoom-btn')) return;
+            e.preventDefault();
+            const start = { x: e.clientX, y: e.clientY, tx0: this.zoom.tx, ty0: this.zoom.ty };
+            const onMove = (m) => this.setZoom(this.zoom.scale, start.tx0 + m.clientX - start.x, start.ty0 + m.clientY - start.y);
+            const onUp = () => {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+            };
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+        });
+    },
+
+    placeLocationAt(clientX, clientY) {
+        if (!this.placing || !this.currentMap) return;
+        // Convert the tap first: hiding the hint banner shifts the canvas
+        this.addLocationAtPosition({ clientX, clientY });
+        this.disarmPlacement();
+    },
+
+    clampZoom(scale) {
+        return Math.max(this.MIN_ZOOM, Math.min(this.MAX_ZOOM, scale));
+    },
+
+    // Apply translate+scale to #map-canvas. Markers counter-scale through the
+    // --zoom custom property so they keep the same on-screen size.
+    setZoom(scale, tx, ty) {
+        const canvas = document.getElementById('map-canvas');
+        const viewport = document.getElementById('map-viewport');
+        scale = this.clampZoom(scale);
+
+        if (scale === 1) {
+            tx = 0;
+            ty = 0;
+        } else {
+            const w = canvas.offsetWidth;
+            const h = canvas.offsetHeight;
+            tx = Math.min(0, Math.max(viewport.clientWidth - w * scale, tx));
+            ty = Math.min(0, Math.max(viewport.clientHeight - h * scale, ty));
+        }
+
+        this.zoom = { scale, tx, ty };
+        canvas.style.transform = scale === 1 ? '' : `translate(${tx}px, ${ty}px) scale(${scale})`;
+        canvas.style.setProperty('--zoom', String(scale));
+        viewport.classList.toggle('zoomed', scale !== 1);
+        document.getElementById('reset-zoom-btn').hidden = scale === 1;
+    },
+
+    resetZoom() {
+        if (!document.getElementById('map-canvas')) return;
+        this.setZoom(1, 0, 0);
+    },
+
+    // ------------------------------------------------------------------
+    // Keyboard
+    // ------------------------------------------------------------------
+
+    handleKeydown(e) {
+        if (e.key === 'Escape') {
+            if (document.querySelector('.modal:not(.hidden)')) {
+                this.closeModals();
+                return;
+            }
+            if (this.placing) {
+                this.disarmPlacement();
+                return;
+            }
+            if (document.getElementById('sidebar')?.classList.contains('open')) {
+                this.closeDrawer();
+                return;
+            }
+            if (this.selectedLocation) {
+                this.closeLocationPanel();
+            }
+            return;
+        }
+
+        if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+            const el = e.target;
+            if (el && el.tagName === 'INPUT' && (el.type === 'text' || el.type === 'number')
+                && el.closest && el.closest('#location-form')) {
+                e.preventDefault();
+                this.saveLocation();
+            }
+        }
+    },
+
+    // ------------------------------------------------------------------
+    // Photos needed (site-wide list of locations with zero photos)
+    // ------------------------------------------------------------------
+
+    photosNeeded() {
+        const rows = [];
+        (this.data.venues || []).forEach(venue => {
+            (venue.maps || []).forEach(map => {
+                (map.locations || []).forEach(loc => {
+                    if (this.getLocationImages(loc).length === 0) rows.push({ venue, map, loc });
+                });
+            });
+        });
+        return rows;
+    },
+
+    updatePhotosNeededBadge() {
+        const badge = document.getElementById('photos-needed-badge');
+        if (!badge) return;
+        const n = this.photosNeeded().length;
+        badge.textContent = String(n);
+        badge.classList.toggle('zero', n === 0);
+    },
+
+    showPhotosNeededView() {
+        this.disarmPlacement();
+        this.closeLocationPanel();
+        document.getElementById('empty-state').classList.add('hidden');
+        document.getElementById('map-editor').classList.add('hidden');
+        document.getElementById('photos-needed-view').classList.remove('hidden');
+        document.getElementById('photos-needed-nav').classList.add('active');
+        document.querySelectorAll('.tree-map').forEach(el => el.classList.remove('active'));
+        this.renderPhotosNeeded();
+        this.closeDrawer();
+        document.getElementById('editor-main').scrollTop = 0;
+    },
+
+    renderPhotosNeeded() {
+        const container = document.getElementById('photos-needed-list');
+        const summary = document.getElementById('photos-needed-summary');
+        container.innerHTML = '';
+
+        const rows = this.photosNeeded();
+        summary.textContent = rows.length === 0
+            ? 'Every location has at least one photo'
+            : `${rows.length} location${rows.length === 1 ? '' : 's'} without a photo`;
+
+        if (rows.length === 0) {
+            container.innerHTML = '<div class="photos-needed-empty">Nothing to do here. Every location has a photo.</div>';
+            return;
+        }
+
+        // Group by venue, then map, keeping data order
+        const groups = new Map();
+        rows.forEach(r => {
+            const key = `${r.venue.id}/${r.map.id}`;
+            if (!groups.has(key)) groups.set(key, { venue: r.venue, map: r.map, rows: [] });
+            groups.get(key).rows.push(r);
+        });
+
+        groups.forEach(group => {
+            const section = document.createElement('section');
+            section.className = 'photos-needed-group';
+            section.dataset.venueId = group.venue.id;
+            section.dataset.mapId = group.map.id;
+            section.innerHTML = `
+                <h3 class="photos-needed-group-title">
+                    <span class="photos-needed-venue">${this.escapeHtml(group.venue.name)}</span>
+                    <span class="photos-needed-sep">&rsaquo;</span>
+                    <span class="photos-needed-map">${this.escapeHtml(group.map.label)}</span>
+                    <button type="button" class="btn btn-sm btn-outline photos-needed-open">Open map</button>
+                </h3>
+                <table class="photos-needed-table">
+                    <thead><tr><th class="col-num">#</th><th>Location</th><th class="col-action"></th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            `;
+            section.querySelector('.photos-needed-open').addEventListener('click', () => {
+                this.selectMap(group.venue.id, group.map.id);
+            });
+
+            const tbody = section.querySelector('tbody');
+            group.rows.sort((a, b) => (a.loc.number || 0) - (b.loc.number || 0)).forEach(({ venue, map, loc }) => {
+                const tr = document.createElement('tr');
+                tr.dataset.locationId = loc.id;
+                tr.innerHTML = `
+                    <td class="col-num"><span class="location-list-number">${loc.number || ''}</span></td>
+                    <td class="col-name">${this.escapeHtml(loc.name) || 'Unnamed'}</td>
+                    <td class="col-action"><button type="button" class="btn btn-primary btn-sm photos-needed-add">Add Photos</button></td>
+                `;
+                tr.querySelector('.photos-needed-add').addEventListener('click', (e) => {
+                    this._photosNeededTarget = {
+                        venueId: venue.id,
+                        mapId: map.id,
+                        loc,
+                        row: tr,
+                        button: e.currentTarget
+                    };
+                    document.getElementById('photos-needed-file-input').click();
+                });
+                tbody.appendChild(tr);
+            });
+
+            container.appendChild(section);
+        });
+    },
+
+    async handlePhotosNeededUpload(e) {
+        const files = Array.from(e.target.files || []);
+        e.target.value = '';
+        const target = this._photosNeededTarget;
+        this._photosNeededTarget = null;
+        if (!files.length || !target) return;
+
+        const added = await this.uploadPhotosToLocation(target, files, target.button, { idleLabel: 'Add Photos' });
+        if (added > 0 && this.getLocationImages(target.loc).length > 0) {
+            const section = target.row.closest('.photos-needed-group');
+            target.row.remove();
+            if (section && !section.querySelector('tbody tr')) section.remove();
+            if (!document.querySelector('#photos-needed-list .photos-needed-group')) {
+                this.renderPhotosNeeded();
+            } else {
+                const n = this.photosNeeded().length;
+                document.getElementById('photos-needed-summary').textContent =
+                    `${n} location${n === 1 ? '' : 's'} without a photo`;
+            }
+            this.updatePhotosNeededBadge();
         }
     },
 
@@ -2042,8 +2780,7 @@ const Admin = {
                 // Reload so the location's images array (now with the approved
                 // photo appended) is current, keeping the open map and panel
                 await this.reloadAndReselectMap();
-                // Regenerate HTML
-                await this.generateHTML();
+                this.schedulePublish();
             } else {
                 this.toast(response.error || 'Failed to approve', 'error');
             }
@@ -2294,11 +3031,20 @@ const Tutorial = {
         {
             id: 'add-location',
             type: 'highlight',
-            target: '#map-canvas',
+            target: '#add-location-btn',
             title: 'Step 4: Add a Location',
-            content: 'Double-click anywhere on the map to add a location marker. Try it now!',
+            content: 'Click "+ Add Location" in the Locations list. The map then waits for you to tap or click the spot where the marker should go. (On a computer, double-clicking the map also adds one.)',
             position: 'left',
-            waitFor: 'dblclick',
+            waitFor: 'click'
+        },
+        {
+            id: 'place-location',
+            type: 'highlight',
+            target: '#map-canvas',
+            title: 'Place the Marker',
+            content: 'Tap or click anywhere on the map to drop the new location there. Press Esc if you change your mind.',
+            position: 'left',
+            waitFor: 'location-created',
             trackCreate: 'location'
         },
         {
@@ -2307,7 +3053,7 @@ const Tutorial = {
             target: '#location-panel',
             targetFn: () => document.getElementById('location-panel'),
             title: 'Edit Location Details',
-            content: 'The location panel opens automatically. Here you can set the name, description, and fiber info, and add one or more photos. The first photo is the cover; drag thumbnails to reorder them. Try editing the fields, then click "Save Location".',
+            content: 'The details open right under the location in the list. Set the name, description, and fiber info, and add one or more photos; the first photo is the cover and thumbnails drag to reorder. The camera badge on each row shows its photo count. Edit the fields, then click "Save Location" (Enter in a text field saves too).',
             position: 'left',
             waitFor: 'click',
             waitForTarget: '#location-form button[type="submit"]'
@@ -2326,18 +3072,27 @@ const Tutorial = {
             type: 'highlight',
             target: '.location-marker',
             title: 'Drag to Reposition',
-            content: 'You can drag any marker to move it. The position is saved automatically. Try dragging the marker!',
+            content: 'You can drag any marker to move it. The position is saved automatically. On a touch screen, pinch the map to zoom in for precise placement; "Reset zoom" brings it back. Try dragging the marker!',
             position: 'bottom',
             buttons: { next: 'Continue', skip: 'Skip' }
         },
         {
+            id: 'map-info',
+            type: 'highlight',
+            target: '#edit-map-btn',
+            title: 'Map Info and Deleting',
+            content: '"Edit Map Info" changes the label, subtitle, image, and the canvas shape used while a map has no image. Deleting a map lives at the bottom of that dialog; the same goes for venues and categories, whose pencil in the sidebar opens an edit dialog with "Delete" at the bottom.',
+            position: 'bottom',
+            buttons: { next: 'Got it', skip: 'Skip' }
+        },
+        {
             id: 'publish',
             type: 'highlight',
-            target: '#generate-html-btn',
-            title: 'Step 5: Publish Changes',
-            content: 'When you\'re ready, click "Publish Changes" to regenerate the HTML pages. This updates the live site.',
+            target: '#publish-status',
+            title: 'Step 5: Publishing',
+            content: 'Every save publishes the public pages automatically about a second and a half later. This strip shows when the site was last published. If it turns orange, something is unpublished or a publish failed: click it to republish.',
             position: 'top',
-            waitFor: 'click'
+            buttons: { next: 'Got it!', skip: 'Skip' }
         },
         {
             id: 'complete',
@@ -2461,6 +3216,24 @@ const Tutorial = {
 
         // Find target element (must be present AND visible to anchor to)
         let target = step.targetFn ? step.targetFn() : document.querySelector(step.target);
+
+        // On phones the sidebar is a drawer: open it for sidebar targets and
+        // close it for everything else, then re-anchor once it has moved
+        if (target && Admin.isPhone()) {
+            const inSidebar = !!target.closest('#sidebar');
+            const drawerOpen = document.getElementById('sidebar').classList.contains('open');
+            if (inSidebar && !drawerOpen) {
+                Admin.openDrawer();
+                setTimeout(() => { if (this.active && this.steps[this.currentStep] === step) this.showHighlight(step); }, 320);
+                return;
+            }
+            if (!inSidebar && drawerOpen) {
+                Admin.closeDrawer();
+                setTimeout(() => { if (this.active && this.steps[this.currentStep] === step) this.showHighlight(step); }, 320);
+                return;
+            }
+        }
+
         if (target && target.getBoundingClientRect().width === 0) target = null;
 
         if (!target) {
@@ -2569,6 +3342,12 @@ const Tutorial = {
         this.popover.style.top = top + 'px';
         this.popover.style.left = left + 'px';
         this.popover.classList.add('position-' + position);
+
+        // On phones the popover is a bottom sheet; flip it to the top when
+        // the target sits in the lower half so it never covers the thing
+        // the user is asked to tap
+        const targetMidY = rect.top + rect.height / 2;
+        this.popover.classList.toggle('at-top', Admin.isPhone() && targetMidY > window.innerHeight / 2);
     },
 
     prefillForm(data) {
@@ -2624,6 +3403,16 @@ const Tutorial = {
             });
             observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
             this.waitForObserver = observer;
+        } else if (waitFor === 'location-created') {
+            // Fired by Admin.createNewLocation after the server accepts the
+            // new location, so tracking it is reliable
+            this.waitForListener = () => {
+                if (!this.active) return;
+                if (step.trackCreate) this.trackCreatedItem(step.trackCreate);
+                setTimeout(() => this.next(), 300);
+            };
+            this.waitForEvent = 'admin:location-created';
+            document.addEventListener('admin:location-created', this.waitForListener, { once: true });
         } else if (waitFor === 'click' || waitFor === 'dblclick') {
             const target = step.waitForTarget
                 ? document.querySelector(step.waitForTarget)
