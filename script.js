@@ -14,6 +14,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const imageModalClose = document.getElementById('image-modal-close');
 
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+  // === IMAGELESS MAPS: honour the server's inline aspect-ratio ===
+  // The server emits style="aspect-ratio: W / H" on maps that have no image.
+  // The collapsed container already respects that inline style; the expanded
+  // (overlay) width in style.css is computed from --map-ar-w / --map-ar-h,
+  // so copy the ratio into those variables to keep the overlay on screen.
+  mapContainers.forEach(container => {
+    const ratio = container.style.aspectRatio || '';
+    const m = ratio.match(/^\s*([\d.]+)\s*\/\s*([\d.]+)\s*$/);
+    if (!m) return;
+    const w = parseFloat(m[1]);
+    const h = parseFloat(m[2]);
+    if (!(w > 0) || !(h > 0)) return;
+    container.style.setProperty('--map-ar-w', String(w));
+    container.style.setProperty('--map-ar-h', String(h));
+  });
   const toggledBoxes = new Set();
   const preloadedMaps = new Set();
 

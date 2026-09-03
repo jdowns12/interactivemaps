@@ -7,3 +7,4 @@ uploads/
 *.tmp
 .claude/
 *.tar.gz
+analytics.json

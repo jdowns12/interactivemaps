@@ -323,6 +323,17 @@ def test_landing_page_put_only_touches_landing_page(client, auth, sandbox):
     assert after['venues'] == server.normalize_data(json.loads(json.dumps(before)))['venues']
 
 
+def test_landing_page_put_unwraps_wrapped_body(client, auth, sandbox):
+    """A body shaped {"landingPage": {...}} must not be stored nested."""
+    new_landing = {'title': 'Wrapped', 'cards': [{'id': 'c9', 'title': 'X', 'visible': True, 'order': 0}]}
+    r = client.put('/api/landing-page', headers=auth, json={'landingPage': new_landing})
+    assert r.status_code == 200
+    assert r.get_json() == new_landing
+    after = read_data(sandbox)
+    assert after['landingPage'] == new_landing
+    assert 'landingPage' not in after['landingPage']
+
+
 def test_landing_page_put_rejects_non_object(client, auth):
     r = client.put('/api/landing-page', headers=auth, data='[1,2]', content_type='application/json')
     assert r.status_code == 400 and 'error' in r.get_json()
@@ -447,6 +458,195 @@ def test_approve_photo_request_appends_image(client, auth, sandbox):
     assert new.startswith('uploads/location-') and (sandbox / new).exists()
     assert (sandbox / server.thumb_path_for(new)).exists()
     assert read_data(sandbox)['photoRequests'] == []
+
+
+# ---------------------------------------------------------------- meta / publish status
+
+def test_load_creates_meta_from_file_mtime(sandbox):
+    assert 'meta' not in read_data(sandbox)
+    data = server.load_data()
+    assert set(data['meta']) == {'lastModified', 'lastPublished'}
+    assert data['meta']['lastPublished'] is None
+    mtime = os.path.getmtime(sandbox / 'data.json')
+    assert abs(server.parse_iso(data['meta']['lastModified']).timestamp() - mtime) < 1
+    # load never writes the migration; a save does
+    assert 'meta' not in read_data(sandbox)
+    server.save_data(data)
+    assert read_data(sandbox)['meta']['lastPublished'] is None
+    assert read_data(sandbox)['meta']['lastModified']
+
+
+def test_normalize_data_creates_meta_and_canvas():
+    data = server.normalize_data({'venues': [{'id': 'v', 'maps': [{'id': 'm', 'locations': []}]}]})
+    assert data['meta'] == {'lastModified': None, 'lastPublished': None}
+    assert data['venues'][0]['maps'][0]['canvas'] == '16:9'
+
+
+def test_save_data_stamps_last_modified(sandbox):
+    data = server.load_data()
+    before = data['meta']['lastModified']
+    server.save_data(data)
+    after = read_data(sandbox)['meta']['lastModified']
+    assert after != before and server.parse_iso(after) > server.parse_iso(before)
+
+
+def test_publish_status_requires_auth(client):
+    assert client.get('/api/publish-status').status_code == 401
+
+
+def test_publish_status_dirty_until_published(client, auth, sandbox):
+    r = client.get('/api/publish-status', headers=auth)
+    assert r.status_code == 200
+    body = r.get_json()
+    assert set(body) == {'lastModified', 'lastPublished', 'dirty'}
+    assert body['dirty'] is True and body['lastPublished'] is None
+
+    r = client.post('/api/generate-html', headers=auth)
+    assert r.status_code == 200
+    assert r.get_json()['status']['dirty'] is False
+
+    body = client.get('/api/publish-status', headers=auth).get_json()
+    assert body['dirty'] is False
+    assert server.parse_iso(body['lastPublished']) >= server.parse_iso(body['lastModified'])
+    stored = read_data(sandbox)['meta']
+    assert stored['lastPublished'] == body['lastPublished']
+
+
+def test_publish_does_not_bump_last_modified(client, auth, sandbox):
+    r = client.put('/api/venues/v1/maps/m1/locations/l1', json={'name': 'Renamed'}, headers=auth)
+    assert r.status_code == 200
+    modified = read_data(sandbox)['meta']['lastModified']
+    assert client.get('/api/publish-status', headers=auth).get_json()['dirty'] is True
+
+    assert client.post('/api/generate-html', headers=auth).status_code == 200
+    meta = read_data(sandbox)['meta']
+    assert meta['lastModified'] == modified
+    assert server.parse_iso(meta['lastPublished']) >= server.parse_iso(modified)
+    assert client.get('/api/publish-status', headers=auth).get_json()['dirty'] is False
+
+    # publishing twice keeps it clean, editing makes it dirty again
+    assert client.post('/api/generate-html', headers=auth).status_code == 200
+    assert client.get('/api/publish-status', headers=auth).get_json()['dirty'] is False
+    r = client.put('/api/venues/v1/maps/m1/locations/l1', json={'name': 'Again'}, headers=auth)
+    assert r.status_code == 200
+    assert client.get('/api/publish-status', headers=auth).get_json()['dirty'] is True
+
+
+@pytest.mark.parametrize('path,method,body', [
+    ('/api/categories', 'post', {'name': 'X', 'slug': 'X'}),
+    ('/api/venues', 'post', {'name': 'V'}),
+    ('/api/venues/v1/maps', 'post', {'label': 'M'}),
+    ('/api/venues/v1/maps/m1', 'put', {'label': 'M2'}),
+    ('/api/landing-page', 'put', {'title': 'T', 'cards': []}),
+    ('/api/venues/v1/maps/m1/locations/l1', 'delete', None),
+])
+def test_every_write_marks_dirty(client, auth, sandbox, path, method, body):
+    assert client.post('/api/generate-html', headers=auth).status_code == 200
+    assert client.get('/api/publish-status', headers=auth).get_json()['dirty'] is False
+    r = getattr(client, method)(path, json=body, headers=auth)
+    assert r.status_code in (200, 201), r.get_json()
+    assert client.get('/api/publish-status', headers=auth).get_json()['dirty'] is True
+
+
+def test_save_all_data_keeps_server_meta(client, auth, sandbox):
+    assert client.post('/api/generate-html', headers=auth).status_code == 200
+    published = read_data(sandbox)['meta']['lastPublished']
+    payload = client.get('/api/data', headers=auth).get_json()
+    payload['meta'] = {'lastModified': '2000-01-01T00:00:00+00:00', 'lastPublished': '2099-01-01T00:00:00+00:00'}
+    assert client.post('/api/data', json=payload, headers=auth).status_code == 200
+    meta = read_data(sandbox)['meta']
+    assert meta['lastPublished'] == published
+    assert meta['lastModified'].startswith('20') and meta['lastModified'] != payload['meta']['lastModified']
+    assert client.get('/api/publish-status', headers=auth).get_json()['dirty'] is True
+
+
+def test_publish_status_helper_edge_cases():
+    assert server.publish_status({})['dirty'] is True
+    assert server.publish_status({'meta': {'lastModified': 'garbage', 'lastPublished': None}})['dirty'] is True
+    assert server.publish_status({'meta': {'lastModified': '2026-01-01T00:00:00+00:00',
+                                           'lastPublished': '2026-01-01T00:00:00+00:00'}})['dirty'] is False
+    assert server.publish_status({'meta': {'lastModified': '2026-01-02T00:00:00+00:00',
+                                           'lastPublished': '2026-01-01T00:00:00Z'}})['dirty'] is True
+
+
+# ---------------------------------------------------------------- map canvas
+
+def test_create_map_defaults_canvas(client, auth, sandbox):
+    r = client.post('/api/venues/v1/maps', json={'label': 'Blank'}, headers=auth)
+    assert r.status_code == 201, r.get_json()
+    assert r.get_json()['canvas'] == '16:9'
+    maps = read_data(sandbox)['venues'][0]['maps']
+    assert maps[-1]['canvas'] == '16:9' and maps[-1]['locations'] == []
+
+
+@pytest.mark.parametrize('canvas', ['16:9', '4:3', '1:1', '3:4'])
+def test_create_map_accepts_valid_canvas(client, auth, sandbox, canvas):
+    r = client.post('/api/venues/v1/maps', json={'label': 'Blank', 'canvas': canvas}, headers=auth)
+    assert r.status_code == 201 and r.get_json()['canvas'] == canvas
+    assert read_data(sandbox)['venues'][0]['maps'][-1]['canvas'] == canvas
+
+
+@pytest.mark.parametrize('canvas', ['16:10', '', None, 4, '4/3', ['4:3']])
+def test_create_map_rejects_invalid_canvas(client, auth, sandbox, canvas):
+    r = client.post('/api/venues/v1/maps', json={'label': 'Blank', 'canvas': canvas}, headers=auth)
+    assert r.status_code == 400 and 'canvas' in r.get_json()['error']
+    assert len(read_data(sandbox)['venues'][0]['maps']) == 1
+
+
+def test_update_map_canvas(client, auth, sandbox):
+    r = client.put('/api/venues/v1/maps/m1', json={'canvas': '3:4'}, headers=auth)
+    assert r.status_code == 200 and r.get_json()['canvas'] == '3:4'
+    assert read_data(sandbox)['venues'][0]['maps'][0]['canvas'] == '3:4'
+    # other fields untouched, canvas kept when not sent
+    r = client.put('/api/venues/v1/maps/m1', json={'label': 'Renamed'}, headers=auth)
+    assert r.status_code == 200 and r.get_json()['canvas'] == '3:4' and r.get_json()['label'] == 'Renamed'
+    r = client.put('/api/venues/v1/maps/m1', json={'canvas': 'square'}, headers=auth)
+    assert r.status_code == 400 and 'canvas' in r.get_json()['error']
+    assert read_data(sandbox)['venues'][0]['maps'][0]['canvas'] == '3:4'
+
+
+def test_get_data_exposes_meta_and_canvas(client, auth):
+    data = client.get('/api/data', headers=auth).get_json()
+    assert 'meta' in data and 'lastModified' in data['meta'] and 'lastPublished' in data['meta']
+    assert data['venues'][0]['maps'][0]['canvas'] == '16:9'
+
+
+# ---------------------------------------------------------------- imageless map markup
+
+def _blank_map(canvas=None, with_image_map=True):
+    m = {'id': 'blank', 'label': 'Blank', 'image': '',
+         'locations': [{'id': 'b1', 'name': 'B', 'number': 9,
+                        'position': {'top': '25%', 'left': '75%'}}]}
+    if canvas is not None:
+        m['canvas'] = canvas
+    return m
+
+
+@pytest.mark.parametrize('canvas,expected', [
+    ('16:9', '16 / 9'), ('4:3', '4 / 3'), ('1:1', '1 / 1'), ('3:4', '3 / 4'),
+    (None, '16 / 9'), ('bogus', '16 / 9'),
+])
+def test_generate_html_blank_map_aspect_ratio(client, auth, sandbox, canvas, expected):
+    data = read_data(sandbox)
+    data['venues'][0]['maps'].append(_blank_map(canvas))
+    (sandbox / 'data.json').write_text(json.dumps(data))
+    assert client.post('/api/generate-html', headers=auth).status_code == 200
+    page = (sandbox / 'Fiber.html').read_text()
+    import re
+    blank = re.search(r'<div class="map-panel[^"]*" id="blank">\s*<div class="([^"]*)"([^>]*)>', page)
+    assert blank, page
+    classes, attrs = blank.group(1), blank.group(2)
+    assert classes == 'map-container map-container-blank'
+    assert f'style="aspect-ratio: {expected}"' in attrs
+    shown = canvas if canvas in server.CANVAS_RATIOS else '16:9'
+    assert f'data-canvas="{shown}"' in attrs
+    assert 'map-image-placeholder' in page
+    # marker still emitted inside the blank container
+    assert 'data-location-id="b1"' in page
+    # the image-backed map is untouched
+    normal = re.search(r'<div class="map-panel[^"]*" id="m1">\s*<div class="map-container">', page)
+    assert normal, page
+    assert page.count('aspect-ratio:') == 1
 
 
 # ---------------------------------------------------------------- errors

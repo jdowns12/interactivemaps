@@ -30,6 +30,9 @@
         <!-- Header -->
         <header class="admin-header">
             <div class="header-left">
+                <button id="sidebar-menu-btn" class="btn-menu" type="button" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">
+                    <span></span><span></span><span></span>
+                </button>
                 <img src="auburn-logo.png" alt="Auburn Logo" class="header-logo">
                 <h1>WEP Maps Admin</h1>
             </div>
@@ -68,11 +71,22 @@
 
         <!-- Main Content -->
         <div class="admin-content">
-            <!-- Sidebar -->
-            <aside class="sidebar">
+            <!-- Scrim behind the phone drawer -->
+            <div id="sidebar-scrim" class="sidebar-scrim" hidden></div>
+
+            <!-- Sidebar (off-canvas drawer at 768px and below) -->
+            <aside class="sidebar" id="sidebar">
                 <div class="sidebar-header">
                     <h2>Navigation</h2>
+                    <button id="sidebar-close-btn" class="btn-close sidebar-close" type="button" aria-label="Close navigation">&times;</button>
                 </div>
+
+                <!-- Photos needed (site-wide view) -->
+                <button id="photos-needed-nav" class="sidebar-nav-entry" type="button">
+                    <span class="nav-entry-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg></span>
+                    <span class="nav-entry-label">Photos needed</span>
+                    <span id="photos-needed-badge" class="count-badge">0</span>
+                </button>
 
                 <!-- Landing Page Section -->
                 <div class="landing-page-section">
@@ -100,14 +114,18 @@
                     <button id="add-map-btn" class="btn btn-action" disabled>+ Add Map</button>
                 </div>
 
-                <!-- Publish Changes -->
+                <!-- Publish status strip (auto-publish; click to republish) -->
                 <div class="sidebar-footer">
-                    <button id="generate-html-btn" class="btn btn-primary btn-full">Publish Changes</button>
+                    <button id="publish-status" class="publish-status state-unknown" type="button" title="Republish the public pages">
+                        <span class="publish-dot" aria-hidden="true"></span>
+                        <span id="publish-status-text" class="publish-status-text">Checking publish status...</span>
+                        <span id="publish-status-action" class="publish-status-action">Republish</span>
+                    </button>
                 </div>
             </aside>
 
             <!-- Main Editor Area -->
-            <main class="editor-main">
+            <main class="editor-main" id="editor-main">
                 <!-- Welcome/Empty State -->
                 <div id="empty-state" class="empty-state">
                     <h2>Welcome to WEP Maps Admin</h2>
@@ -115,6 +133,20 @@
                     <button id="tutorial-start-btn" class="btn btn-primary" style="margin-top: 20px;">
                         <span style="margin-right: 8px;">&#9658;</span> Take a Tour
                     </button>
+                </div>
+
+                <!-- Photos needed view -->
+                <div id="photos-needed-view" class="photos-needed-view hidden">
+                    <div class="editor-header">
+                        <div class="editor-title">
+                            <h2>Photos needed</h2>
+                            <span id="photos-needed-summary" class="map-label"></span>
+                        </div>
+                    </div>
+                    <div id="photos-needed-list" class="photos-needed-body">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                    <input type="file" id="photos-needed-file-input" accept="image/*" multiple hidden>
                 </div>
 
                 <!-- Map Editor -->
@@ -127,21 +159,26 @@
                         </div>
                         <div class="editor-actions">
                             <button id="edit-map-btn" class="btn btn-secondary">Edit Map Info</button>
-                            <button id="delete-map-btn" class="btn btn-danger">Delete Map</button>
                         </div>
                     </div>
 
                     <!-- Map Canvas with Location List -->
                     <div class="map-editor-layout">
                         <div class="map-canvas-container">
-                            <div class="map-canvas" id="map-canvas">
-                                <img id="map-image" src="" alt="Map" class="map-image">
-                                <div id="markers-container" class="markers-container">
-                                    <!-- Location markers added by JavaScript -->
+                            <div id="placing-hint" class="placing-hint" hidden>
+                                Tap the map to place the new location. Esc cancels.
+                            </div>
+                            <div class="map-viewport" id="map-viewport">
+                                <div class="map-canvas" id="map-canvas">
+                                    <img id="map-image" src="" alt="Map" class="map-image">
+                                    <div id="markers-container" class="markers-container">
+                                        <!-- Location markers added by JavaScript -->
+                                    </div>
                                 </div>
+                                <button id="reset-zoom-btn" class="reset-zoom-btn" type="button" hidden>Reset zoom</button>
                             </div>
                             <div class="canvas-instructions">
-                                <p>Click and drag markers to reposition. Double-click on map to add new location.</p>
+                                <p>Drag markers to reposition. Use <strong>+ Add Location</strong> (or double-click) to add one. Pinch to zoom on touch screens.</p>
                             </div>
                         </div>
 
@@ -149,10 +186,17 @@
                         <div class="location-list-panel" id="location-list-panel">
                             <div class="location-list-header">
                                 <h3>Locations</h3>
-                                <button id="renumber-btn" class="btn btn-sm" title="Renumber all locations">Renumber</button>
+                                <div class="location-list-header-actions">
+                                    <button id="add-location-btn" class="btn btn-primary btn-sm" type="button" aria-pressed="false">+ Add Location</button>
+                                    <button id="renumber-btn" class="btn btn-sm" type="button" title="Renumber all locations">Renumber</button>
+                                </div>
                             </div>
                             <div class="location-list-search">
                                 <input type="text" id="location-search" placeholder="Search locations...">
+                                <label class="needs-photos-toggle" for="needs-photos-filter">
+                                    <input type="checkbox" id="needs-photos-filter">
+                                    <span>Needs photos</span>
+                                </label>
                             </div>
                             <ul class="location-list" id="location-list">
                                 <!-- Location items added by JavaScript -->
@@ -160,52 +204,54 @@
                         </div>
                     </div>
 
-                    <!-- Location Details Panel -->
-                    <div id="location-panel" class="location-panel hidden">
-                        <div class="panel-header">
-                            <h3>Location Details</h3>
-                            <button id="close-panel-btn" class="btn-close">&times;</button>
+                    <!-- Location Details (moved beneath the selected list item while open) -->
+                    <div id="location-panel-home" class="location-panel-home" hidden>
+                        <div id="location-panel" class="location-panel hidden">
+                            <div class="panel-header">
+                                <h3>Location Details</h3>
+                                <button id="close-panel-btn" class="btn-close" type="button" aria-label="Collapse details">&times;</button>
+                            </div>
+                            <form id="location-form">
+                                <input type="hidden" id="location-id">
+                                <div class="form-group">
+                                    <label for="location-number">Number</label>
+                                    <input type="number" id="location-number" min="1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="location-name">Name</label>
+                                    <input type="text" id="location-name" placeholder="Location name">
+                                </div>
+                                <div class="form-group">
+                                    <label for="location-description">Description</label>
+                                    <textarea id="location-description" rows="4" placeholder="Location description"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="location-fiber">Fiber Info</label>
+                                    <input type="text" id="location-fiber" placeholder="e.g., 12 ST">
+                                </div>
+                                <div class="form-group">
+                                    <label>Photos</label>
+                                    <div id="image-preview" class="photo-row" aria-label="Location photos"></div>
+                                    <p class="photo-hint">First photo is the cover. Drag a thumbnail (use the grip on touch) to reorder.</p>
+                                    <div class="image-upload">
+                                        <input type="file" id="location-image-input" accept="image/*" multiple hidden>
+                                        <button type="button" id="upload-image-btn" class="btn btn-secondary">Add Photos</button>
+                                        <span id="image-filename" class="filename"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group coordinates">
+                                    <label>Position</label>
+                                    <div class="coord-display">
+                                        <span>Top: <strong id="coord-top">0%</strong></span>
+                                        <span>Left: <strong id="coord-left">0%</strong></span>
+                                    </div>
+                                </div>
+                                <div class="panel-actions">
+                                    <button type="submit" class="btn btn-primary">Save Location</button>
+                                    <button type="button" id="delete-location-btn" class="btn btn-danger">Delete</button>
+                                </div>
+                            </form>
                         </div>
-                        <form id="location-form">
-                            <input type="hidden" id="location-id">
-                            <div class="form-group">
-                                <label for="location-number">Number</label>
-                                <input type="number" id="location-number" min="1">
-                            </div>
-                            <div class="form-group">
-                                <label for="location-name">Name</label>
-                                <input type="text" id="location-name" placeholder="Location name">
-                            </div>
-                            <div class="form-group">
-                                <label for="location-description">Description</label>
-                                <textarea id="location-description" rows="4" placeholder="Location description"></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label for="location-fiber">Fiber Info</label>
-                                <input type="text" id="location-fiber" placeholder="e.g., 12 ST">
-                            </div>
-                            <div class="form-group">
-                                <label>Photos</label>
-                                <div id="image-preview" class="photo-row" aria-label="Location photos"></div>
-                                <p class="photo-hint">First photo is the cover. Drag a thumbnail (use the grip on touch) to reorder.</p>
-                                <div class="image-upload">
-                                    <input type="file" id="location-image-input" accept="image/*" multiple hidden>
-                                    <button type="button" id="upload-image-btn" class="btn btn-secondary">Add Photos</button>
-                                    <span id="image-filename" class="filename"></span>
-                                </div>
-                            </div>
-                            <div class="form-group coordinates">
-                                <label>Position</label>
-                                <div class="coord-display">
-                                    <span>Top: <strong id="coord-top">0%</strong></span>
-                                    <span>Left: <strong id="coord-left">0%</strong></span>
-                                </div>
-                            </div>
-                            <div class="panel-actions">
-                                <button type="submit" class="btn btn-primary">Save Location</button>
-                                <button type="button" id="delete-location-btn" class="btn btn-danger">Delete</button>
-                            </div>
-                        </form>
                     </div>
                 </div>
             </main>
@@ -232,6 +278,7 @@
                     <small>Auto-generated from name if left blank</small>
                 </div>
                 <div class="modal-actions">
+                    <button type="button" id="delete-category-btn" class="btn btn-danger-text modal-delete hidden">Delete this category</button>
                     <button type="button" class="btn btn-secondary modal-close">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save</button>
                 </div>
@@ -268,6 +315,7 @@
                     </div>
                 </div>
                 <div class="modal-actions">
+                    <button type="button" id="delete-venue-btn" class="btn btn-danger-text modal-delete hidden">Delete this venue</button>
                     <button type="button" class="btn btn-secondary modal-close">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save</button>
                 </div>
@@ -302,7 +350,18 @@
                     </div>
                     <div id="map-image-preview" class="image-preview"></div>
                 </div>
+                <div class="form-group" id="map-canvas-group">
+                    <label for="map-canvas-shape">Canvas shape</label>
+                    <select id="map-canvas-shape">
+                        <option value="16:9">16:9 wide</option>
+                        <option value="4:3">4:3</option>
+                        <option value="1:1">1:1 square</option>
+                        <option value="3:4">3:4 tall</option>
+                    </select>
+                    <small>No image yet: markers go on a blank grid of this shape. You can upload an image later from Edit Map Info.</small>
+                </div>
                 <div class="modal-actions">
+                    <button type="button" id="delete-map-btn" class="btn btn-danger-text modal-delete hidden">Delete this map</button>
                     <button type="button" class="btn btn-secondary modal-close">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save</button>
                 </div>
