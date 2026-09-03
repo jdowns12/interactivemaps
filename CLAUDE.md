@@ -40,6 +40,7 @@ Interactive venue maps for Auburn Athletics with fiber connectivity, ESPN camera
 - `PUT /api/landing-page` - Replace only the landing page cards
 - `DELETE /api/upload/<path>` - Delete an uploaded image and its thumbnail (uploads/ only)
 - `GET /api/health` - Liveness check
+- `GET /api/publish-status` - `{lastModified, lastPublished, dirty}`; admin auto-publishes after every save
 - `POST /api/auth/login` - Admin authentication (401 body is always `{"error": "Session expired"}`)
 
 ## File Upload
@@ -52,6 +53,10 @@ Interactive venue maps for Auburn Athletics with fiber connectivity, ESPN camera
 - Each location has `images` (array, first is the cover) and `image` (mirror of `images[0]`, legacy)
 - Generated pages carry `data-images` (HTML-escaped JSON array) on each marker
 - Full contract: `PLAN-FIXES-AND-MULTIPHOTO.md`
+
+## Admin editor
+- Workflow contract in `PLAN-ADMIN-WORKFLOW.md` (placement mode, drawer, accordion, auto-publish, Photos needed view, pinch zoom, blank-map `canvas` ratio)
+- Playwright harness for regression: scratchpad `admin-verify.js` pattern (login with a preview `.env`, port 8092)
 
 ## Tests
 - `.venv/bin/python -m pytest tests -q` (sandboxed, never touches real data.json or uploads/)
