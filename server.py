@@ -12,11 +12,10 @@ import threading
 from html import escape as html_escape
 from datetime import datetime, timedelta
 from functools import wraps
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, abort
 from flask_cors import CORS
-from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash
-from werkzeug.exceptions import HTTPException
+from werkzeug.exceptions import HTTPException, NotFound
 
 try:
     from PIL import Image as PILImage, ExifTags
@@ -24,8 +23,14 @@ try:
 except ImportError:
     PILLOW_AVAILABLE = False
 
-def load_dotenv(path='.env'):
+# Everything on disk is addressed relative to the project root (the directory
+# containing this file) so the server behaves the same no matter the cwd.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+def load_dotenv(path=None):
     """Load KEY=VALUE pairs from a .env file into os.environ (no dependency needed)."""
+    path = path or os.path.join(BASE_DIR, '.env')
     try:
         with open(path, 'r') as f:
             for line in f:
@@ -38,17 +43,35 @@ def load_dotenv(path='.env'):
 
 load_dotenv()
 
-app = Flask(__name__, static_folder='.', static_url_path='')
+# static_folder=None: Flask's built-in static route is disabled so every file
+# request goes through serve_static() and its allowlist below.
+app = Flask(__name__, static_folder=None)
 app.secret_key = secrets.token_hex(32)
 CORS(app, supports_credentials=True)
 
-# Configuration
-DATA_FILE = 'data.json'
-UPLOAD_FOLDER = 'uploads'
-ANALYTICS_FILE = 'analytics.json'
+# Configuration (module globals so tests can point them at temp copies)
+DATA_FILE = os.path.join(BASE_DIR, 'data.json')
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
+ANALYTICS_FILE = os.path.join(BASE_DIR, 'analytics.json')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'gif'}
 MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB max file size
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
+
+# Image sizing (see PLAN-FIXES-AND-MULTIPHOTO.md, "Thumbnails")
+FULL_MAX_DIM = 1600
+FULL_QUALITY = 80
+THUMB_MAX_DIM = 480
+THUMB_QUALITY = 78
+THUMBS_DIRNAME = 'thumbs'
+
+# Static allowlist: only these extensions are ever served from the project root.
+STATIC_EXTENSIONS = {
+    'html', 'css', 'js', 'json',
+    'jpg', 'jpeg', 'png', 'webp', 'gif', 'ico', 'svg', 'webmanifest',
+}
+STATIC_BLOCKED_FILES = {'analytics.json'}
+STATIC_BLOCKED_DIRS = {'.git', '.venv', '__pycache__', 'tests', 'templates'}
+IMAGE_EXTENSIONS = {'jpg', 'jpeg', 'png', 'webp', 'gif'}
 
 # Admin password: salted hash loaded from .env (never stored in source).
 # Generate a new one with:
@@ -63,24 +86,45 @@ LOGIN_MAX_FAILURES = 5
 LOGIN_WINDOW_SECONDS = 15 * 60
 failed_logins = {}
 
-# Serialize JSON file writes (Flask dev server handles requests on threads)
-file_write_lock = threading.Lock()
+# Serialize JSON file access. RLock so with_data() can wrap load/save, which
+# also take the lock, without deadlocking.
+file_write_lock = threading.RLock()
 
 # Analytics - track unique sessions per day
 visitor_sessions = set()  # Track session IDs seen today
 last_analytics_date = None
 
-# Ensure upload folder exists
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(os.path.join(UPLOAD_FOLDER, 'maps'), exist_ok=True)
-os.makedirs(os.path.join(UPLOAD_FOLDER, 'photo-requests'), exist_ok=True)
+
+def ensure_dirs():
+    """Create the upload folders (safe to call any time)."""
+    for d in ('', 'maps', 'photo-requests', THUMBS_DIRNAME):
+        os.makedirs(os.path.join(UPLOAD_FOLDER, d), exist_ok=True)
+
+ensure_dirs()
+
+
+def abs_path(rel):
+    """Resolve a project-relative path (as stored in data.json) to an absolute one."""
+    if os.path.isabs(rel):
+        return rel
+    return os.path.join(BASE_DIR, rel)
+
+
+def rel_path(path):
+    """Project-relative path with forward slashes, as stored in data.json."""
+    return os.path.relpath(path, BASE_DIR).replace(os.sep, '/')
+
+
+# ---------------------------------------------------------------------------
+# Analytics
+# ---------------------------------------------------------------------------
 
 def load_analytics():
     """Load analytics data from JSON file"""
     try:
         with open(ANALYTICS_FILE, 'r') as f:
             return json.load(f)
-    except FileNotFoundError:
+    except (FileNotFoundError, json.JSONDecodeError):
         return {"daily": {}, "total_sessions": 0, "total_pageviews": 0}
 
 def save_analytics(data):
@@ -96,35 +140,80 @@ def track_visit(session_id):
     global visitor_sessions, last_analytics_date
 
     today = datetime.now().strftime('%Y-%m-%d')
-    analytics = load_analytics()
+    with file_write_lock:
+        analytics = load_analytics()
 
-    # Reset daily sessions if it's a new day
-    if last_analytics_date != today:
-        visitor_sessions = set()
-        last_analytics_date = today
+        # Reset daily sessions if it's a new day
+        if last_analytics_date != today:
+            visitor_sessions = set()
+            last_analytics_date = today
 
-    # Initialize today's stats if needed
-    if today not in analytics['daily']:
-        analytics['daily'][today] = {'sessions': 0, 'pageviews': 0}
+        # Initialize today's stats if needed
+        analytics.setdefault('daily', {})
+        if today not in analytics['daily']:
+            analytics['daily'][today] = {'sessions': 0, 'pageviews': 0}
 
-    # Track pageview
-    analytics['daily'][today]['pageviews'] += 1
-    analytics['total_pageviews'] += 1
+        # Track pageview
+        analytics['daily'][today]['pageviews'] += 1
+        analytics['total_pageviews'] = analytics.get('total_pageviews', 0) + 1
 
-    # Track unique session
-    if session_id and session_id not in visitor_sessions:
-        visitor_sessions.add(session_id)
-        analytics['daily'][today]['sessions'] += 1
-        analytics['total_sessions'] += 1
+        # Track unique session
+        if session_id and session_id not in visitor_sessions:
+            visitor_sessions.add(session_id)
+            analytics['daily'][today]['sessions'] += 1
+            analytics['total_sessions'] = analytics.get('total_sessions', 0) + 1
 
-    save_analytics(analytics)
+        save_analytics(analytics)
     return analytics
 
-# Helper functions
+
+# ---------------------------------------------------------------------------
+# Images
+# ---------------------------------------------------------------------------
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def compress_image(filepath, max_dimension=1920, quality=82):
+def _open_oriented_rgb(filepath):
+    """Open an image with Pillow, apply EXIF orientation, and flatten to RGB."""
+    img = PILImage.open(filepath)
+
+    # Apply EXIF rotation before anything else
+    try:
+        exif = img._getexif()
+        if exif:
+            for tag, value in exif.items():
+                if ExifTags.TAGS.get(tag) == 'Orientation':
+                    if value == 3:
+                        img = img.rotate(180, expand=True)
+                    elif value == 6:
+                        img = img.rotate(270, expand=True)
+                    elif value == 8:
+                        img = img.rotate(90, expand=True)
+                    break
+    except Exception:
+        pass
+
+    # Convert to RGB (handles PNG with transparency, etc.)
+    if img.mode in ('RGBA', 'P', 'LA'):
+        background = PILImage.new('RGB', img.size, (255, 255, 255))
+        if img.mode == 'RGBA':
+            background.paste(img, mask=img.split()[3])
+        else:
+            background.paste(img)
+        img = background
+    elif img.mode != 'RGB':
+        img = img.convert('RGB')
+    return img
+
+def _fit(img, max_dimension):
+    w, h = img.size
+    if max(w, h) > max_dimension:
+        scale = max_dimension / max(w, h)
+        img = img.resize((max(1, int(w * scale)), max(1, int(h * scale))), PILImage.LANCZOS)
+    return img
+
+def compress_image(filepath, max_dimension=FULL_MAX_DIM, quality=FULL_QUALITY):
     """Resize and compress an image using Pillow. Saves in-place as JPEG.
     Respects EXIF orientation so portrait phone photos come out right-side-up.
     Returns the final filepath (extension may change to .jpg)."""
@@ -132,40 +221,7 @@ def compress_image(filepath, max_dimension=1920, quality=82):
         return filepath
 
     try:
-        img = PILImage.open(filepath)
-
-        # Apply EXIF rotation before anything else
-        try:
-            exif = img._getexif()
-            if exif:
-                for tag, value in exif.items():
-                    if ExifTags.TAGS.get(tag) == 'Orientation':
-                        if value == 3:
-                            img = img.rotate(180, expand=True)
-                        elif value == 6:
-                            img = img.rotate(270, expand=True)
-                        elif value == 8:
-                            img = img.rotate(90, expand=True)
-                        break
-        except Exception:
-            pass
-
-        # Convert to RGB (handles PNG with transparency, etc.)
-        if img.mode in ('RGBA', 'P', 'LA'):
-            background = PILImage.new('RGB', img.size, (255, 255, 255))
-            if img.mode == 'RGBA':
-                background.paste(img, mask=img.split()[3])
-            else:
-                background.paste(img)
-            img = background
-        elif img.mode != 'RGB':
-            img = img.convert('RGB')
-
-        # Resize if either dimension exceeds max_dimension
-        w, h = img.size
-        if max(w, h) > max_dimension:
-            scale = max_dimension / max(w, h)
-            img = img.resize((int(w * scale), int(h * scale)), PILImage.LANCZOS)
+        img = _fit(_open_oriented_rgb(filepath), max_dimension)
 
         # Always save as JPEG for consistency
         base = os.path.splitext(filepath)[0]
@@ -181,23 +237,122 @@ def compress_image(filepath, max_dimension=1920, quality=82):
         # If anything fails, leave the file as-is
         return filepath
 
+def thumb_path_for(image_path):
+    """DIR/NAME.ext -> DIR/thumbs/NAME.ext (works on relative or absolute paths)."""
+    if not image_path:
+        return ''
+    d, name = os.path.split(image_path)
+    return os.path.join(d, THUMBS_DIRNAME, name) if d else os.path.join(THUMBS_DIRNAME, name)
+
+def make_thumbnail(image_path, max_dimension=THUMB_MAX_DIM, quality=THUMB_QUALITY):
+    """Write DIR/thumbs/NAME.jpg for an image. `image_path` may be absolute or
+    project-relative. Returns the project-relative thumbnail path, or '' if the
+    thumbnail could not be made."""
+    if not PILLOW_AVAILABLE or not image_path:
+        return ''
+    src = abs_path(image_path)
+    if not os.path.isfile(src):
+        return ''
+    dst = thumb_path_for(src)
+    try:
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        img = _fit(_open_oriented_rgb(src), max_dimension)
+        ext = os.path.splitext(dst)[1].lower()
+        if ext in ('.jpg', '.jpeg', ''):
+            img.save(dst, 'JPEG', quality=quality, optimize=True)
+        elif ext == '.png':
+            img.save(dst, 'PNG', optimize=True)
+        elif ext == '.webp':
+            img.save(dst, 'WEBP', quality=quality)
+        else:
+            # gif and anything else: store JPEG bytes under the same name; the
+            # frontend falls back to the full image if the browser objects.
+            img.save(dst, 'JPEG', quality=quality, optimize=True)
+        return rel_path(dst)
+    except Exception as e:
+        print(f"[Thumb] Failed for {image_path}: {e}")
+        return ''
+
+def delete_image_file(image_path):
+    """Delete an image file and its thumbnail, but only if it really lives
+    inside the uploads folder. Root photos (location1-1.jpg) are never deleted."""
+    if not image_path:
+        return
+    # Resolve symlinks/'..' so a path like 'uploads/../data.json' can't escape
+    filepath = os.path.realpath(abs_path(image_path))
+    uploads_root = os.path.realpath(UPLOAD_FOLDER)
+    if not filepath.startswith(uploads_root + os.sep):
+        return
+
+    for p in (filepath, thumb_path_for(filepath)):
+        if os.path.isfile(p):
+            try:
+                os.remove(p)
+                print(f"[Cleanup] Deleted: {p}")
+            except Exception as e:
+                print(f"[Cleanup] Failed to delete {p}: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Data file
+# ---------------------------------------------------------------------------
+
+def normalize_location_images(loc):
+    """Apply the images/image contract to one location, in place.
+
+    - `images` missing: images = [image] if image else []
+    - `image` is always a mirror of images[0] (or "" when there are none)
+    """
+    if not isinstance(loc, dict):
+        return loc
+    images = loc.get('images')
+    if not isinstance(images, list):
+        image = loc.get('image') or ''
+        images = [image] if isinstance(image, str) and image else []
+    images = [i for i in images if isinstance(i, str) and i]
+    loc['images'] = images
+    loc['image'] = images[0] if images else ''
+    return loc
+
+def normalize_data(data):
+    """Migrate/normalize the whole dataset in place and return it."""
+    if not isinstance(data, dict):
+        data = {}
+    data.setdefault('categories', [])
+    data.setdefault('venues', [])
+    for venue in data.get('venues', []) or []:
+        for m in venue.get('maps', []) or []:
+            for loc in m.get('locations', []) or []:
+                normalize_location_images(loc)
+    return data
+
 def load_data():
-    """Load data from JSON file"""
+    """Load data from JSON file (normalized per the images contract)."""
     try:
         with open(DATA_FILE, 'r') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return {"categories": [], "venues": []}
-    except json.JSONDecodeError:
+            return normalize_data(json.load(f))
+    except (FileNotFoundError, json.JSONDecodeError):
         return {"categories": [], "venues": []}
 
 def save_data(data):
     """Save data to JSON file (atomic write, serialized)"""
+    normalize_data(data)
     with file_write_lock:
         tmp = DATA_FILE + '.tmp'
         with open(tmp, 'w') as f:
             json.dump(data, f, indent=2)
         os.replace(tmp, DATA_FILE)
+
+def with_data(mutator):
+    """Run load -> mutator(data) -> save atomically under the file lock.
+
+    The mutator returns whatever the caller wants back (typically a Flask
+    response). If it raises, nothing is written."""
+    with file_write_lock:
+        data = load_data()
+        result = mutator(data)
+        save_data(data)
+        return result
 
 def require_auth(f):
     """Decorator to require authentication"""
@@ -205,7 +360,7 @@ def require_auth(f):
     def decorated(*args, **kwargs):
         token = request.headers.get('Authorization', '').replace('Bearer ', '')
         if not token or token not in sessions:
-            return jsonify({"error": "Unauthorized"}), 401
+            return jsonify({"error": "Session expired"}), 401
         # Check if session is expired (24 hours)
         if sessions[token]['expires'] < datetime.now():
             del sessions[token]
@@ -217,41 +372,78 @@ def generate_id():
     """Generate a unique ID"""
     return str(uuid.uuid4())[:8]
 
-def delete_image_file(image_path):
-    """Delete an image file, but only if it really lives inside the uploads folder"""
-    if not image_path:
-        return
-    # Resolve symlinks/'..' so a path like 'uploads/../data.json' can't escape
-    filepath = os.path.realpath(image_path)
-    uploads_root = os.path.realpath(UPLOAD_FOLDER)
-    if not filepath.startswith(uploads_root + os.sep):
-        return
+def get_json_object():
+    """Request body as a dict, or None if it isn't a JSON object."""
+    body = request.get_json(silent=True)
+    return body if isinstance(body, dict) else None
 
-    if os.path.exists(filepath):
-        try:
-            os.remove(filepath)
-            print(f"[Cleanup] Deleted: {filepath}")
-        except Exception as e:
-            print(f"[Cleanup] Failed to delete {filepath}: {e}")
 
-# Static file routes
+# ---------------------------------------------------------------------------
+# Static files
+# ---------------------------------------------------------------------------
+
+def static_allowed(filename):
+    """Allowlist for files served from the project root."""
+    parts = filename.replace('\\', '/').split('/')
+    if any(p == '' or p == '..' or p.startswith('.') for p in parts):
+        return False
+    if parts[0] in STATIC_BLOCKED_DIRS:
+        return False
+    if filename in STATIC_BLOCKED_FILES:
+        return False
+    if parts[0] in ('uploads', THUMBS_DIRNAME):
+        return True
+    ext = parts[-1].rsplit('.', 1)[1].lower() if '.' in parts[-1] else ''
+    return ext in STATIC_EXTENSIONS
+
 @app.route('/')
 def serve_index():
-    return send_from_directory('.', 'index.html')
+    return send_from_directory(BASE_DIR, 'index.html')
 
 @app.route('/<path:filename>')
 def serve_static(filename):
-    return send_from_directory('.', filename)
+    if not static_allowed(filename):
+        abort(404)
+    return send_from_directory(BASE_DIR, filename)
 
 @app.route('/uploads/<path:filename>')
 def serve_uploads(filename):
+    if not static_allowed('uploads/' + filename):
+        abort(404)
     return send_from_directory(UPLOAD_FOLDER, filename)
 
-# Authentication endpoints
+@app.after_request
+def set_cache_headers(response):
+    """Long-lived caching for images, no-cache for HTML/data/sw, 1h for CSS/JS."""
+    path = request.path
+    if path.startswith('/api/'):
+        response.headers['Cache-Control'] = 'no-store'
+        return response
+    if request.method not in ('GET', 'HEAD') or response.status_code != 200:
+        return response
+    name = path.rsplit('/', 1)[-1]
+    ext = name.rsplit('.', 1)[1].lower() if '.' in name else ''
+    if ext in IMAGE_EXTENSIONS:
+        response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+    elif path == '/' or ext == 'html' or name in ('data.json', 'sw.js'):
+        response.headers['Cache-Control'] = 'no-cache'
+    elif ext in ('css', 'js'):
+        response.headers['Cache-Control'] = 'public, max-age=3600'
+    return response
+
+@app.route('/api/health', methods=['GET'])
+def health():
+    return jsonify({"ok": True})
+
+
+# ---------------------------------------------------------------------------
+# Authentication
+# ---------------------------------------------------------------------------
+
 @app.route('/api/auth/login', methods=['POST'])
 def login():
     """Authenticate admin user"""
-    data = request.get_json()
+    data = get_json_object() or {}
     password = data.get('password', '')
 
     # Rate limit: block an IP after too many recent failures
@@ -263,7 +455,7 @@ def login():
     if len(recent) >= LOGIN_MAX_FAILURES:
         return jsonify({"success": False, "error": "Too many attempts. Try again later."}), 429
 
-    if ADMIN_PASSWORD_HASH and check_password_hash(ADMIN_PASSWORD_HASH, password):
+    if ADMIN_PASSWORD_HASH and isinstance(password, str) and check_password_hash(ADMIN_PASSWORD_HASH, password):
         failed_logins.pop(ip, None)
         token = secrets.token_hex(32)
         sessions[token] = {
@@ -289,9 +481,13 @@ def verify_auth():
     token = request.headers.get('Authorization', '').replace('Bearer ', '')
     if token and token in sessions and sessions[token]['expires'] > datetime.now():
         return jsonify({"valid": True})
-    return jsonify({"valid": False}), 401
+    return jsonify({"valid": False, "error": "Session expired"}), 401
 
+
+# ---------------------------------------------------------------------------
 # Data endpoints
+# ---------------------------------------------------------------------------
+
 @app.route('/api/data', methods=['GET'])
 @require_auth
 def get_data():
@@ -302,9 +498,25 @@ def get_data():
 @require_auth
 def save_all_data():
     """Save all venue data"""
-    data = request.get_json()
-    save_data(data)
+    data = get_json_object()
+    if data is None:
+        return jsonify({"error": "Expected a JSON object"}), 400
+    with file_write_lock:
+        save_data(data)
     return jsonify({"success": True})
+
+@app.route('/api/landing-page', methods=['PUT'])
+@require_auth
+def update_landing_page():
+    """Replace only the landingPage key; venues/categories are untouched."""
+    landing = get_json_object()
+    if landing is None:
+        return jsonify({"error": "Expected a JSON object"}), 400
+
+    def mutate(data):
+        data['landingPage'] = landing
+        return jsonify(landing)
+    return with_data(mutate)
 
 # Category endpoints
 @app.route('/api/categories', methods=['GET'])
@@ -318,40 +530,40 @@ def get_categories():
 @require_auth
 def create_category():
     """Create a new category"""
-    data = load_data()
-    new_category = request.get_json()
+    new_category = get_json_object()
+    if new_category is None:
+        return jsonify({"error": "Expected a JSON object"}), 400
     new_category['id'] = generate_id()
 
-    if 'categories' not in data:
-        data['categories'] = []
-
-    data['categories'].append(new_category)
-    save_data(data)
-    return jsonify(new_category), 201
+    def mutate(data):
+        data.setdefault('categories', []).append(new_category)
+        return jsonify(new_category), 201
+    return with_data(mutate)
 
 @app.route('/api/categories/<category_id>', methods=['PUT'])
 @require_auth
 def update_category(category_id):
     """Update a category"""
-    data = load_data()
-    updated = request.get_json()
+    updated = get_json_object()
+    if updated is None:
+        return jsonify({"error": "Expected a JSON object"}), 400
 
-    for i, cat in enumerate(data.get('categories', [])):
-        if cat['id'] == category_id:
-            data['categories'][i] = {**cat, **updated}
-            save_data(data)
-            return jsonify(data['categories'][i])
-
-    return jsonify({"error": "Category not found"}), 404
+    def mutate(data):
+        for i, cat in enumerate(data.get('categories', [])):
+            if cat['id'] == category_id:
+                data['categories'][i] = {**cat, **updated, 'id': category_id}
+                return jsonify(data['categories'][i])
+        return jsonify({"error": "Category not found"}), 404
+    return with_data(mutate)
 
 @app.route('/api/categories/<category_id>', methods=['DELETE'])
 @require_auth
 def delete_category(category_id):
     """Delete a category"""
-    data = load_data()
-    data['categories'] = [c for c in data.get('categories', []) if c['id'] != category_id]
-    save_data(data)
-    return jsonify({"success": True})
+    def mutate(data):
+        data['categories'] = [c for c in data.get('categories', []) if c['id'] != category_id]
+        return jsonify({"success": True})
+    return with_data(mutate)
 
 # Venue endpoints
 @app.route('/api/venues', methods=['GET'])
@@ -365,281 +577,320 @@ def get_venues():
 @require_auth
 def create_venue():
     """Create a new venue"""
-    data = load_data()
-    new_venue = request.get_json()
+    new_venue = get_json_object()
+    if new_venue is None:
+        return jsonify({"error": "Expected a JSON object"}), 400
     new_venue['id'] = generate_id()
     new_venue['maps'] = []
 
-    data['venues'].append(new_venue)
-    save_data(data)
-    return jsonify(new_venue), 201
+    def mutate(data):
+        data['venues'].append(new_venue)
+        return jsonify(new_venue), 201
+    return with_data(mutate)
 
 @app.route('/api/venues/<venue_id>', methods=['PUT'])
 @require_auth
 def update_venue(venue_id):
     """Update a venue"""
-    data = load_data()
-    updated = request.get_json()
+    updated = get_json_object()
+    if updated is None:
+        return jsonify({"error": "Expected a JSON object"}), 400
 
-    for i, venue in enumerate(data['venues']):
-        if venue['id'] == venue_id:
-            data['venues'][i] = {**venue, **updated}
-            save_data(data)
-            return jsonify(data['venues'][i])
+    def mutate(data):
+        for i, venue in enumerate(data['venues']):
+            if venue['id'] == venue_id:
+                data['venues'][i] = {**venue, **updated, 'id': venue_id}
+                return jsonify(data['venues'][i])
+        return jsonify({"error": "Venue not found"}), 404
+    return with_data(mutate)
 
-    return jsonify({"error": "Venue not found"}), 404
+def _delete_map_images(m):
+    delete_image_file(m.get('image', ''))
+    for loc in m.get('locations', []):
+        _delete_location_images(loc)
+
+def _delete_location_images(loc):
+    normalize_location_images(loc)
+    for img in dict.fromkeys(loc.get('images', []) + [loc.get('image', '')]):
+        delete_image_file(img)
 
 @app.route('/api/venues/<venue_id>', methods=['DELETE'])
 @require_auth
 def delete_venue(venue_id):
     """Delete a venue and all its images"""
-    data = load_data()
-
-    # Find venue and delete all associated images
-    for venue in data['venues']:
-        if venue['id'] == venue_id:
-            for m in venue.get('maps', []):
-                # Delete map image
-                delete_image_file(m.get('image', ''))
-                # Delete all location images
-                for loc in m.get('locations', []):
-                    delete_image_file(loc.get('image', ''))
-            break
-
-    data['venues'] = [v for v in data['venues'] if v['id'] != venue_id]
-    save_data(data)
-    return jsonify({"success": True})
+    def mutate(data):
+        for venue in data['venues']:
+            if venue['id'] == venue_id:
+                for m in venue.get('maps', []):
+                    _delete_map_images(m)
+                break
+        data['venues'] = [v for v in data['venues'] if v['id'] != venue_id]
+        return jsonify({"success": True})
+    return with_data(mutate)
 
 # Map endpoints
 @app.route('/api/venues/<venue_id>/maps', methods=['POST'])
 @require_auth
 def create_map(venue_id):
     """Create a new map for a venue"""
-    data = load_data()
-    new_map = request.get_json()
+    new_map = get_json_object()
+    if new_map is None:
+        return jsonify({"error": "Expected a JSON object"}), 400
     new_map['id'] = generate_id()
     new_map['locations'] = []
 
-    for venue in data['venues']:
-        if venue['id'] == venue_id:
-            venue['maps'].append(new_map)
-            save_data(data)
-            return jsonify(new_map), 201
-
-    return jsonify({"error": "Venue not found"}), 404
+    def mutate(data):
+        for venue in data['venues']:
+            if venue['id'] == venue_id:
+                venue.setdefault('maps', []).append(new_map)
+                return jsonify(new_map), 201
+        return jsonify({"error": "Venue not found"}), 404
+    return with_data(mutate)
 
 @app.route('/api/venues/<venue_id>/maps/<map_id>', methods=['PUT'])
 @require_auth
 def update_map(venue_id, map_id):
     """Update a map"""
-    data = load_data()
-    updated = request.get_json()
+    updated = get_json_object()
+    if updated is None:
+        return jsonify({"error": "Expected a JSON object"}), 400
 
-    for venue in data['venues']:
-        if venue['id'] == venue_id:
-            for i, m in enumerate(venue['maps']):
-                if m['id'] == map_id:
-                    venue['maps'][i] = {**m, **updated}
-                    save_data(data)
-                    return jsonify(venue['maps'][i])
-
-    return jsonify({"error": "Map not found"}), 404
+    def mutate(data):
+        for venue in data['venues']:
+            if venue['id'] == venue_id:
+                for i, m in enumerate(venue['maps']):
+                    if m['id'] == map_id:
+                        venue['maps'][i] = {**m, **updated, 'id': map_id}
+                        return jsonify(venue['maps'][i])
+        return jsonify({"error": "Map not found"}), 404
+    return with_data(mutate)
 
 @app.route('/api/venues/<venue_id>/maps/<map_id>', methods=['DELETE'])
 @require_auth
 def delete_map(venue_id, map_id):
     """Delete a map and all its images"""
-    data = load_data()
-
-    for venue in data['venues']:
-        if venue['id'] == venue_id:
-            # Find the map and delete its images
-            for m in venue['maps']:
-                if m['id'] == map_id:
-                    # Delete map image
-                    delete_image_file(m.get('image', ''))
-                    # Delete all location images
-                    for loc in m.get('locations', []):
-                        delete_image_file(loc.get('image', ''))
-                    break
-            venue['maps'] = [m for m in venue['maps'] if m['id'] != map_id]
-            save_data(data)
-            return jsonify({"success": True})
-
-    return jsonify({"error": "Venue not found"}), 404
+    def mutate(data):
+        for venue in data['venues']:
+            if venue['id'] == venue_id:
+                for m in venue['maps']:
+                    if m['id'] == map_id:
+                        _delete_map_images(m)
+                        break
+                venue['maps'] = [m for m in venue['maps'] if m['id'] != map_id]
+                return jsonify({"success": True})
+        return jsonify({"error": "Venue not found"}), 404
+    return with_data(mutate)
 
 # Location endpoints
+def _apply_location_update(loc, updated):
+    """Merge a PUT body into a location, honouring the images contract.
+
+    - `images` in the body wins and `image` is derived from it.
+    - Legacy clients that send only `image`: a non-empty value replaces the
+      cover (images[0]); an empty value removes the cover only.
+    """
+    merged = {**loc, **updated}
+    if 'images' not in updated and 'image' in updated:
+        current = [i for i in (loc.get('images') or []) if i]
+        new_cover = updated.get('image') or ''
+        if not new_cover:
+            merged['images'] = current[1:]
+        elif current and current[0] == new_cover:
+            merged['images'] = current
+        else:
+            merged['images'] = [new_cover] + [i for i in current[1:] if i != new_cover]
+    return normalize_location_images(merged)
+
 @app.route('/api/venues/<venue_id>/maps/<map_id>/locations', methods=['POST'])
 @require_auth
 def create_location(venue_id, map_id):
     """Create a new location on a map"""
-    data = load_data()
-    new_location = request.get_json()
+    new_location = get_json_object()
+    if new_location is None:
+        return jsonify({"error": "Expected a JSON object"}), 400
     new_location['id'] = generate_id()
+    normalize_location_images(new_location)
 
-    for venue in data['venues']:
-        if venue['id'] == venue_id:
-            for m in venue['maps']:
-                if m['id'] == map_id:
-                    # Auto-assign number if not provided
-                    if 'number' not in new_location:
-                        existing_numbers = [loc.get('number', 0) for loc in m['locations']]
-                        new_location['number'] = max(existing_numbers, default=0) + 1
-                    m['locations'].append(new_location)
-                    save_data(data)
-                    return jsonify(new_location), 201
-
-    return jsonify({"error": "Map not found"}), 404
+    def mutate(data):
+        for venue in data['venues']:
+            if venue['id'] == venue_id:
+                for m in venue['maps']:
+                    if m['id'] == map_id:
+                        # Auto-assign number if not provided
+                        if 'number' not in new_location:
+                            existing_numbers = [loc.get('number', 0) for loc in m['locations']]
+                            new_location['number'] = max(existing_numbers, default=0) + 1
+                        m['locations'].append(new_location)
+                        return jsonify(new_location), 201
+        return jsonify({"error": "Map not found"}), 404
+    return with_data(mutate)
 
 @app.route('/api/venues/<venue_id>/maps/<map_id>/locations/<location_id>', methods=['PUT'])
 @require_auth
 def update_location(venue_id, map_id, location_id):
-    """Update a location"""
-    data = load_data()
-    updated = request.get_json()
+    """Update a location (accepts `images`; `image` is normalized from it)."""
+    updated = get_json_object()
+    if updated is None:
+        return jsonify({"error": "Expected a JSON object"}), 400
+    if 'images' in updated and not isinstance(updated['images'], list):
+        return jsonify({"error": "images must be an array"}), 400
 
-    for venue in data['venues']:
-        if venue['id'] == venue_id:
-            for m in venue['maps']:
-                if m['id'] == map_id:
-                    for i, loc in enumerate(m['locations']):
-                        if loc['id'] == location_id:
-                            m['locations'][i] = {**loc, **updated}
-                            save_data(data)
-                            return jsonify(m['locations'][i])
-
-    return jsonify({"error": "Location not found"}), 404
+    def mutate(data):
+        for venue in data['venues']:
+            if venue['id'] == venue_id:
+                for m in venue['maps']:
+                    if m['id'] == map_id:
+                        for i, loc in enumerate(m['locations']):
+                            if loc['id'] == location_id:
+                                m['locations'][i] = _apply_location_update(loc, {**updated, 'id': location_id})
+                                return jsonify(m['locations'][i])
+        return jsonify({"error": "Location not found"}), 404
+    return with_data(mutate)
 
 @app.route('/api/venues/<venue_id>/maps/<map_id>/locations/<location_id>', methods=['DELETE'])
 @require_auth
 def delete_location(venue_id, map_id, location_id):
-    """Delete a location and its image"""
-    data = load_data()
+    """Delete a location and its images"""
+    def mutate(data):
+        for venue in data['venues']:
+            if venue['id'] == venue_id:
+                for m in venue['maps']:
+                    if m['id'] == map_id:
+                        for loc in m['locations']:
+                            if loc['id'] == location_id:
+                                _delete_location_images(loc)
+                                break
+                        m['locations'] = [loc for loc in m['locations'] if loc['id'] != location_id]
+                        return jsonify({"success": True})
+        return jsonify({"error": "Location not found"}), 404
+    return with_data(mutate)
 
-    for venue in data['venues']:
-        if venue['id'] == venue_id:
-            for m in venue['maps']:
-                if m['id'] == map_id:
-                    # Find and delete the location's image
-                    for loc in m['locations']:
-                        if loc['id'] == location_id:
-                            delete_image_file(loc.get('image', ''))
-                            break
-                    m['locations'] = [loc for loc in m['locations'] if loc['id'] != location_id]
-                    save_data(data)
-                    return jsonify({"success": True})
 
-    return jsonify({"error": "Location not found"}), 404
-
+# ---------------------------------------------------------------------------
 # Image upload endpoints
-@app.route('/api/upload', methods=['POST'])
-@require_auth
-def upload_image():
-    """Upload a location image"""
+# ---------------------------------------------------------------------------
+
+def _receive_upload(subdir, prefix):
+    """Validate request.files['file'] and save it. Returns (abs_path, error_response)."""
     if 'file' not in request.files:
-        return jsonify({"error": "No file provided"}), 400
+        return None, (jsonify({"error": "No file provided"}), 400)
 
     file = request.files['file']
     if file.filename == '':
-        return jsonify({"error": "No file selected"}), 400
+        return None, (jsonify({"error": "No file selected"}), 400)
 
     if not allowed_file(file.filename):
-        return jsonify({"error": "File type not allowed"}), 400
+        return None, (jsonify({"error": "File type not allowed"}), 400)
 
-    # Generate unique filename
     ext = file.filename.rsplit('.', 1)[1].lower()
     timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-    filename = f"location-{timestamp}-{secrets.token_hex(4)}.{ext}"
+    filename = f"{prefix}-{timestamp}-{secrets.token_hex(4)}.{ext}"
 
-    filepath = os.path.join(UPLOAD_FOLDER, filename)
+    ensure_dirs()
+    filepath = os.path.join(UPLOAD_FOLDER, subdir, filename) if subdir else os.path.join(UPLOAD_FOLDER, filename)
     file.save(filepath)
+    return filepath, None
 
-    # Compress / resize — phone photos can be 4-6 MB; bring them to ≤1920px
-    final_path = compress_image(filepath)
-    final_filename = os.path.relpath(final_path, '.')
+@app.route('/api/upload', methods=['POST'])
+@require_auth
+def upload_image():
+    """Upload a location image. Returns {success, filename, thumbnail}."""
+    filepath, err = _receive_upload('', 'location')
+    if err:
+        return err
 
-    return jsonify({"success": True, "filename": final_filename})
+    # Compress / resize — phone photos can be 4-6 MB; bring them to ≤1600px
+    final_path = compress_image(filepath, max_dimension=FULL_MAX_DIM, quality=FULL_QUALITY)
+    thumbnail = make_thumbnail(final_path)
+
+    return jsonify({"success": True, "filename": rel_path(final_path), "thumbnail": thumbnail})
 
 @app.route('/api/upload/map', methods=['POST'])
 @require_auth
 def upload_map_image():
     """Upload a map image"""
-    if 'file' not in request.files:
-        return jsonify({"error": "No file provided"}), 400
-
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({"error": "No file selected"}), 400
-
-    if not allowed_file(file.filename):
-        return jsonify({"error": "File type not allowed"}), 400
-
-    # Generate unique filename
-    ext = file.filename.rsplit('.', 1)[1].lower()
-    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-    filename = f"map-{timestamp}-{secrets.token_hex(4)}.{ext}"
-
-    filepath = os.path.join(UPLOAD_FOLDER, 'maps', filename)
-    file.save(filepath)
+    filepath, err = _receive_upload('maps', 'map')
+    if err:
+        return err
 
     # Compress map images too — keep them crisp but not oversized
     final_path = compress_image(filepath, max_dimension=2560, quality=88)
-    final_filename = os.path.relpath(final_path, '.')
 
-    return jsonify({"success": True, "filename": final_filename})
+    return jsonify({"success": True, "filename": rel_path(final_path)})
 
+@app.route('/api/upload/<path:filename>', methods=['DELETE'])
+@require_auth
+def delete_upload(filename):
+    """Delete an uploaded image and its thumbnail. Only files inside uploads/."""
+    rel = filename.replace('\\', '/')
+    if not rel.startswith('uploads/'):
+        rel = 'uploads/' + rel
+    target = os.path.realpath(abs_path(rel))
+    uploads_root = os.path.realpath(UPLOAD_FOLDER)
+    if not target.startswith(uploads_root + os.sep):
+        return jsonify({"error": "Not an upload"}), 400
+    if not os.path.isfile(target):
+        return jsonify({"error": "File not found"}), 404
+    delete_image_file(rel)
+    return jsonify({"success": True})
+
+
+# ---------------------------------------------------------------------------
 # HTML Generation endpoint
+# ---------------------------------------------------------------------------
+
 @app.route('/api/generate-html', methods=['POST'])
 @require_auth
 def generate_html():
     """Generate HTML files from data"""
     try:
-        data = load_data()
-        categories = data.get('categories', [])
-        venues = data.get('venues', [])
+        with file_write_lock:
+            data = load_data()
+            categories = data.get('categories', [])
+            venues = data.get('venues', [])
 
-        # Load template
-        template_path = 'templates/map-template.html'
-        if not os.path.exists(template_path):
-            return jsonify({"error": "Template not found"}), 500
+            # Load template
+            template_path = os.path.join(BASE_DIR, 'templates', 'map-template.html')
+            if not os.path.exists(template_path):
+                return jsonify({"error": "Template not found"}), 500
 
-        with open(template_path, 'r') as f:
-            template = f.read()
+            with open(template_path, 'r') as f:
+                template = f.read()
 
-        generated_files = []
+            generated_files = []
 
-        for category in categories:
-            # Support both old 'category' string and new 'categories' array
-            category_venues = []
-            for v in venues:
-                venue_categories = v.get('categories', [])
-                # Fallback to legacy 'category' field if 'categories' not present
-                if not venue_categories and v.get('category'):
-                    venue_categories = [v.get('category')]
-                if category['id'] in venue_categories:
-                    category_venues.append(v)
+            for category in categories:
+                # Support both old 'category' string and new 'categories' array
+                category_venues = []
+                for v in venues:
+                    venue_categories = v.get('categories', [])
+                    # Fallback to legacy 'category' field if 'categories' not present
+                    if not venue_categories and v.get('category'):
+                        venue_categories = [v.get('category')]
+                    if category['id'] in venue_categories:
+                        category_venues.append(v)
 
-            # Generate venues HTML (empty string if no venues)
-            venues_html = generate_venues_html(category_venues) if category_venues else ''
+                # Generate venues HTML (empty string if no venues)
+                venues_html = generate_venues_html(category_venues) if category_venues else ''
 
-            # Replace template placeholders
-            html = template.replace('{{CATEGORY_NAME}}', category['name'])
-            html = html.replace('{{VENUES_CONTENT}}', venues_html)
+                # Replace template placeholders
+                html = template.replace('{{CATEGORY_NAME}}', category['name'])
+                html = html.replace('{{VENUES_CONTENT}}', venues_html)
 
-            # Write to file
-            filename = f"{category['slug']}.html"
-            with open(filename, 'w') as f:
-                f.write(html)
+                # Write to file
+                filename = f"{category['slug']}.html"
+                with open(os.path.join(BASE_DIR, filename), 'w') as f:
+                    f.write(html)
 
-            generated_files.append(filename)
+                generated_files.append(filename)
 
-        # Generate index.html from landingPage config
-        landing_page = data.get('landingPage', {})
-        if landing_page.get('cards'):
-            index_html = generate_index_html(landing_page, categories)
-            with open('index.html', 'w') as f:
-                f.write(index_html)
-            generated_files.append('index.html')
+            # Generate index.html from landingPage config
+            landing_page = data.get('landingPage', {})
+            if landing_page.get('cards'):
+                index_html = generate_index_html(landing_page, categories)
+                with open(os.path.join(BASE_DIR, 'index.html'), 'w') as f:
+                    f.write(index_html)
+                generated_files.append('index.html')
 
         return jsonify({"success": True, "files": generated_files})
 
@@ -960,6 +1211,7 @@ def generate_venues_html(venues):
 
             # Add location markers with full data attributes
             for loc in m.get('locations', []):
+                normalize_location_images(loc)
                 pos = loc.get('position', {})
                 top = pos.get('top', '0%')
                 left = pos.get('left', '0%')
@@ -967,6 +1219,9 @@ def generate_venues_html(venues):
                 description = html_escape(loc.get('description', ''))
                 fiber = html_escape(loc.get('fiber', ''))
                 image = html_escape(loc.get('image', ''))
+                # data-images: JSON array of every photo path, HTML-escaped so the
+                # frontend can JSON.parse(el.dataset.images)
+                images = html_escape(json.dumps(loc.get('images', [])), quote=True)
                 number = loc.get('number', '')
                 map_label = html_escape(m.get('label', ''))
                 venue_name = html_escape(venue.get('name', ''))
@@ -979,6 +1234,7 @@ def generate_venues_html(venues):
                          data-description="{description}"
                          data-fiber="{fiber}"
                          data-image="{image}"
+                         data-images="{images}"
                          data-number="{number}"
                          data-venue-name="{venue_name}"
                          data-map-label="{map_label}">
@@ -996,34 +1252,24 @@ def generate_venues_html(venues):
 
     return '\n'.join(html_parts)
 
+
+# ---------------------------------------------------------------------------
 # Photo Request endpoints
+# ---------------------------------------------------------------------------
+
 @app.route('/api/photo-requests', methods=['POST'])
 def create_photo_request():
     """Submit a photo request (public - no auth required)"""
     try:
-        data = load_data()
-
-        # Initialize photoRequests if not exists
-        if 'photoRequests' not in data:
-            data['photoRequests'] = []
-
-        # Get form data
-        location_id = request.form.get('locationId', '')
-        location_name = request.form.get('locationName', 'Unknown')
-        venue_name = request.form.get('venueName', '')
-        map_label = request.form.get('mapLabel', '')
-        venue_id = request.form.get('venueId', '')
-        map_id = request.form.get('mapId', '')
-
         # Create request object
         photo_request = {
             'id': f"req-{generate_id()}",
-            'locationId': location_id,
-            'locationName': location_name,
-            'venueName': venue_name,
-            'mapLabel': map_label,
-            'venueId': venue_id,
-            'mapId': map_id,
+            'locationId': request.form.get('locationId', ''),
+            'locationName': request.form.get('locationName', 'Unknown'),
+            'venueName': request.form.get('venueName', ''),
+            'mapLabel': request.form.get('mapLabel', ''),
+            'venueId': request.form.get('venueId', ''),
+            'mapId': request.form.get('mapId', ''),
             'requestedAt': datetime.now().isoformat(),
             'status': 'pending',
             'uploadedPhoto': None
@@ -1036,14 +1282,15 @@ def create_photo_request():
                 ext = file.filename.rsplit('.', 1)[1].lower()
                 timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
                 filename = f"request-{timestamp}-{secrets.token_hex(4)}.{ext}"
+                ensure_dirs()
                 filepath = os.path.join(UPLOAD_FOLDER, 'photo-requests', filename)
                 file.save(filepath)
                 photo_request['uploadedPhoto'] = f"uploads/photo-requests/{filename}"
 
-        data['photoRequests'].append(photo_request)
-        save_data(data)
-
-        return jsonify({"success": True, "request": photo_request}), 201
+        def mutate(data):
+            data.setdefault('photoRequests', []).append(photo_request)
+            return jsonify({"success": True, "request": photo_request}), 201
+        return with_data(mutate)
     except HTTPException:
         raise  # let Flask return the proper status (e.g. 413 for oversized uploads)
     except Exception as e:
@@ -1063,88 +1310,86 @@ def get_photo_requests():
 @require_auth
 def dismiss_photo_request(request_id):
     """Dismiss/delete a photo request (admin only)"""
-    data = load_data()
+    def mutate(data):
+        if 'photoRequests' not in data:
+            return jsonify({"error": "Request not found"}), 404
 
-    if 'photoRequests' not in data:
-        return jsonify({"error": "Request not found"}), 404
+        # Find and remove the request (and its pending photo file)
+        original_count = len(data['photoRequests'])
+        for r in data['photoRequests']:
+            if r['id'] == request_id:
+                delete_image_file(r.get('uploadedPhoto') or '')
+        data['photoRequests'] = [r for r in data['photoRequests'] if r['id'] != request_id]
 
-    # Find and remove the request
-    original_count = len(data['photoRequests'])
-    data['photoRequests'] = [r for r in data['photoRequests'] if r['id'] != request_id]
-
-    if len(data['photoRequests']) == original_count:
-        return jsonify({"error": "Request not found"}), 404
-
-    save_data(data)
-    return jsonify({"success": True})
+        if len(data['photoRequests']) == original_count:
+            return jsonify({"error": "Request not found"}), 404
+        return jsonify({"success": True})
+    return with_data(mutate)
 
 @app.route('/api/photo-requests/<request_id>/approve', methods=['POST'])
 @require_auth
 def approve_photo_request(request_id):
-    """Approve a photo request and add the photo to the location (admin only)"""
-    data = load_data()
+    """Approve a photo request: the photo is appended to the location's images (admin only)"""
+    def mutate(data):
+        if 'photoRequests' not in data:
+            return jsonify({"error": "Request not found"}), 404
 
-    if 'photoRequests' not in data:
-        return jsonify({"error": "Request not found"}), 404
+        photo_request = next((r for r in data['photoRequests'] if r['id'] == request_id), None)
+        if not photo_request:
+            return jsonify({"error": "Request not found"}), 404
 
-    # Find the request
-    photo_request = None
-    for r in data['photoRequests']:
-        if r['id'] == request_id:
-            photo_request = r
-            break
+        if not photo_request.get('uploadedPhoto'):
+            return jsonify({"error": "No photo to approve"}), 400
 
-    if not photo_request:
-        return jsonify({"error": "Request not found"}), 404
+        venue_id = photo_request.get('venueId')
+        map_id = photo_request.get('mapId')
+        location_id = photo_request.get('locationId')
 
-    if not photo_request.get('uploadedPhoto'):
-        return jsonify({"error": "No photo to approve"}), 400
+        location = None
+        for venue in data.get('venues', []):
+            if venue['id'] == venue_id:
+                for m in venue.get('maps', []):
+                    if m['id'] == map_id:
+                        for loc in m.get('locations', []):
+                            if loc['id'] == location_id:
+                                location = loc
+                                break
 
-    # Find the location and update its image
-    venue_id = photo_request.get('venueId')
-    map_id = photo_request.get('mapId')
-    location_id = photo_request.get('locationId')
+        if location is None:
+            return jsonify({"error": "Location not found"}), 404
 
-    location_found = False
-    for venue in data.get('venues', []):
-        if venue['id'] == venue_id:
-            for m in venue.get('maps', []):
-                if m['id'] == map_id:
-                    for loc in m.get('locations', []):
-                        if loc['id'] == location_id:
-                            # Move the uploaded photo to regular uploads folder
-                            old_path = photo_request['uploadedPhoto']
-                            if old_path.startswith('uploads/photo-requests/'):
-                                # Generate new filename
-                                ext = old_path.rsplit('.', 1)[1].lower()
-                                timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-                                new_filename = f"location-{timestamp}-{secrets.token_hex(4)}.{ext}"
-                                old_filepath = os.path.join('.', old_path)
-                                new_filepath = os.path.join(UPLOAD_FOLDER, new_filename)
+        # Move the uploaded photo into the regular uploads folder, compress it
+        # like a normal upload, and make its thumbnail
+        old_path = photo_request['uploadedPhoto']
+        new_rel = old_path
+        if old_path.startswith('uploads/photo-requests/'):
+            ext = old_path.rsplit('.', 1)[1].lower()
+            timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+            new_filename = f"location-{timestamp}-{secrets.token_hex(4)}.{ext}"
+            old_filepath = abs_path(old_path)
+            new_filepath = os.path.join(UPLOAD_FOLDER, new_filename)
+            if os.path.exists(old_filepath):
+                os.replace(old_filepath, new_filepath)
+                new_filepath = compress_image(new_filepath, max_dimension=FULL_MAX_DIM, quality=FULL_QUALITY)
+                new_rel = rel_path(new_filepath)
+        make_thumbnail(new_rel)
 
-                                # Move file
-                                if os.path.exists(old_filepath):
-                                    os.rename(old_filepath, new_filepath)
-                                    loc['image'] = f"uploads/{new_filename}"
-                                else:
-                                    loc['image'] = old_path
-                            else:
-                                loc['image'] = old_path
+        normalize_location_images(location)
+        if new_rel not in location['images']:
+            location['images'].append(new_rel)
+        normalize_location_images(location)
 
-                            location_found = True
-                            break
-
-    if not location_found:
-        return jsonify({"error": "Location not found"}), 404
-
-    # Remove the request from photoRequests
-    data['photoRequests'] = [r for r in data['photoRequests'] if r['id'] != request_id]
-
-    save_data(data)
-    return jsonify({"success": True, "message": "Photo added to location"})
+        # Remove the request from photoRequests
+        data['photoRequests'] = [r for r in data['photoRequests'] if r['id'] != request_id]
+        return jsonify({"success": True, "message": "Photo added to location", "image": new_rel,
+                        "images": location['images']})
+    return with_data(mutate)
 
 
-# Analytics tracking endpoint (called from frontend)
+# ---------------------------------------------------------------------------
+# Analytics endpoints
+# ---------------------------------------------------------------------------
+
 @app.route('/api/track', methods=['POST'])
 def track_pageview():
     """Track a page visit"""
@@ -1152,7 +1397,6 @@ def track_pageview():
     if not session_id:
         session_id = secrets.token_hex(16)
 
-    page = request.json.get('page', '/') if request.is_json else '/'
     track_visit(session_id)
 
     response = jsonify({"success": True})
@@ -1160,39 +1404,37 @@ def track_pageview():
     response.set_cookie('visitor_id', session_id, max_age=365*24*60*60, httponly=True, samesite='Lax')
     return response
 
-# Get analytics data (admin only)
 @app.route('/api/analytics', methods=['GET'])
 @require_auth
 def get_analytics():
-    """Get analytics data"""
+    """Get analytics data (admin only)"""
     analytics = load_analytics()
+    daily = analytics.get('daily', {})
 
     # Get last 30 days
     today = datetime.now()
     last_30_days = []
     for i in range(30):
         date = (today - timedelta(days=i)).strftime('%Y-%m-%d')
-        if date in analytics['daily']:
-            last_30_days.append({
-                'date': date,
-                'sessions': analytics['daily'][date]['sessions'],
-                'pageviews': analytics['daily'][date]['pageviews']
-            })
-        else:
-            last_30_days.append({
-                'date': date,
-                'sessions': 0,
-                'pageviews': 0
-            })
+        day = daily.get(date, {'sessions': 0, 'pageviews': 0})
+        last_30_days.append({
+            'date': date,
+            'sessions': day.get('sessions', 0),
+            'pageviews': day.get('pageviews', 0)
+        })
 
     return jsonify({
-        'total_sessions': analytics['total_sessions'],
-        'total_pageviews': analytics['total_pageviews'],
+        'total_sessions': analytics.get('total_sessions', 0),
+        'total_pageviews': analytics.get('total_pageviews', 0),
         'last_30_days': last_30_days,
-        'today': analytics['daily'].get(today.strftime('%Y-%m-%d'), {'sessions': 0, 'pageviews': 0})
+        'today': daily.get(today.strftime('%Y-%m-%d'), {'sessions': 0, 'pageviews': 0})
     })
 
-# Error handlers
+
+# ---------------------------------------------------------------------------
+# Error handlers: every error is {"error": "..."} with a 4xx/5xx status
+# ---------------------------------------------------------------------------
+
 @app.errorhandler(413)
 def too_large(e):
     return jsonify({"error": "File too large. Maximum size is 5MB."}), 413
@@ -1200,6 +1442,14 @@ def too_large(e):
 @app.errorhandler(404)
 def not_found(e):
     return jsonify({"error": "Not found"}), 404
+
+@app.errorhandler(405)
+def method_not_allowed(e):
+    return jsonify({"error": "Method not allowed"}), 405
+
+@app.errorhandler(400)
+def bad_request(e):
+    return jsonify({"error": "Bad request"}), 400
 
 @app.errorhandler(500)
 def server_error(e):
@@ -1215,4 +1465,4 @@ if __name__ == '__main__':
     if not ADMIN_PASSWORD_HASH:
         print("WARNING: ADMIN_PASSWORD_HASH not set in .env — admin login is disabled")
     print("=" * 50)
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(host='0.0.0.0', port=port, debug=False, threaded=True)

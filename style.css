@@ -1470,3 +1470,325 @@ html.overlay-active {
 #location-modal {
   display: none;
 }
+
+/* === PHOTO STRIP (one photo at a time, swipeable) === */
+.photo-strip {
+  position: relative;
+  width: 100%;
+  background: var(--primary-navy);
+  overflow: hidden;
+}
+
+.photo-strip[hidden],
+.photo-strip-nav[hidden] {
+  display: none !important;
+}
+
+.photo-strip-track {
+  display: flex;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  outline: none;
+}
+
+.photo-strip-track::-webkit-scrollbar {
+  display: none;
+}
+
+.photo-strip-track:focus-visible {
+  box-shadow: inset 0 0 0 3px var(--primary-orange);
+}
+
+.photo-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-in;
+  background: #081a30;
+}
+
+.photo-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  -webkit-user-drag: none;
+  user-select: none;
+  transition: opacity var(--transition-normal);
+}
+
+.photo-slide img.img-loading {
+  opacity: 0.25;
+}
+
+.photo-slide-broken {
+  display: none;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+  background: #081a30;
+}
+
+.photo-slide.broken {
+  cursor: default;
+}
+
+.photo-slide.broken img {
+  visibility: hidden;
+}
+
+.photo-slide.broken .photo-slide-broken {
+  display: flex;
+}
+
+.photo-strip-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(12, 35, 64, 0.75);
+  color: white;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0 4px 0;
+  transition: background var(--transition-fast), opacity var(--transition-fast);
+  z-index: 2;
+}
+
+.photo-strip-prev { left: 10px; }
+.photo-strip-next { right: 10px; }
+
+.photo-strip-arrow:hover:not(:disabled) {
+  background: var(--primary-orange);
+}
+
+.photo-strip-arrow:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.photo-strip.single .photo-strip-arrow {
+  display: none;
+}
+
+/* Phones swipe; hide the arrows so the photo stays clear. Matched by
+   touch capability AND by narrow viewport so a narrow non-touch browser
+   (or a headless screenshot) behaves the same as a real phone. */
+@media (hover: none) and (pointer: coarse), (max-width: 768px) {
+  .photo-strip-arrow {
+    display: none;
+  }
+}
+
+.photo-strip-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem 0.9rem;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.photo-strip-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.photo-strip-dot {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-strip-dot::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border-color);
+  transition: all var(--transition-fast);
+}
+
+.photo-strip-dot.active::before {
+  background: var(--primary-orange);
+  width: 10px;
+  height: 10px;
+}
+
+.photo-strip-counter {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  min-width: 3.2em;
+  text-align: right;
+}
+
+.location-list-photos {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+@media (min-width: 769px) {
+  .photo-strip-track {
+    aspect-ratio: 16 / 10;
+  }
+}
+
+/* === IMAGE MODAL: prev/next === */
+#image-modal-content.img-loading {
+  opacity: 0.3;
+}
+
+.image-modal-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(12, 35, 64, 0.75);
+  color: white;
+  font-size: 2.2rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0 4px 0;
+  z-index: 2;
+  transition: background var(--transition-fast);
+}
+
+.image-modal-arrow[hidden] {
+  display: none !important;
+}
+
+.image-modal-prev { left: 16px; }
+.image-modal-next { right: 16px; }
+
+.image-modal-arrow:hover:not(:disabled) {
+  background: var(--primary-orange);
+  border-color: var(--primary-orange);
+}
+
+.image-modal-arrow:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.image-modal-counter {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  background: rgba(12, 35, 64, 0.75);
+  padding: 0.35rem 0.9rem;
+  border-radius: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+.image-modal-counter[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  #image-modal-overlay {
+    padding: 12px;
+  }
+
+  #image-modal-content {
+    max-width: 100%;
+    max-height: 80%;
+  }
+
+  #image-modal-close {
+    top: 12px;
+    right: 16px;
+  }
+
+  .image-modal-arrow {
+    width: 44px;
+    height: 44px;
+    top: auto;
+    bottom: 16px;
+    transform: none;
+  }
+
+  .image-modal-prev { left: 16px; }
+  .image-modal-next { right: 16px; }
+}
+
+/* === SERVICE WORKER UPDATE TOAST === */
+.sw-update-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  transform: translate(-50%, 20px);
+  background: var(--primary-navy);
+  color: white;
+  border: 2px solid var(--primary-orange);
+  border-radius: 999px;
+  padding: 0.7rem 1.25rem;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  z-index: 100010;
+  box-shadow: var(--shadow-xl);
+  opacity: 0;
+  transition: opacity var(--transition-normal), transform var(--transition-normal);
+}
+
+.sw-update-toast.visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* Print-only elements live in the DOM but stay hidden on screen */
+.print-location-list,
+.print-map-label {
+  display: none;
+}
+
+#image-modal-close {
+  background: transparent;
+  border: none;
+  padding: 0 8px;
+  z-index: 3;
+}

@@ -88,7 +88,10 @@
               "position": {
                 "left": "47.2%",
                 "top": "80%"
-              }
+              },
+              "images": [
+                "location1-1.jpg"
+              ]
             },
             {
               "description": "Main Right is at the top of section 103 on the third floor concourse. 12 ST Fiber all to the loose white box.",
@@ -100,7 +103,10 @@
               "position": {
                 "left": "51%",
                 "top": "80%"
-              }
+              },
+              "images": [
+                "location1-2.jpg"
+              ]
             },
             {
               "description": "Main Reverse is at the top of section 111 on the third floor concourse. 6 ST Fiber",
@@ -112,7 +118,10 @@
               "position": {
                 "left": "50%",
                 "top": "18%"
-              }
+              },
+              "images": [
+                "location1-3.jpg"
+              ]
             },
             {
               "description": "South Endzone is at the top of Section 116. 6 ST Fiber labeled as Section 116, 12 ST labeled South Endzone.",
@@ -124,7 +133,10 @@
               "position": {
                 "left": "19%",
                 "top": "48%"
-              }
+              },
+              "images": [
+                "location1-4.jpg"
+              ]
             },
             {
               "description": "North Endzone is at the top of Section 107. 12 ST Fiber.",
@@ -136,7 +148,10 @@
               "position": {
                 "left": "81%",
                 "top": "48%"
-              }
+              },
+              "images": [
+                "location1-5.jpg"
+              ]
             },
             {
               "description": "Section 118 is at the top of Section 118. 12 ST that run to 4440 (Location 8) as SC APC.",
@@ -148,7 +163,10 @@
               "position": {
                 "left": "22.998047%",
                 "top": "72.593997%"
-              }
+              },
+              "images": [
+                "location1-6.jpg"
+              ]
             },
             {
               "description": "Near Right High Slash is at the top of section 211 on the 4th Floor Concourse. 12 ST Fiber pulled here. 6 ST Fiber labeled Near Right High Slash (FULL) and 6 Labeled New Near Right High Slash.",
@@ -160,7 +178,10 @@
               "position": {
                 "left": "80%",
                 "top": "65%"
-              }
+              },
+              "images": [
+                "location1-7.jpg"
+              ]
             },
             {
               "description": "4440 is located behind section 201. A single door to the right of double doors. The fiber in the room is located at the top of the left DAK Rack. 6 ST and 24 SC APC to Truck Dock.",
@@ -172,7 +193,10 @@
               "position": {
                 "left": "26%",
                 "top": "88%"
-              }
+              },
+              "images": [
+                "location1-8.jpg"
+              ]
             },
             {
               "description": "CenterHung is located on the cat walk in the center. Access this by the middle doors on the 4th floor north or south of venue.",
@@ -184,7 +208,10 @@
               "position": {
                 "left": "49%",
                 "top": "49%"
-              }
+              },
+              "images": [
+                "location1-9.jpg"
+              ]
             },
             {
               "description": "The truck dock is located off of Floor Far Left. All of the Venue IO run through this box.",
@@ -196,7 +223,10 @@
               "position": {
                 "left": "20%",
                 "top": "14.9997%"
-              }
+              },
+              "images": [
+                "location1-10.jpg"
+              ]
             },
             {
               "description": "testing 123",
@@ -208,7 +238,10 @@
               "position": {
                 "left": "72.6316%",
                 "top": "22.6113%"
-              }
+              },
+              "images": [
+                "uploads/location-20260130125415-2e77d1aa.jpg"
+              ]
             }
           ],
           "subtitle": "From Truck Dock"
@@ -228,7 +261,10 @@
               "position": {
                 "left": "32%",
                 "top": "30%"
-              }
+              },
+              "images": [
+                "location2-1.jpg"
+              ]
             },
             {
               "description": "FFR is located in the North West corner of the arena between section F and G.",
@@ -240,7 +276,10 @@
               "position": {
                 "left": "72%",
                 "top": "37%"
-              }
+              },
+              "images": [
+                "location2-2.jpg"
+              ]
             },
             {
               "description": "FNR is located in the North East corner of the arena between section C and D.",
@@ -252,7 +291,10 @@
               "position": {
                 "left": "68%",
                 "top": "68%"
-              }
+              },
+              "images": [
+                "location2-3.jpg"
+              ]
             },
             {
               "description": "FNL is located in the South East corner of the arena between secton A and N.",
@@ -264,7 +306,10 @@
               "position": {
                 "left": "28%",
                 "top": "61%"
-              }
+              },
+              "images": [
+                "location2-4.jpg"
+              ]
             },
             {
               "description": "Floor Pocket 1 is located on the near side of the court in front of section B and C.",
@@ -276,7 +321,10 @@
               "position": {
                 "left": "53%",
                 "top": "60%"
-              }
+              },
+              "images": [
+                "location2-5.jpg"
+              ]
             },
             {
               "description": "Floor Pocket 2 is located on the far side of the court in front of section H.",
@@ -288,7 +336,10 @@
               "position": {
                 "left": "53%",
                 "top": "37%"
-              }
+              },
+              "images": [
+                "location2-6.jpg"
+              ]
             },
             {
               "description": "The Fiber in the Men's locker room is located under the cabinets inside of their locker room behind section M.",
@@ -300,7 +351,10 @@
               "position": {
                 "left": "27%",
                 "top": "50%"
-              }
+              },
+              "images": [
+                "location2-7.jpg"
+              ]
             },
             {
               "description": "Media room is located to the right of the elevator off Floor Far Left area.",
@@ -312,7 +366,10 @@
               "position": {
                 "left": "31%",
                 "top": "23%"
-              }
+              },
+              "images": [
+                "location2-8.jpg"
+              ]
             },
             {
               "description": "Women's locker room has 2 SDI cables ran to the back of their film review room.",
@@ -324,7 +381,10 @@
               "position": {
                 "left": "23%",
                 "top": "35%"
-              }
+              },
+              "images": [
+                "location2-9.jpg"
+              ]
             },
             {
               "description": "The truck dock is located off of Floor Far Left. All of the Venue IO run through this box.",
@@ -336,7 +396,10 @@
               "position": {
                 "left": "20%",
                 "top": "15%"
-              }
+              },
+              "images": [
+                "location2-10.jpg"
+              ]
             }
           ],
           "subtitle": "From Truck Dock"
@@ -366,7 +429,10 @@
               "position": {
                 "left": "32%",
                 "top": "48%"
-              }
+              },
+              "images": [
+                "location3-1.jpg"
+              ]
             },
             {
               "description": "Right silver box on photo deck. Located near south 45 yd line.",
@@ -378,7 +444,10 @@
               "position": {
                 "left": "32%",
                 "top": "52%"
-              }
+              },
+              "images": [
+                "location3-2.jpg"
+              ]
             },
             {
               "description": "Silver box on the NorthWest corner on a brick wall at field level. Power is located on the west sideline fence.",
@@ -390,7 +459,10 @@
               "position": {
                 "left": "45%",
                 "top": "25%"
-              }
+              },
+              "images": [
+                "location3-3.jpg"
+              ]
             },
             {
               "description": "Silver box near the cheer stand on the SouthEast corner on a brick pillar at field level. Power is located on the east sideline fence.",
@@ -402,7 +474,10 @@
               "position": {
                 "left": "60%",
                 "top": "64%"
-              }
+              },
+              "images": [
+                "location3-4.jpg"
+              ]
             },
             {
               "description": "Silver box under the bleachers on the west side wall of the south tunnel.",
@@ -414,7 +489,10 @@
               "position": {
                 "left": "49%",
                 "top": "70%"
-              }
+              },
+              "images": [
+                "location3-5.jpg"
+              ]
             },
             {
               "description": "Silver box at the top of the south endzone under the videoboard clock.",
@@ -426,19 +504,23 @@
               "position": {
                 "left": "50%",
                 "top": "85%"
-              }
+              },
+              "images": [
+                "location3-6.jpg"
+              ]
             },
             {
               "description": "Between section 12 and 13. 1415 is the main fiber hub for all connections that do not originate in the truck pedistal.",
               "fiber": "Main Hub",
               "id": "3.7",
-              "image": "location3-7.jpg",
+              "image": "",
               "name": "1415",
               "number": 7,
               "position": {
                 "left": "34%",
                 "top": "73%"
-              }
+              },
+              "images": []
             },
             {
               "description": "Between section 6 and 7. Direct runs back to 1415. Against wall between hedges.",
@@ -450,7 +532,10 @@
               "position": {
                 "left": "38%",
                 "top": "50%"
-              }
+              },
+              "images": [
+                "location3-8.jpg"
+              ]
             },
             {
               "number": 9,
@@ -462,7 +547,8 @@
                 "top": "4.57%",
                 "left": "48.77%"
               },
-              "id": "08530c6e"
+              "id": "08530c6e",
+              "images": []
             },
             {
               "number": 10,
@@ -474,7 +560,8 @@
                 "top": "16.21%",
                 "left": "35.53%"
               },
-              "id": "aaae932a"
+              "id": "aaae932a",
+              "images": []
             }
           ],
           "subtitle": "6 ST Fiber & 2 SMPTE"
@@ -488,13 +575,14 @@
               "description": "Located through the SouthEast tunnel - The media room has 6 ST Fiber.",
               "fiber": "6 ST",
               "id": "4.1",
-              "image": "location4-1.jpg",
+              "image": "",
               "name": "Media Room",
               "number": 1,
               "position": {
                 "left": "56%",
                 "top": "74%"
-              }
+              },
+              "images": []
             },
             {
               "description": "Take the SouthWest elevator to the third floor, take the last door on the left and its the room straight ahead. 12 ST Fiber located near the top of the wall in the back of the room.",
@@ -506,91 +594,101 @@
               "position": {
                 "left": "24%",
                 "top": "59%"
-              }
+              },
+              "images": [
+                "location4-2.jpg"
+              ]
             },
             {
               "description": "Take the ramp upwards away from the third floor concourse. Silver box on the underside of the ramp - 12 ST Fiber.",
               "fiber": "12 ST",
               "id": "4.3",
-              "image": "location4-3.jpg",
+              "image": "",
               "name": "North West Ramp",
               "number": 3,
               "position": {
                 "left": "25%",
                 "top": "14%"
-              }
+              },
+              "images": []
             },
             {
               "description": "Take the ramp upwards away from the third floor concourse. Silver box on the underside of the ramp - 12 ST Fiber.",
               "fiber": "12 ST",
               "id": "4.4",
-              "image": "location4-4.jpg",
+              "image": "",
               "name": "South West Ramp",
               "number": 4,
               "position": {
                 "left": "24%",
                 "top": "78%"
-              }
+              },
+              "images": []
             },
             {
               "description": "Mostly used for team video - 12 ST at the top of the south videoboard.",
               "fiber": "12 ST",
               "id": "4.5",
-              "image": "location4-5.jpg",
+              "image": "",
               "name": "Top South Videoboard West",
               "number": 5,
               "position": {
                 "left": "47%",
                 "top": "88%"
-              }
+              },
+              "images": []
             },
             {
               "description": "Mostly used for team video - 12 ST at the top of the south videoboard.",
               "fiber": "12 ST",
               "id": "4.6",
-              "image": "location4-6.jpg",
+              "image": "",
               "name": "Top South VideoBoard East",
               "number": 6,
               "position": {
                 "left": "58%",
                 "top": "88%"
-              }
+              },
+              "images": []
             },
             {
               "description": "24 LC - Located between the West side elevators - this pedestal holds the connection between 1415 and Truck Pedestal. It also holds some legacy cables from when this was the main stadium truck pedestal.",
               "fiber": "24 LC",
               "id": "4.7",
-              "image": "location4-7.jpg",
+              "image": "",
               "name": "West Truck Dock",
               "number": 7,
               "position": {
                 "left": "11%",
                 "top": "42%"
-              }
+              },
+              "images": []
             },
             {
               "description": "36 SC - This room holds some more fiber runs that are solely for team video.",
               "fiber": "36 SC",
               "id": "4.8",
-              "image": "location4-8.jpg",
+              "image": "",
               "name": "Room 2130F",
               "number": 8,
               "position": {
                 "left": "24%",
                 "top": "46%"
-              }
+              },
+              "images": []
             },
             {
               "description": "Between section 12 and 13. 1415 is the main fiber hub for all connections that do not originate in the truck pedistal.",
               "fiber": "Main Hub",
               "id": "4.9",
-              "image": "location4-9.jpg",
+              "image": "",
               "name": "1415",
               "number": 9,
               "position": {
                 "left": "34%",
                 "top": "73%"
-              }
+              },
+              "images": []
             }
           ],
           "subtitle": "Patches From 1415"
@@ -616,7 +714,10 @@
               "position": {
                 "left": "31%",
                 "top": "28%"
-              }
+              },
+              "images": [
+                "location5-1.jpg"
+              ]
             },
             {
               "description": "6 ST - 5th Floor of South West Recruiting Building",
@@ -629,7 +730,10 @@
               "position": {
                 "left": "42%",
                 "top": "38%"
-              }
+              },
+              "images": [
+                "location5-2.jpg"
+              ]
             },
             {
               "description": "12 ST - 5th Floor of South West Recruiting Building",
@@ -642,7 +746,10 @@
               "position": {
                 "left": "35%",
                 "top": "38%"
-              }
+              },
+              "images": [
+                "location5-3.jpg"
+              ]
             },
             {
               "description": "6 ST - Inside the white box directly to your right when entering the glass doors at main entrance.",
@@ -655,7 +762,10 @@
               "position": {
                 "left": "72%",
                 "top": "72%"
-              }
+              },
+              "images": [
+                "location5-4.jpg"
+              ]
             },
             {
               "description": "12 ST - Through 1st floor main entrance, the fiber box is near the floor near the blue wall.",
@@ -668,7 +778,10 @@
               "position": {
                 "left": "58%",
                 "top": "54%"
-              }
+              },
+              "images": [
+                "location5-5.jpg"
+              ]
             },
             {
               "description": "24 SC - Hallway across from the bathrooms on the 1st floor.",
@@ -681,7 +794,10 @@
               "position": {
                 "left": "66%",
                 "top": "52%"
-              }
+              },
+              "images": [
+                "location5-6.jpg"
+              ]
             },
             {
               "description": "12 ST - Meeting room in the back of the locker room.",
@@ -694,7 +810,10 @@
               "position": {
                 "left": "84%",
                 "top": "52%"
-              }
+              },
+              "images": [
+                "location5-7.jpg"
+              ]
             },
             {
               "description": "6 ST - Beside the large video wall on in the 1st floor TWC.",
@@ -707,7 +826,10 @@
               "position": {
                 "left": "43%",
                 "top": "52%"
-              }
+              },
+              "images": [
+                "location5-8.jpg"
+              ]
             },
             {
               "description": "6 ST - No Power - Concourse Level - Just off elevator through the TWC doors by the stairs.",
@@ -720,7 +842,10 @@
               "position": {
                 "left": "45%",
                 "top": "48%"
-              }
+              },
+              "images": [
+                "location5-9.jpg"
+              ]
             }
           ],
           "subtitle": "Patches From 1415"
@@ -734,13 +859,14 @@
               "description": "12 ST, 3 SMPTE, 2 Triax, 6 XLR - Located on the photodeck at the North 25 yd line on the third floor concourse",
               "fiber": "12 ST + 3 SMPTE + 2 Triax + 6 XLR",
               "id": "6.1",
-              "image": "location6-1.jpg",
+              "image": "",
               "name": "Left 25",
               "number": 1,
               "position": {
                 "left": "25%",
                 "top": "37%"
-              }
+              },
+              "images": []
             },
             {
               "description": "12 ST, 6 SMPTE, 4 Triax, 6 XLR - Located on the photodeck at the 50 yd line on the third floor concourse",
@@ -752,19 +878,23 @@
               "position": {
                 "left": "23%",
                 "top": "46%"
-              }
+              },
+              "images": [
+                "location6-2.jpg"
+              ]
             },
             {
               "description": "12 ST, 3 SMPTE, 2 Triax, 6 XLR - Located on the photodeck at the South 25 yd line on the third floor concourse",
               "fiber": "12 ST + 3 SMPTE + 2 Triax + 6 XLR",
               "id": "6.3",
-              "image": "location6-3.jpg",
+              "image": "",
               "name": "Right 25",
               "number": 3,
               "position": {
                 "left": "25%",
                 "top": "55%"
-              }
+              },
+              "images": []
             },
             {
               "description": "48 ST, 3 SMPTE, 2 Triax, 36 (DT12) XLR - Located off the North West elevator - take the last hallway on your right and the room is straight down the hallway from the door.",
@@ -776,19 +906,23 @@
               "position": {
                 "left": "22%",
                 "top": "35%"
-              }
+              },
+              "images": [
+                "location6-4.jpg"
+              ]
             },
             {
               "description": "12 ST, 3 SMPTE, 2 Triax, 6 XLR - Located at the top of the South Endzone directly under the VideoBoard clock.",
               "fiber": "12 ST + 3 SMPTE + 2 Triax + 6 XLR",
               "id": "6.5",
-              "image": "location6-5.jpg",
+              "image": "",
               "name": "High South EZ",
               "number": 5,
               "position": {
                 "left": "50%",
                 "top": "85%"
-              }
+              },
+              "images": []
             },
             {
               "description": "12 ST, 3 SMPTE, 2 Triax, 6 XLR - Located inside the North ScoreBoard. Enter from the top of the bowl in section 41.",
@@ -800,7 +934,10 @@
               "position": {
                 "left": "50%",
                 "top": "5%"
-              }
+              },
+              "images": [
+                "location6-6.jpg"
+              ]
             },
             {
               "description": "New demarc room (2026 season) for connectivity from stadium to TV dock underneath NW stands.",
@@ -812,7 +949,8 @@
               "position": {
                 "top": "17.3254%",
                 "left": "33.9765%"
-              }
+              },
+              "images": []
             },
             {
               "description": "12 ST - Take the South West Elevator, take the last door on your left and the official replay room is the 4th door on your right.",
@@ -824,7 +962,10 @@
               "position": {
                 "left": "22%",
                 "top": "52%"
-              }
+              },
+              "images": [
+                "location6-8.jpg"
+              ]
             }
           ],
           "subtitle": "From Truck Dock"
@@ -854,199 +995,216 @@
               "position": {
                 "top": "67.9995%",
                 "left": "33.9988%"
-              }
+              },
+              "images": []
             },
             {
               "description": "12 ST",
               "fiber": "12 ST",
               "id": "7.2",
-              "image": "location7-2.jpg",
+              "image": "",
               "name": "High Home",
               "number": 2,
               "position": {
                 "left": "45.5%",
                 "top": "93%"
-              }
+              },
+              "images": []
             },
             {
               "description": "12 ST",
               "fiber": "12 ST",
               "id": "7.3",
-              "image": "location7-3.jpg",
+              "image": "",
               "name": "Low First",
               "number": 3,
               "position": {
                 "left": "56%",
                 "top": "68%"
-              }
+              },
+              "images": []
             },
             {
               "description": "12 ST",
               "fiber": "12 ST",
               "id": "7.4",
-              "image": "location7-4.jpg",
+              "image": "",
               "name": "High First",
               "number": 4,
               "position": {
                 "left": "65%",
                 "top": "77%"
-              }
+              },
+              "images": []
             },
             {
               "description": "12 ST",
               "fiber": "12 ST",
               "id": "7.5",
-              "image": "location7-5.jpg",
+              "image": "",
               "name": "War Eagle Productions (Booth)",
               "number": 5,
               "position": {
                 "left": "40%",
                 "top": "93%"
-              }
+              },
+              "images": []
             },
             {
               "description": "24 ST",
               "fiber": "24 ST",
               "id": "7.6",
-              "image": "location7-6.jpg",
+              "image": "",
               "name": "Centerfield",
               "number": 6,
               "position": {
                 "left": "42%",
                 "top": "5%"
-              }
+              },
+              "images": []
             },
             {
               "description": "12 ST",
               "fiber": "12 ST",
               "id": "7.7",
-              "image": "location7-7.jpg",
+              "image": "",
               "name": "Left Field",
               "number": 7,
               "position": {
                 "left": "16%",
                 "top": "33%"
-              }
+              },
+              "images": []
             },
             {
               "description": "12 ST",
               "fiber": "12 ST",
               "id": "7.8",
-              "image": "location7-8.jpg",
+              "image": "",
               "name": "Auburn Bullpen",
               "number": 8,
               "position": {
                 "left": "14%",
                 "top": "33%"
-              }
+              },
+              "images": []
             },
             {
               "description": "24 SC",
               "fiber": "24 SC",
               "id": "7.9",
-              "image": "location7-9.jpg",
+              "image": "",
               "name": "PA Room",
               "number": 9,
               "position": {
                 "left": "79%",
                 "top": "39%"
-              }
+              },
+              "images": []
             },
             {
               "description": "24 SC",
               "fiber": "24 SC",
               "id": "7.10",
-              "image": "location7-10.jpg",
+              "image": "",
               "name": "PA Room Closet",
               "number": 10,
               "position": {
                 "left": "83%",
                 "top": "44%"
-              }
+              },
+              "images": []
             },
             {
               "description": "6 ST",
               "fiber": "6 ST",
               "id": "7.11",
-              "image": "location7-11.jpg",
+              "image": "",
               "name": "Umpire Review Room",
               "number": 11,
               "position": {
                 "left": "31%",
                 "top": "70%"
-              }
+              },
+              "images": []
             },
             {
               "description": "10 ST",
               "fiber": "10 ST",
               "id": "7.12",
-              "image": "location7-12.jpg",
+              "image": "",
               "name": "Away Radio",
               "number": 12,
               "position": {
                 "left": "52.5%",
                 "top": "93%"
-              }
+              },
+              "images": []
             },
             {
               "description": "10 ST",
               "fiber": "10 ST",
               "id": "7.13",
-              "image": "location7-13.jpg",
+              "image": "",
               "name": "Auburn Radio",
               "number": 13,
               "position": {
                 "left": "50%",
                 "top": "94%"
-              }
+              },
+              "images": []
             },
             {
               "description": "tbd",
               "fiber": "TBD",
               "id": "7.14",
-              "image": "location7-14.jpg",
+              "image": "",
               "name": "Truck Pedestal",
               "number": 14,
               "position": {
                 "left": "3%",
                 "top": "32%"
-              }
+              },
+              "images": []
             },
             {
               "description": "12 ST",
               "fiber": "12 ST",
               "id": "7.15",
-              "image": "location7-15.jpg",
+              "image": "",
               "name": "Concourse",
               "number": 15,
               "position": {
                 "left": "82%",
                 "top": "49%"
-              }
+              },
+              "images": []
             },
             {
               "description": "6 ST",
               "fiber": "6 ST",
               "id": "7.16",
-              "image": "location7-16.jpg",
+              "image": "",
               "name": "TV Booth Closet",
               "number": 16,
               "position": {
                 "left": "40%",
                 "top": "97%"
-              }
+              },
+              "images": []
             },
             {
               "description": "24 SC",
               "fiber": "24 SC",
               "id": "7.17",
-              "image": "location7-17.jpg",
+              "image": "",
               "name": "Broadcast Room",
               "number": 17,
               "position": {
                 "left": "73%",
                 "top": "59%"
-              }
+              },
+              "images": []
             }
           ],
           "subtitle": ""
@@ -1076,7 +1234,10 @@
               "position": {
                 "left": "32%",
                 "top": "45%"
-              }
+              },
+              "images": [
+                "location8-1.jpg"
+              ]
             },
             {
               "description": "12 ST in the front left of the PA room.",
@@ -1088,7 +1249,10 @@
               "position": {
                 "left": "49%",
                 "top": "66%"
-              }
+              },
+              "images": [
+                "location8-2.jpg"
+              ]
             },
             {
               "description": "18 ST in the left box. 12 ST in the left box (primarily saved for hawkeye)",
@@ -1100,7 +1264,10 @@
               "position": {
                 "left": "62%",
                 "top": "45%"
-              }
+              },
+              "images": [
+                "location8-3.jpg"
+              ]
             },
             {
               "description": "6 ST - Located on the outside wall of the first base side hitting facility.",
@@ -1112,7 +1279,10 @@
               "position": {
                 "left": "74%",
                 "top": "46%"
-              }
+              },
+              "images": [
+                "location8-4.jpg"
+              ]
             },
             {
               "description": "tbd",
@@ -1124,7 +1294,10 @@
               "position": {
                 "left": "78%",
                 "top": "20%"
-              }
+              },
+              "images": [
+                "location8-5.jpg"
+              ]
             },
             {
               "description": "12 ST",
@@ -1136,7 +1309,10 @@
               "position": {
                 "left": "50%",
                 "top": "5%"
-              }
+              },
+              "images": [
+                "location8-6.jpg"
+              ]
             },
             {
               "description": "12 ST - Under Desk",
@@ -1148,7 +1324,10 @@
               "position": {
                 "left": "46%",
                 "top": "66%"
-              }
+              },
+              "images": [
+                "location8-7.jpg"
+              ]
             }
           ],
           "subtitle": ""
@@ -1178,7 +1357,10 @@
               "position": {
                 "left": "23%",
                 "top": "60%"
-              }
+              },
+              "images": [
+                "location9-1.jpg"
+              ]
             },
             {
               "description": "Facing the pool on the 2nd floor concourse, the middle camera well is at the middle",
@@ -1190,7 +1372,10 @@
               "position": {
                 "left": "35%",
                 "top": "60%"
-              }
+              },
+              "images": [
+                "location9-2.jpg"
+              ]
             },
             {
               "description": "Facing the pool on the 2nd floor concourse, the right camera well is on the far right.",
@@ -1202,7 +1387,10 @@
               "position": {
                 "left": "52%",
                 "top": "60%"
-              }
+              },
+              "images": [
+                "location9-3.jpg"
+              ]
             },
             {
               "description": "Facing the pool on the 2nd level concourse, the high endzone camera well is on the far right of the venue at the top of the stairs.",
@@ -1214,7 +1402,10 @@
               "position": {
                 "left": "72%",
                 "top": "48%"
-              }
+              },
+              "images": [
+                "location9-4.jpg"
+              ]
             },
             {
               "description": "Facing the pool on pool level, the poolside left box is on the far left.",
@@ -1226,7 +1417,10 @@
               "position": {
                 "left": "23%",
                 "top": "52%"
-              }
+              },
+              "images": [
+                "location9-5.jpg"
+              ]
             },
             {
               "description": "Facing the pool on pool level, the poolside right box is on the far right.",
@@ -1238,7 +1432,10 @@
               "position": {
                 "left": "52%",
                 "top": "52%"
-              }
+              },
+              "images": [
+                "location9-6.jpg"
+              ]
             },
             {
               "description": "Facing the pool on pool level, the poolside middle box is at the middle.",
@@ -1250,7 +1447,10 @@
               "position": {
                 "left": "35%",
                 "top": "52%"
-              }
+              },
+              "images": [
+                "location9-7.jpg"
+              ]
             },
             {
               "description": "Facing the pool on pool level, the closet by the trophy case is just below the right side camera platform.",
@@ -1262,7 +1462,10 @@
               "position": {
                 "left": "60%",
                 "top": "52%"
-              }
+              },
+              "images": [
+                "location9-8.jpg"
+              ]
             },
             {
               "description": "",
@@ -1274,7 +1477,8 @@
               "position": {
                 "left": "69.95%",
                 "top": "72.45%"
-              }
+              },
+              "images": []
             }
           ],
           "subtitle": "From closet by trophy case poolside"
@@ -1304,7 +1508,10 @@
               "position": {
                 "left": "42%",
                 "top": "85%"
-              }
+              },
+              "images": [
+                "location10-1.jpg"
+              ]
             },
             {
               "description": "Directly under the videoboard. 24 ST fiber. The last 6 are hard patched to bench fiber (5).",
@@ -1316,7 +1523,10 @@
               "position": {
                 "left": "76%",
                 "top": "20%"
-              }
+              },
+              "images": [
+                "location10-2.jpg"
+              ]
             },
             {
               "description": "Opposite side of the field from the videoboard. Located behind the fence from the goal. 12 ST fiber.",
@@ -1328,7 +1538,10 @@
               "position": {
                 "left": "8%",
                 "top": "50%"
-              }
+              },
+              "images": [
+                "location10-3.jpg"
+              ]
             },
             {
               "description": "Hanging on fence in front of bleachers. 12 ST fiber.",
@@ -1340,7 +1553,10 @@
               "position": {
                 "left": "42%",
                 "top": "76%"
-              }
+              },
+              "images": [
+                "location10-4.jpg"
+              ]
             },
             {
               "description": "Between the benches under the gazeebo. Usually located in the manhole. Patches from 19-24 of videoboard patches. 6 ST fiber",
@@ -1352,7 +1568,10 @@
               "position": {
                 "left": "42%",
                 "top": "13%"
-              }
+              },
+              "images": [
+                "location10-5.jpg"
+              ]
             }
           ],
           "subtitle": "From center of trailer top of bleachers"
@@ -1382,31 +1601,36 @@
               "position": {
                 "left": "96%",
                 "top": "55%"
-              }
+              },
+              "images": [
+                "location11-1.jpg"
+              ]
             },
             {
               "description": "Near LaDove lounge is a box mounted at feet level. 6 ST",
               "fiber": "6 ST",
               "id": "11.2",
-              "image": "location11-2.jpg",
+              "image": "",
               "name": "Covered Arena",
               "number": 2,
               "position": {
                 "left": "60%",
                 "top": "53%"
-              }
+              },
+              "images": []
             },
             {
               "description": "Unterminated. Located in the electrical boxes mounted on the deck beside LaDove. 6 strands.",
               "fiber": "6 strands (unterminated)",
               "id": "11.3",
-              "image": "location11-3.jpg",
+              "image": "",
               "name": "CrowsNest",
               "number": 3,
               "position": {
                 "left": "63%",
                 "top": "44%"
-              }
+              },
+              "images": []
             },
             {
               "description": "Single Coax converted to SDI from booth (1). This converts to HDMI into extron machine for the TVs in LaDove.",
@@ -1418,7 +1642,10 @@
               "position": {
                 "left": "52%",
                 "top": "45%"
-              }
+              },
+              "images": [
+                "location11-4.jpg"
+              ]
             }
           ],
           "subtitle": ""
@@ -1448,7 +1675,10 @@
               "position": {
                 "left": "46.01%",
                 "top": "56.52%"
-              }
+              },
+              "images": [
+                "uploads/location-20251202110351-7178a08c.jpg"
+              ]
             }
           ],
           "subtitle": "Test level "
@@ -1478,7 +1708,10 @@
               "position": {
                 "left": "48.80%",
                 "top": "47.25%"
-              }
+              },
+              "images": [
+                "uploads/location-20251202113110-c5204615.jpg"
+              ]
             },
             {
               "description": "",
@@ -1490,7 +1723,8 @@
               "position": {
                 "left": "66.75%",
                 "top": "62.50%"
-              }
+              },
+              "images": []
             }
           ],
           "subtitle": "1"
@@ -1520,7 +1754,10 @@
               "position": {
                 "left": "18.83%",
                 "top": "29.51%"
-              }
+              },
+              "images": [
+                "uploads/location-20260130131350-e2dd85e5.jpg"
+              ]
             }
           ],
           "subtitle": "above floor "

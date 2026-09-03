@@ -59,6 +59,9 @@ const SearchModule = {
             type: 'location',
             venue: venue.name,
             venueId: venue.id,
+            venueCategories: Array.isArray(venue.categories)
+              ? venue.categories
+              : (venue.category ? [venue.category] : []),
             map: map.label,
             mapId: map.id,
             name: location.name,
@@ -79,26 +82,24 @@ const SearchModule = {
     });
   },
 
-  // Fallback: Build index from DOM
+  // Fallback: Build index from the markers on this page
   buildIndexFromDOM() {
-    document.querySelectorAll('.map-container').forEach(container => {
-      const mapLabel = container.querySelector('.map-label')?.textContent || '';
-
-      container.querySelectorAll('.floating-info-box').forEach(box => {
-        const name = box.querySelector('strong')?.textContent || '';
-        const description = box.querySelector('p')?.textContent || '';
-
-        this.searchIndex.push({
-          type: 'location',
-          venue: mapLabel.split('\n')[0],
-          map: mapLabel,
-          name: name,
-          description: description,
-          fiber: '',
-          mapElement: container,
-          infoBoxElement: box,
-          searchText: [mapLabel, name, description].join(' ').toLowerCase()
-        });
+    document.querySelectorAll('.location-marker').forEach(marker => {
+      const d = marker.dataset;
+      this.searchIndex.push({
+        type: 'location',
+        venue: d.venueName || '',
+        venueId: d.venueId || '',
+        venueCategories: [],
+        map: d.mapLabel || '',
+        mapId: d.mapId || '',
+        name: d.name || '',
+        locationId: d.locationId || '',
+        number: d.number || '',
+        description: d.description || '',
+        fiber: d.fiber || '',
+        searchText: [d.venueName, d.mapLabel, d.name, d.description, d.fiber]
+          .filter(Boolean).join(' ').toLowerCase()
       });
     });
   },
@@ -223,7 +224,8 @@ const SearchModule = {
       item.addEventListener('click', () => {
         const mapId = item.dataset.mapId;
         const locationId = item.dataset.locationId;
-        this.navigateToLocation(mapId, locationId);
+        const result = results.find(r => r.mapId === mapId && r.locationId === locationId);
+        this.navigateToLocation(mapId, locationId, result);
       });
     });
   },
@@ -240,15 +242,75 @@ const SearchModule = {
     return result;
   },
 
-  // Navigate to a location
-  navigateToLocation(mapId, locationId) {
-    // Find the map panel by ID
-    const mapPanel = document.getElementById(mapId);
-    if (!mapPanel) return;
+  // Current page's file name (e.g. "Fiber.html")
+  currentPage() {
+    return decodeURIComponent(window.location.pathname.split('/').pop() || '') || 'index.html';
+  },
 
-    // Find the venue section containing this map
-    const venue = mapPanel.closest('.venue');
-    if (!venue) return;
+  // Work out which category page hosts this result's venue.
+  // Prefers a category other than the current page (we already know the map
+  // is not here), falls back to the first category the venue belongs to.
+  categoryPageFor(result) {
+    if (!this.data || !Array.isArray(this.data.categories)) return null;
+    const categories = this.data.categories;
+    const venueCats = result && Array.isArray(result.venueCategories) ? result.venueCategories : [];
+    const current = this.currentPage().toLowerCase();
+    const candidates = venueCats
+      .map(id => categories.find(c => c.id === id))
+      .filter(c => c && c.slug);
+    if (candidates.length === 0) return null;
+    const other = candidates.find(c => `${c.slug}.html`.toLowerCase() !== current);
+    return `${(other || candidates[0]).slug}.html`;
+  },
+
+  // Build overlay data from a marker (shared helper from script.js if present)
+  markerData(marker) {
+    if (window.WEPMaps && typeof window.WEPMaps.markerToLocationData === 'function') {
+      return window.WEPMaps.markerToLocationData(marker);
+    }
+    let images = [];
+    try {
+      const parsed = JSON.parse(marker.dataset.images || 'null');
+      if (Array.isArray(parsed)) images = parsed.filter(Boolean);
+    } catch (e) { /* fall back */ }
+    if (images.length === 0 && marker.dataset.image) images = [marker.dataset.image];
+    return {
+      number: marker.dataset.number || '',
+      name: marker.dataset.name || 'Location',
+      description: marker.dataset.description || '',
+      fiber: marker.dataset.fiber || '',
+      image: images[0] || '',
+      images: images,
+      locationId: marker.dataset.locationId || '',
+      venueId: marker.dataset.venueId || '',
+      mapId: marker.dataset.mapId || '',
+      venueName: marker.dataset.venueName || '',
+      mapLabel: marker.dataset.mapLabel || ''
+    };
+  },
+
+  // Navigate to a location. If its map is not on this page, jump to the
+  // category page that has it (<slug>.html#<mapId>); script.js expands the
+  // map on load and opens the stashed location.
+  navigateToLocation(mapId, locationId, result) {
+    this.resultsContainer.classList.remove('visible');
+    this.searchInput.value = '';
+
+    const mapPanel = document.getElementById(mapId);
+    const venue = mapPanel ? mapPanel.closest('.venue') : null;
+
+    if (!mapPanel || !venue) {
+      const page = this.categoryPageFor(result);
+      if (!page) {
+        console.warn('Search: map not on this page and no category page found for', mapId);
+        return;
+      }
+      try {
+        if (locationId) sessionStorage.setItem('wep-pending-location', locationId);
+      } catch (e) { /* storage unavailable */ }
+      window.location.href = `${page}#${encodeURIComponent(mapId)}`;
+      return;
+    }
 
     // Activate the correct map tab
     const tab = venue.querySelector(`[data-map="${mapId}"]`);
@@ -259,32 +321,15 @@ const SearchModule = {
       mapPanel.classList.add('active');
     }
 
-    // Scroll venue into view
     venue.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-    // Find the location marker and show overlay
-    const marker = mapPanel.querySelector(`[data-location-id="${locationId}"]`);
+    const marker = Array.from(mapPanel.querySelectorAll('.location-marker'))
+      .find(m => m.dataset.locationId === String(locationId));
     if (marker && window.showLocationOverlay) {
       setTimeout(() => {
-        const locationData = {
-          number: marker.dataset.number || '',
-          name: marker.dataset.name || 'Location',
-          description: marker.dataset.description || '',
-          fiber: marker.dataset.fiber || '',
-          image: marker.dataset.image || '',
-          locationId: marker.dataset.locationId || '',
-          venueId: marker.dataset.venueId || '',
-          mapId: marker.dataset.mapId || '',
-          venueName: marker.dataset.venueName || '',
-          mapLabel: marker.dataset.mapLabel || ''
-        };
-        window.showLocationOverlay(locationData);
+        window.showLocationOverlay(this.markerData(marker));
       }, 400);
     }
-
-    // Hide search results
-    this.resultsContainer.classList.remove('visible');
-    this.searchInput.value = '';
   }
 };
 

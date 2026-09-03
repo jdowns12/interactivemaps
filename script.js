@@ -13,38 +13,86 @@ document.addEventListener('DOMContentLoaded', () => {
   const imageModalContent = document.getElementById('image-modal-content');
   const imageModalClose = document.getElementById('image-modal-close');
 
-  // === MAP TABS FUNCTIONALITY ===
-  // Handle clicking on map tabs to switch between different maps within a venue
-  document.querySelectorAll('.map-tab').forEach(tab => {
-    tab.addEventListener('click', (e) => {
-      const mapId = tab.dataset.map;
-      const venue = tab.closest('.venue');
-
-      if (!venue || !mapId) return;
-
-      // Deactivate all tabs in this venue
-      venue.querySelectorAll('.map-tab').forEach(t => t.classList.remove('active'));
-
-      // Activate clicked tab
-      tab.classList.add('active');
-
-      // Hide all map panels in this venue
-      venue.querySelectorAll('.map-panel').forEach(panel => panel.classList.remove('active'));
-
-      // Show the selected map panel
-      const targetPanel = venue.querySelector(`#${mapId}`);
-      if (targetPanel) {
-        targetPanel.classList.add('active');
-      }
-    });
-  });
-
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   const toggledBoxes = new Set();
   const preloadedMaps = new Set();
 
+  // === IMAGE PATH HELPERS ===
+  // Thumbnail for DIR/NAME.jpg lives at DIR/thumbs/NAME.jpg (root photos: thumbs/NAME.jpg)
+  function thumbPath(src) {
+    if (!src || src.startsWith('data:') || src.startsWith('blob:')) return src;
+    const slash = src.lastIndexOf('/');
+    if (slash === -1) return 'thumbs/' + src;
+    return src.slice(0, slash + 1) + 'thumbs/' + src.slice(slash + 1);
+  }
+
+  // Parse the image list off a marker: data-images (JSON array) with a
+  // fallback to the single data-image attribute on older generated pages.
+  function parseMarkerImages(marker) {
+    const raw = marker.dataset.images;
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          return parsed.filter(p => typeof p === 'string' && p.trim() !== '');
+        }
+      } catch (e) {
+        // fall through to data-image
+      }
+    }
+    return marker.dataset.image ? [marker.dataset.image] : [];
+  }
+
+  function normalizeImages(locationData) {
+    let images = [];
+    if (Array.isArray(locationData.images)) {
+      images = locationData.images.filter(p => typeof p === 'string' && p.trim() !== '');
+    } else if (locationData.image) {
+      images = [locationData.image];
+    }
+    return images;
+  }
+
+  // Build the overlay payload from a .location-marker element
+  function markerToLocationData(marker) {
+    const images = parseMarkerImages(marker);
+    return {
+      number: marker.dataset.number || '',
+      name: marker.dataset.name || 'Location',
+      description: marker.dataset.description || '',
+      fiber: marker.dataset.fiber || '',
+      image: images[0] || '',
+      images: images,
+      locationId: marker.dataset.locationId || '',
+      venueId: marker.dataset.venueId || '',
+      mapId: marker.dataset.mapId || '',
+      venueName: marker.dataset.venueName || '',
+      mapLabel: marker.dataset.mapLabel || ''
+    };
+  }
+
+  // === MAP TABS FUNCTIONALITY ===
+  function activateMapTab(venue, mapId) {
+    if (!venue || !mapId) return null;
+    venue.querySelectorAll('.map-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.map === mapId);
+    });
+    let targetPanel = null;
+    venue.querySelectorAll('.map-panel').forEach(panel => {
+      const isTarget = panel.id === mapId;
+      panel.classList.toggle('active', isTarget);
+      if (isTarget) targetPanel = panel;
+    });
+    return targetPanel;
+  }
+
+  document.querySelectorAll('.map-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      activateMapTab(tab.closest('.venue'), tab.dataset.map);
+    });
+  });
+
   // === LOCATION OVERLAY (Full-Page) ===
-  // Create the overlay element
   const locationOverlay = document.createElement('div');
   locationOverlay.className = 'location-overlay';
   locationOverlay.innerHTML = `
@@ -55,12 +103,20 @@ document.addEventListener('DOMContentLoaded', () => {
           <h2></h2>
           <span class="fiber-badge"></span>
         </div>
-        <button class="location-overlay-close">&times;</button>
+        <button class="location-overlay-close" aria-label="Close">&times;</button>
       </div>
       <div class="location-overlay-body">
         <p></p>
       </div>
-      <img class="location-overlay-image" src="" alt="Location image">
+      <div class="photo-strip" hidden>
+        <div class="photo-strip-track" tabindex="0" aria-label="Location photos"></div>
+        <button type="button" class="photo-strip-arrow photo-strip-prev" aria-label="Previous photo">&#8249;</button>
+        <button type="button" class="photo-strip-arrow photo-strip-next" aria-label="Next photo">&#8250;</button>
+      </div>
+      <div class="photo-strip-nav" hidden>
+        <div class="photo-strip-dots" role="tablist"></div>
+        <span class="photo-strip-counter" aria-live="polite"></span>
+      </div>
       <div class="photo-placeholder">
         <div class="photo-placeholder-icon">📷</div>
         <div class="photo-placeholder-text">Photo Coming Soon</div>
@@ -80,12 +136,19 @@ document.addEventListener('DOMContentLoaded', () => {
   `;
   document.body.appendChild(locationOverlay);
 
+  const overlayContent = locationOverlay.querySelector('.location-overlay-content');
   const overlayNumber = locationOverlay.querySelector('.location-overlay-number');
   const overlayTitle = locationOverlay.querySelector('.location-overlay-title h2');
   const overlayFiber = locationOverlay.querySelector('.fiber-badge');
   const overlayBody = locationOverlay.querySelector('.location-overlay-body p');
-  const overlayImage = locationOverlay.querySelector('.location-overlay-image');
   const overlayClose = locationOverlay.querySelector('.location-overlay-close');
+  const photoStrip = locationOverlay.querySelector('.photo-strip');
+  const photoTrack = locationOverlay.querySelector('.photo-strip-track');
+  const photoPrevBtn = locationOverlay.querySelector('.photo-strip-prev');
+  const photoNextBtn = locationOverlay.querySelector('.photo-strip-next');
+  const photoNav = locationOverlay.querySelector('.photo-strip-nav');
+  const photoDots = locationOverlay.querySelector('.photo-strip-dots');
+  const photoCounter = locationOverlay.querySelector('.photo-strip-counter');
   const photoPlaceholder = locationOverlay.querySelector('.photo-placeholder');
   const requestPhotoBtn = locationOverlay.querySelector('.request-photo-btn');
   const uploadPhotoInput = locationOverlay.querySelector('.upload-photo-input');
@@ -97,14 +160,18 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentLocationData = null;
   let uploadedPhotoFile = null;
 
+  // Photo strip state
+  let currentImages = [];
+  let currentPhotoIndex = 0;
+
   // Handle file selection for photo upload
   uploadPhotoInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file && file.type.startsWith('image/')) {
       uploadedPhotoFile = file;
       const reader = new FileReader();
-      reader.onload = (e) => {
-        uploadPreviewImg.src = e.target.result;
+      reader.onload = (ev) => {
+        uploadPreviewImg.src = ev.target.result;
         uploadPreviewContainer.style.display = 'block';
         requestPhotoBtn.textContent = 'Submit Photo';
       };
@@ -151,7 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (response.ok) {
         requestPhotoBtn.textContent = uploadedPhotoFile ? 'Photo Submitted!' : 'Request Sent!';
         requestPhotoBtn.classList.add('sent');
-        // Reset upload state
         uploadedPhotoFile = null;
         uploadPhotoInput.value = '';
         uploadPreviewContainer.style.display = 'none';
@@ -165,6 +231,140 @@ document.addEventListener('DOMContentLoaded', () => {
       requestPhotoBtn.disabled = false;
     }
   });
+
+  // === PHOTO STRIP ===
+  function photoCount() {
+    return currentImages.length;
+  }
+
+  function slideWidth() {
+    return photoTrack.clientWidth || 1;
+  }
+
+  function updatePhotoNav() {
+    const n = photoCount();
+    const idx = Math.min(Math.max(currentPhotoIndex, 0), Math.max(n - 1, 0));
+    photoDots.querySelectorAll('.photo-strip-dot').forEach((dot, i) => {
+      dot.classList.toggle('active', i === idx);
+      dot.setAttribute('aria-selected', i === idx ? 'true' : 'false');
+    });
+    photoCounter.textContent = n > 1 ? `${idx + 1} / ${n}` : '';
+    photoPrevBtn.disabled = idx <= 0;
+    photoNextBtn.disabled = idx >= n - 1;
+  }
+
+  function goToPhoto(index, behavior) {
+    const n = photoCount();
+    if (n === 0) return;
+    const idx = Math.min(Math.max(index, 0), n - 1);
+    currentPhotoIndex = idx;
+    photoTrack.scrollTo({ left: idx * slideWidth(), behavior: behavior || 'smooth' });
+    updatePhotoNav();
+  }
+
+  function stepPhoto(delta) {
+    goToPhoto(currentPhotoIndex + delta);
+  }
+
+  // Keep index in sync with native swiping (scroll-snap)
+  let trackScrollTimer = null;
+  photoTrack.addEventListener('scroll', () => {
+    clearTimeout(trackScrollTimer);
+    trackScrollTimer = setTimeout(() => {
+      const idx = Math.round(photoTrack.scrollLeft / slideWidth());
+      if (idx !== currentPhotoIndex && idx >= 0 && idx < photoCount()) {
+        currentPhotoIndex = idx;
+        updatePhotoNav();
+      }
+    }, 60);
+  }, { passive: true });
+
+  photoPrevBtn.addEventListener('click', (e) => { e.stopPropagation(); stepPhoto(-1); });
+  photoNextBtn.addEventListener('click', (e) => { e.stopPropagation(); stepPhoto(1); });
+
+  // Load a strip slide: thumbnail first, full image if the thumb is missing
+  function loadSlideImage(img, fullSrc) {
+    let triedFull = false;
+    img.classList.add('img-loading');
+    img.addEventListener('load', () => {
+      img.classList.remove('img-loading');
+      img.closest('.photo-slide').classList.remove('broken');
+    });
+    img.addEventListener('error', () => {
+      if (!triedFull && img.getAttribute('src') !== fullSrc) {
+        triedFull = true;
+        img.src = fullSrc;
+        return;
+      }
+      img.classList.remove('img-loading');
+      img.closest('.photo-slide').classList.add('broken');
+      // A single dead photo behaves like no photo at all
+      if (photoCount() === 1) {
+        showPlaceholder();
+      }
+    });
+    img.src = thumbPath(fullSrc);
+  }
+
+  function showPlaceholder() {
+    photoStrip.hidden = true;
+    photoNav.hidden = true;
+    photoPlaceholder.style.display = 'flex';
+  }
+
+  function renderPhotoStrip(images) {
+    currentImages = images.slice();
+    currentPhotoIndex = 0;
+    photoTrack.innerHTML = '';
+    photoDots.innerHTML = '';
+
+    if (images.length === 0) {
+      showPlaceholder();
+      return;
+    }
+
+    photoPlaceholder.style.display = 'none';
+    photoStrip.hidden = false;
+    photoStrip.classList.toggle('single', images.length === 1);
+    photoNav.hidden = images.length <= 1;
+
+    images.forEach((src, i) => {
+      const slide = document.createElement('div');
+      slide.className = 'photo-slide';
+      slide.dataset.index = String(i);
+      const img = document.createElement('img');
+      img.alt = `Photo ${i + 1} of ${images.length}`;
+      img.decoding = 'async';
+      img.loading = i === 0 ? 'eager' : 'lazy';
+      img.draggable = false;
+      slide.appendChild(img);
+      const broken = document.createElement('div');
+      broken.className = 'photo-slide-broken';
+      broken.textContent = 'Photo unavailable';
+      slide.appendChild(broken);
+      photoTrack.appendChild(slide);
+      loadSlideImage(img, src);
+
+      slide.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (slide.classList.contains('broken')) return;
+        openImageModal(i);
+      });
+
+      if (images.length > 1) {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'photo-strip-dot';
+        dot.setAttribute('role', 'tab');
+        dot.setAttribute('aria-label', `Photo ${i + 1}`);
+        dot.addEventListener('click', (e) => { e.stopPropagation(); goToPhoto(i); });
+        photoDots.appendChild(dot);
+      }
+    });
+
+    photoTrack.scrollLeft = 0;
+    updatePhotoNav();
+  }
 
   function showLocationOverlay(locationData) {
     currentLocationData = locationData;
@@ -189,16 +389,9 @@ document.addEventListener('DOMContentLoaded', () => {
     uploadPreviewContainer.style.display = 'none';
     uploadPreviewImg.src = '';
 
-    if (locationData.image) {
-      overlayImage.style.display = 'block';
-      photoPlaceholder.style.display = 'none';
-      overlayImage.classList.add('img-loading');
-      overlayImage.src = locationData.image;
-    } else {
-      overlayImage.style.display = 'none';
-      photoPlaceholder.style.display = 'flex';
-    }
+    renderPhotoStrip(normalizeImages(locationData));
 
+    overlayContent.scrollTop = 0;
     locationOverlay.classList.add('visible');
     document.body.style.overflow = 'hidden';
   }
@@ -208,8 +401,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.style.overflow = '';
   }
 
-  // Expose showLocationOverlay globally for search.js
+  // Expose for search.js and other modules
   window.showLocationOverlay = showLocationOverlay;
+  window.WEPMaps = { showLocationOverlay, markerToLocationData, parseMarkerImages, thumbPath };
 
   // Close overlay handlers
   overlayClose.addEventListener('click', hideLocationOverlay);
@@ -219,71 +413,146 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Click image in overlay to open in image modal
-  overlayImage.addEventListener('click', (e) => {
-    e.stopPropagation();
-    imageModalContent.src = overlayImage.src;
+  // === IMAGE MODAL (zoom) with prev/next ===
+  let modalImages = [];
+  let modalIndex = 0;
+  let modalOpenedFromOverlay = false;
+
+  // Prev/next controls are created here so old generated pages get them too
+  const modalPrevBtn = document.createElement('button');
+  modalPrevBtn.type = 'button';
+  modalPrevBtn.className = 'image-modal-arrow image-modal-prev';
+  modalPrevBtn.setAttribute('aria-label', 'Previous photo');
+  modalPrevBtn.innerHTML = '&#8249;';
+  const modalNextBtn = document.createElement('button');
+  modalNextBtn.type = 'button';
+  modalNextBtn.className = 'image-modal-arrow image-modal-next';
+  modalNextBtn.setAttribute('aria-label', 'Next photo');
+  modalNextBtn.innerHTML = '&#8250;';
+  const modalCounter = document.createElement('div');
+  modalCounter.className = 'image-modal-counter';
+  if (imageModalOverlay) {
+    imageModalOverlay.appendChild(modalPrevBtn);
+    imageModalOverlay.appendChild(modalNextBtn);
+    imageModalOverlay.appendChild(modalCounter);
+  }
+
+  function updateModalNav() {
+    const n = modalImages.length;
+    const multi = n > 1;
+    modalPrevBtn.hidden = !multi;
+    modalNextBtn.hidden = !multi;
+    modalCounter.hidden = !multi;
+    modalPrevBtn.disabled = modalIndex <= 0;
+    modalNextBtn.disabled = modalIndex >= n - 1;
+    modalCounter.textContent = multi ? `${modalIndex + 1} / ${n}` : '';
+  }
+
+  function showModalImage(index) {
+    if (modalImages.length === 0) return;
+    modalIndex = Math.min(Math.max(index, 0), modalImages.length - 1);
+    imageModalContent.classList.add('img-loading');
+    imageModalContent.src = modalImages[modalIndex];
+    updateModalNav();
+  }
+
+  function openImageModal(index) {
+    if (!imageModalOverlay) return;
+    modalImages = currentImages.slice();
+    modalOpenedFromOverlay = locationOverlay.classList.contains('visible');
+    if (modalOpenedFromOverlay) locationOverlay.style.visibility = 'hidden';
     imageModalOverlay.style.display = 'flex';
-    locationOverlay.style.visibility = 'hidden';
-  });
+    showModalImage(index);
+  }
 
-  // Handle image load errors - show placeholder when image fails to load
-  overlayImage.addEventListener('error', () => {
-    overlayImage.classList.remove('img-loading');
-    overlayImage.style.display = 'none';
-    photoPlaceholder.style.display = 'flex';
-  });
+  function openSingleImageModal(src) {
+    if (!imageModalOverlay) return;
+    modalImages = [src];
+    modalOpenedFromOverlay = false;
+    imageModalOverlay.style.display = 'flex';
+    showModalImage(0);
+  }
 
-  // Handle successful image load
-  overlayImage.addEventListener('load', () => {
-    overlayImage.classList.remove('img-loading');
-    overlayImage.style.display = 'block';
-    photoPlaceholder.style.display = 'none';
-  });
+  function closeImageModal() {
+    if (!imageModalOverlay) return;
+    imageModalOverlay.style.display = 'none';
+    imageModalContent.src = '';
+    imageModalContent.classList.remove('img-loading');
+    locationOverlay.style.visibility = '';
+    if (modalOpenedFromOverlay && modalImages.length > 1) {
+      // Keep the strip on the photo the user was looking at
+      goToPhoto(modalIndex, 'auto');
+    }
+    modalImages = [];
+  }
+
+  function isImageModalOpen() {
+    return !!imageModalOverlay && imageModalOverlay.style.display === 'flex';
+  }
+
+  if (imageModalOverlay) {
+    imageModalContent.addEventListener('load', () => imageModalContent.classList.remove('img-loading'));
+    imageModalContent.addEventListener('error', () => imageModalContent.classList.remove('img-loading'));
+    imageModalClose.addEventListener('click', (e) => { e.stopPropagation(); closeImageModal(); });
+    imageModalOverlay.addEventListener('click', (e) => {
+      if (e.target === imageModalOverlay) closeImageModal();
+    });
+    modalPrevBtn.addEventListener('click', (e) => { e.stopPropagation(); showModalImage(modalIndex - 1); });
+    modalNextBtn.addEventListener('click', (e) => { e.stopPropagation(); showModalImage(modalIndex + 1); });
+
+    // Swipe left/right inside the modal to move between photos
+    let modalTouchX = null;
+    let modalTouchY = null;
+    imageModalOverlay.addEventListener('touchstart', (e) => {
+      modalTouchX = e.changedTouches[0].clientX;
+      modalTouchY = e.changedTouches[0].clientY;
+    }, { passive: true });
+    imageModalOverlay.addEventListener('touchend', (e) => {
+      if (modalTouchX === null) return;
+      const dx = e.changedTouches[0].clientX - modalTouchX;
+      const dy = e.changedTouches[0].clientY - modalTouchY;
+      modalTouchX = null;
+      modalTouchY = null;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5 && modalImages.length > 1) {
+        showModalImage(modalIndex + (dx < 0 ? 1 : -1));
+      }
+    }, { passive: true });
+  }
 
   // === LOCATION MARKER CLICK HANDLERS ===
   document.querySelectorAll('.location-marker').forEach(marker => {
     marker.addEventListener('click', (e) => {
       e.stopPropagation();
-      const locationData = {
-        number: marker.dataset.number || '',
-        name: marker.dataset.name || 'Location',
-        description: marker.dataset.description || '',
-        fiber: marker.dataset.fiber || '',
-        image: marker.dataset.image || '',
-        // New fields for photo requests
-        locationId: marker.dataset.locationId || '',
-        venueId: marker.dataset.venueId || '',
-        mapId: marker.dataset.mapId || '',
-        venueName: marker.dataset.venueName || '',
-        mapLabel: marker.dataset.mapLabel || ''
-      };
-      showLocationOverlay(locationData);
+      showLocationOverlay(markerToLocationData(marker));
     });
   });
 
-  // === IMAGE PRELOADING ===
+  // === IMAGE PRELOADING (thumbnails only) ===
   function preloadMapImages(container) {
-    // Use the container element itself as the key — avoids the old bug where
-    // querying a non-existent .map-content returned undefined and every
-    // container shared the same Set key, so only the first ever preloaded.
     if (preloadedMaps.has(container)) return;
     preloadedMaps.add(container);
 
-    const imageUrls = [];
-    container.querySelectorAll('.location-marker[data-image]').forEach(marker => {
-      const src = marker.dataset.image;
-      if (src && !src.startsWith('data:')) {
-        imageUrls.push(src);
-        const preloadImg = new Image();
-        preloadImg.src = src;
-      }
+    const thumbUrls = [];
+    container.querySelectorAll('.location-marker').forEach(marker => {
+      parseMarkerImages(marker).forEach(src => {
+        if (src && !src.startsWith('data:')) {
+          const thumb = thumbPath(src);
+          if (!thumbUrls.includes(thumb)) thumbUrls.push(thumb);
+        }
+      });
     });
+
+    if (thumbUrls.length === 0) return;
 
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage({
         action: 'precacheImages',
-        images: imageUrls
+        images: thumbUrls
+      });
+    } else {
+      thumbUrls.forEach(src => {
+        const preloadImg = new Image();
+        preloadImg.src = src;
       });
     }
   }
@@ -296,7 +565,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // === HANDLE MISSING IMAGES ===
-  // Handle location images in info boxes
   document.querySelectorAll('.floating-info-box img').forEach(img => {
     img.addEventListener('error', function() {
       const placeholder = document.createElement('div');
@@ -305,11 +573,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Handle map images
   document.querySelectorAll('.map-image').forEach(img => {
     img.addEventListener('error', function() {
       this.classList.add('image-error');
-      this.closest('.map-content').classList.add('has-image-error');
+      const content = this.closest('.map-content') || this.closest('.map-container');
+      if (content) content.classList.add('has-image-error');
     });
   });
 
@@ -327,10 +595,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // === LAZY PRELOAD: kick off image preloading as maps scroll into view ===
-  // Location images live in data-image attrs (not img[data-src]), so they
-  // only load on demand when a marker is clicked. But we can warm the cache
-  // a bit earlier by preloading when the map panel enters the viewport.
+  // === LAZY PRELOAD: warm the thumbnail cache as maps scroll into view ===
   const mapInViewObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -342,14 +607,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   mapContainers.forEach(c => mapInViewObserver.observe(c));
 
-  // === SMART INFO BOX POSITIONING ===
+  // === SMART INFO BOX POSITIONING (legacy floating boxes) ===
   function positionInfoBox(infoBox, icon) {
-    // Skip positioning on mobile - bottom sheet handles it
     if (window.innerWidth <= 768) {
       return;
     }
 
-    // Reset positioning first
     infoBox.style.top = '';
     infoBox.style.bottom = '';
     infoBox.style.left = '';
@@ -360,60 +623,47 @@ document.addEventListener('DOMContentLoaded', () => {
     infoBox.style.maxWidth = '';
     infoBox.style.position = 'absolute';
 
-    // Get measurements after reset
     const iconRect = icon.getBoundingClientRect();
     const boxRect = infoBox.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
-    const padding = 10; // Minimum distance from viewport edge
+    const padding = 10;
 
-    // Calculate available space
     const spaceAbove = iconRect.top - padding;
     const spaceBelow = viewportHeight - iconRect.bottom - padding;
     const spaceLeft = iconRect.left + (iconRect.width / 2);
     const spaceRight = viewportWidth - iconRect.left - (iconRect.width / 2);
 
-    // Limit box width to fit in viewport
     const maxBoxWidth = Math.min(boxRect.width, viewportWidth - (padding * 2));
     if (maxBoxWidth < boxRect.width) {
       infoBox.style.maxWidth = `${maxBoxWidth}px`;
     }
 
-    // Vertical positioning
     if (spaceBelow >= boxRect.height || spaceBelow >= spaceAbove) {
-      // Position below
       infoBox.style.top = '100%';
       infoBox.style.bottom = 'auto';
       infoBox.style.marginTop = '10px';
     } else {
-      // Position above
       infoBox.style.bottom = '100%';
       infoBox.style.top = 'auto';
       infoBox.style.marginBottom = '10px';
     }
 
-    // Horizontal positioning - keep within viewport
     const halfBoxWidth = Math.min(boxRect.width, maxBoxWidth) / 2;
 
     if (spaceLeft < halfBoxWidth + padding) {
-      // Too close to left edge - align left
       const offset = halfBoxWidth - spaceLeft + padding;
       infoBox.style.left = '50%';
       infoBox.style.transform = `translateX(calc(-50% + ${offset}px))`;
     } else if (spaceRight < halfBoxWidth + padding) {
-      // Too close to right edge - align right
       const offset = halfBoxWidth - spaceRight + padding;
       infoBox.style.left = '50%';
       infoBox.style.transform = `translateX(calc(-50% - ${offset}px))`;
     } else {
-      // Center normally
       infoBox.style.left = '50%';
       infoBox.style.transform = 'translateX(-50%)';
     }
   }
-
-  // Track scroll position when opening overlay
-  let savedScrollPosition = 0;
 
   // Create scroll indicator element
   const scrollIndicator = document.createElement('div');
@@ -433,10 +683,20 @@ document.addEventListener('DOMContentLoaded', () => {
     scrollIndicator.classList.remove('visible');
   }
 
-  function openMapOverlay(container) {
-    // Save current scroll position
-    savedScrollPosition = window.scrollY;
+  function addMapCloseButton(container) {
+    if (container.querySelector('.map-close-btn')) return;
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'close-button map-close-btn';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.setAttribute('aria-label', 'Close map');
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeMapOverlay();
+    });
+    container.appendChild(closeBtn);
+  }
 
+  function openMapOverlay(container) {
     container.classList.add('expanded');
     mapContainers.forEach(c => {
       if (c !== container) c.classList.add('dimmed');
@@ -444,26 +704,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('overlay-active');
     document.documentElement.classList.add('overlay-active');
 
-    // Add visible close button so it's clear how to dismiss
-    if (!container.querySelector('.map-close-btn')) {
-      const closeBtn = document.createElement('button');
-      closeBtn.className = 'close-button map-close-btn';
-      closeBtn.innerHTML = '&times;';
-      closeBtn.setAttribute('aria-label', 'Close map');
-      closeBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        closeMapOverlay();
-      });
-      container.appendChild(closeBtn);
-    }
-
-    // Preload all location images for this map in the background
+    addMapCloseButton(container);
     preloadMapImages(container);
-
-    // Create location list
     createLocationList(container);
 
-    // Listen for scroll to hide indicator
     const scrollHandler = () => {
       if (container.scrollTop > 30) {
         hideScrollIndicator();
@@ -476,18 +720,23 @@ document.addEventListener('DOMContentLoaded', () => {
   // Global location list element
   let locationListEl = null;
 
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
   // Create location list for expanded maps
   function createLocationList(container) {
-    // Remove any existing list
     if (locationListEl) {
       locationListEl.remove();
     }
 
-    // Get all markers in this container
     const markers = container.querySelectorAll('.location-marker');
     if (markers.length === 0) return;
 
-    // Create the list container
     locationListEl = document.createElement('div');
     locationListEl.className = 'location-list visible';
     locationListEl.innerHTML = `
@@ -501,52 +750,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const listItems = locationListEl.querySelector('.location-list-items');
     const toggleBtn = locationListEl.querySelector('.location-list-toggle');
 
-    // Sort markers by number
     const sortedMarkers = Array.from(markers).sort((a, b) => {
       const numA = parseInt(a.dataset.number) || 0;
       const numB = parseInt(b.dataset.number) || 0;
       return numA - numB;
     });
 
-    // Create list items
     sortedMarkers.forEach(marker => {
       const number = marker.dataset.number || '?';
       const name = marker.dataset.name || 'Location';
       const fiber = marker.dataset.fiber || '';
+      const count = parseMarkerImages(marker).length;
 
       const li = document.createElement('li');
       li.className = 'location-list-item';
       li.innerHTML = `
-        <div class="location-list-number">${number}</div>
+        <div class="location-list-number">${escapeHtml(number)}</div>
         <div class="location-list-info">
-          <div class="location-list-name">${name}</div>
-          ${fiber ? `<div class="location-list-fiber">${fiber}</div>` : ''}
+          <div class="location-list-name">${escapeHtml(name)}</div>
+          ${fiber ? `<div class="location-list-fiber">${escapeHtml(fiber)}</div>` : ''}
         </div>
+        ${count > 1 ? `<span class="location-list-photos" title="${count} photos">${count} 📷</span>` : ''}
         <div class="location-list-arrow">›</div>
       `;
 
-      // Click handler - show the location overlay
       li.addEventListener('click', (e) => {
         e.stopPropagation();
-        const locationData = {
-          number: marker.dataset.number || '',
-          name: marker.dataset.name || 'Location',
-          description: marker.dataset.description || '',
-          fiber: marker.dataset.fiber || '',
-          image: marker.dataset.image || '',
-          locationId: marker.dataset.locationId || '',
-          venueId: marker.dataset.venueId || '',
-          mapId: marker.dataset.mapId || '',
-          venueName: marker.dataset.venueName || '',
-          mapLabel: marker.dataset.mapLabel || ''
-        };
-        showLocationOverlay(locationData);
+        showLocationOverlay(markerToLocationData(marker));
       });
 
       listItems.appendChild(li);
     });
 
-    // Toggle list visibility
     toggleBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       const isHidden = listItems.style.display === 'none';
@@ -554,11 +789,9 @@ document.addEventListener('DOMContentLoaded', () => {
       toggleBtn.textContent = isHidden ? 'Hide List' : 'Show List';
     });
 
-    // Append list to body so it's positioned fixed at bottom
     document.body.appendChild(locationListEl);
   }
 
-  // Hide and remove location list
   function hideLocationList() {
     if (locationListEl) {
       locationListEl.remove();
@@ -581,7 +814,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   mapContainers.forEach(container => {
     container.addEventListener('click', (e) => {
-      // Don't toggle if clicking on info box, close button, or location marker
       if (e.target.closest('.floating-info-box') ||
           e.target.closest('.close-button') ||
           e.target.closest('.location-marker')) {
@@ -593,42 +825,85 @@ document.addEventListener('DOMContentLoaded', () => {
       if (isExpanded) {
         closeMapOverlay();
       } else {
-        closeMapOverlay(); // Close any open first
+        closeMapOverlay();
         openMapOverlay(container);
       }
     });
   });
 
-  dimOverlay.addEventListener('click', () => {
-    closeMapOverlay();
-  });
+  if (dimOverlay) {
+    dimOverlay.addEventListener('click', () => {
+      closeMapOverlay();
+    });
+  }
 
-  // Extract location data from info box element
+  // === DEEP LINK: #<mapId> scrolls to and expands that map ===
+  // Used by search results that point at a map on another category page.
+  function openMapFromHash() {
+    const hash = (window.location.hash || '').replace(/^#/, '');
+    if (!hash) return false;
+    let mapId = hash;
+    try { mapId = decodeURIComponent(hash); } catch (e) { /* keep raw */ }
+
+    const mapPanel = document.getElementById(mapId);
+    if (!mapPanel || !mapPanel.classList.contains('map-panel')) return false;
+    const venue = mapPanel.closest('.venue');
+    const container = mapPanel.querySelector('.map-container');
+    if (!venue || !container) return false;
+
+    activateMapTab(venue, mapId);
+    venue.scrollIntoView({ behavior: 'auto', block: 'start' });
+
+    // Let layout settle before expanding so the fixed overlay measures right
+    setTimeout(() => {
+      closeMapOverlay();
+      openMapOverlay(container);
+
+      // A search result on another page may have stashed the location to open
+      let pendingLocation = '';
+      try {
+        pendingLocation = sessionStorage.getItem('wep-pending-location') || '';
+        sessionStorage.removeItem('wep-pending-location');
+      } catch (e) { /* storage unavailable */ }
+      if (pendingLocation) {
+        const marker = Array.from(mapPanel.querySelectorAll('.location-marker'))
+          .find(m => m.dataset.locationId === pendingLocation);
+        if (marker) {
+          setTimeout(() => showLocationOverlay(markerToLocationData(marker)), 300);
+        }
+      }
+    }, 150);
+    return true;
+  }
+
+  openMapFromHash();
+  window.addEventListener('hashchange', openMapFromHash);
+
+  // === LEGACY FLOATING INFO BOX SUPPORT ===
   function extractLocationData(infoBox, icon) {
     const nameEl = infoBox.querySelector('strong, h3, h4');
     const descEl = infoBox.querySelector('p');
     const imgEl = infoBox.querySelector('img');
     const fiberEl = infoBox.querySelector('.fiber-info, [class*="fiber"]');
 
-    // Get number from icon text
     const number = icon.textContent.trim();
 
-    // Try to find fiber info in text
     let fiber = '';
     if (fiberEl) {
       fiber = fiberEl.textContent.trim();
     } else {
-      // Look for fiber pattern in description
       const text = infoBox.textContent;
       const fiberMatch = text.match(/(\d+\s*ST|\d+\s*fiber|fiber:\s*\d+)/i);
       if (fiberMatch) fiber = fiberMatch[0];
     }
 
+    const image = imgEl ? (imgEl.dataset.src || imgEl.src) : '';
     return {
       number: number,
       name: nameEl ? nameEl.textContent.trim() : 'Location ' + number,
       description: descEl ? descEl.textContent.trim() : '',
-      image: imgEl ? (imgEl.dataset.src || imgEl.src) : '',
+      image: image,
+      images: image ? [image] : [],
       fiber: fiber
     };
   }
@@ -639,10 +914,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     icon.addEventListener('click', e => {
       e.stopPropagation();
-
-      // Extract data and show in overlay
-      const locationData = extractLocationData(infoBox, icon);
-      showLocationOverlay(locationData);
+      if (!infoBox) return;
+      showLocationOverlay(extractLocationData(infoBox, icon));
     });
   });
 
@@ -660,59 +933,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.floating-info-box img').forEach(img => {
     img.addEventListener('click', (e) => {
       e.stopPropagation();
-      imageModalContent.src = img.src;
-      imageModalOverlay.style.display = 'flex';
+      openSingleImageModal(img.src);
     });
   });
 
-  imageModalClose.addEventListener('click', () => {
-    imageModalOverlay.style.display = 'none';
-    imageModalContent.src = '';
-    locationOverlay.style.visibility = '';
-  });
-
-  imageModalOverlay.addEventListener('click', (e) => {
-    if (e.target === imageModalOverlay) {
-      imageModalOverlay.style.display = 'none';
-      imageModalContent.src = '';
-      locationOverlay.style.visibility = '';
-    }
-  });
-
   // === SWIPE GESTURES FOR MOBILE ===
-  let touchStartX = 0;
-  let touchStartY = 0;
-  let touchEndX = 0;
-  let touchEndY = 0;
-
-  function handleSwipeGesture() {
-    const deltaX = touchEndX - touchStartX;
-    const deltaY = touchEndY - touchStartY;
-    const minSwipeDistance = 50;
-
-    // Check if swipe is more horizontal or vertical
-    if (Math.abs(deltaX) > Math.abs(deltaY)) {
-      // Horizontal swipe
-      if (Math.abs(deltaX) > minSwipeDistance) {
-        if (deltaX > 0) {
-          // Swipe right - previous map
-          navigateMaps('prev');
-        } else {
-          // Swipe left - next map
-          navigateMaps('next');
-        }
-      }
-    } else {
-      // Vertical swipe
-      if (deltaY > minSwipeDistance) {
-        // Swipe down - close expanded map
-        if (document.body.classList.contains('overlay-active')) {
-          closeMapOverlay();
-        }
-      }
-    }
-  }
-
+  // Scoped to the expanded map container only. Gestures that begin inside a
+  // vertically scrollable element (the location list, the bottom sheet, the
+  // photo strip) are ignored, as are gestures that scrolled anything.
   function navigateMaps(direction) {
     const expandedMap = document.querySelector('.map-container.expanded');
     if (!expandedMap) return;
@@ -727,85 +955,146 @@ document.addEventListener('DOMContentLoaded', () => {
       nextIndex = (currentIndex - 1 + allMaps.length) % allMaps.length;
     }
 
-    // Close current and open next
     const closeBtn = expandedMap.querySelector('.map-close-btn');
     if (closeBtn) closeBtn.remove();
     expandedMap.classList.remove('expanded');
 
     const nextMap = allMaps[nextIndex];
     nextMap.classList.add('expanded');
-
-    // Add close button to new map
-    if (!nextMap.querySelector('.map-close-btn')) {
-      const closeBtn = document.createElement('button');
-      closeBtn.className = 'close-button map-close-btn';
-      closeBtn.innerHTML = '&times;';
-      closeBtn.setAttribute('aria-label', 'Close map');
-      closeBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        closeMapOverlay();
-      });
-      nextMap.appendChild(closeBtn);
-    }
-
-    // Preload images for the new map and rebuild location list
+    addMapCloseButton(nextMap);
     preloadMapImages(nextMap);
     createLocationList(nextMap);
   }
 
-  // Only add touch listeners on touch devices
+  function isInsideVerticalScroller(el) {
+    let node = el;
+    while (node && node !== document.body && node !== document.documentElement) {
+      if (node.nodeType === 1) {
+        const style = window.getComputedStyle(node);
+        const oy = style.overflowY;
+        if ((oy === 'auto' || oy === 'scroll') && node.scrollHeight > node.clientHeight + 1) {
+          return true;
+        }
+      }
+      node = node.parentNode;
+    }
+    return false;
+  }
+
   if (isTouchDevice) {
+    let gesture = null;
+
+    const cancelGesture = () => { if (gesture) gesture.scrolled = true; };
+    // Any scroll during the gesture (page, list, sheet, strip) disqualifies it
+    document.addEventListener('scroll', cancelGesture, { passive: true, capture: true });
+
     document.addEventListener('touchstart', (e) => {
-      touchStartX = e.changedTouches[0].screenX;
-      touchStartY = e.changedTouches[0].screenY;
+      gesture = null;
+      if (e.touches.length !== 1) return;
+      if (!document.body.classList.contains('overlay-active')) return;
+      if (locationOverlay.classList.contains('visible') || isImageModalOpen()) return;
+
+      const expandedMap = document.querySelector('.map-container.expanded');
+      if (!expandedMap) return;
+
+      const target = e.target;
+      if (!(target instanceof Element) || !expandedMap.contains(target)) return;
+      if (target.closest('.close-button')) return;
+      if (isInsideVerticalScroller(target)) return;
+
+      const t = e.touches[0];
+      gesture = {
+        startX: t.clientX,
+        startY: t.clientY,
+        startTime: Date.now(),
+        scrolled: false,
+        axis: null
+      };
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+      if (!gesture || gesture.scrolled) return;
+      if (e.touches.length !== 1) { gesture.scrolled = true; return; }
+      const t = e.touches[0];
+      const dx = t.clientX - gesture.startX;
+      const dy = t.clientY - gesture.startY;
+      if (!gesture.axis && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+        gesture.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      }
     }, { passive: true });
 
     document.addEventListener('touchend', (e) => {
-      touchEndX = e.changedTouches[0].screenX;
-      touchEndY = e.changedTouches[0].screenY;
-      handleSwipeGesture();
+      if (!gesture) return;
+      const g = gesture;
+      gesture = null;
+      if (g.scrolled) return;
+      if (Date.now() - g.startTime > 800) return;
+
+      const t = e.changedTouches[0];
+      const dx = t.clientX - g.startX;
+      const dy = t.clientY - g.startY;
+      const minSwipeDistance = 60;
+
+      if (g.axis === 'y') {
+        // Mostly vertical, downward: close the expanded map
+        if (dy > minSwipeDistance && Math.abs(dy) > Math.abs(dx) * 2) {
+          closeMapOverlay();
+        }
+      } else if (g.axis === 'x') {
+        if (Math.abs(dx) > minSwipeDistance && Math.abs(dx) > Math.abs(dy) * 2) {
+          navigateMaps(dx > 0 ? 'prev' : 'next');
+        }
+      }
     }, { passive: true });
+
+    document.addEventListener('touchcancel', () => { gesture = null; }, { passive: true });
   }
 
   // === KEYBOARD NAVIGATION ===
   let currentLocationIndex = -1;
 
-  function getExpandedMapIcons() {
+  function getExpandedMapMarkers() {
     const expandedMap = document.querySelector('.map-container.expanded');
     if (!expandedMap) return [];
+    const markers = Array.from(expandedMap.querySelectorAll('.location-marker'));
+    if (markers.length > 0) {
+      return markers.sort((a, b) => (parseInt(a.dataset.number) || 0) - (parseInt(b.dataset.number) || 0));
+    }
     return Array.from(expandedMap.querySelectorAll('.location-icon'));
   }
 
   function navigateToLocation(index) {
-    const icons = getExpandedMapIcons();
-    if (icons.length === 0) return;
+    const items = getExpandedMapMarkers();
+    if (items.length === 0) return;
 
-    // Wrap around
-    if (index < 0) index = icons.length - 1;
-    if (index >= icons.length) index = 0;
+    if (index < 0) index = items.length - 1;
+    if (index >= items.length) index = 0;
 
     currentLocationIndex = index;
-    const icon = icons[index];
+    const item = items[index];
 
-    // Get info box and show overlay
-    const infoId = icon.getAttribute('data-info-id');
-    const infoBox = document.getElementById(infoId);
-    if (infoBox) {
-      const locationData = extractLocationData(infoBox, icon);
-      showLocationOverlay(locationData);
+    if (item.classList.contains('location-marker')) {
+      showLocationOverlay(markerToLocationData(item));
+    } else {
+      const infoId = item.getAttribute('data-info-id');
+      const infoBox = document.getElementById(infoId);
+      if (infoBox) {
+        showLocationOverlay(extractLocationData(infoBox, item));
+      }
     }
 
-    // Add focus indicator
-    icons.forEach(i => i.classList.remove('keyboard-focus'));
-    icon.classList.add('keyboard-focus');
+    items.forEach(i => i.classList.remove('keyboard-focus'));
+    item.classList.add('keyboard-focus');
   }
 
   document.addEventListener('keydown', (e) => {
-    // Escape key handling
+    // Never hijack typing in the search box or other inputs
+    const tag = e.target && e.target.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
     if (e.key === 'Escape') {
-      if (imageModalOverlay.style.display === 'flex') {
-        imageModalOverlay.style.display = 'none';
-        imageModalContent.src = '';
+      if (isImageModalOpen()) {
+        closeImageModal();
       } else if (locationOverlay.classList.contains('visible')) {
         hideLocationOverlay();
       } else if (document.body.classList.contains('overlay-active')) {
@@ -814,10 +1103,28 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Only handle navigation keys when a map is expanded
+    // Zoom modal open: arrows move between photos
+    if (isImageModalOpen()) {
+      if (e.key === 'ArrowRight') { e.preventDefault(); showModalImage(modalIndex + 1); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); showModalImage(modalIndex - 1); }
+      return;
+    }
+
+    // Location sheet open with several photos: arrows move the strip
+    if (locationOverlay.classList.contains('visible')) {
+      if (photoCount() > 1) {
+        if (e.key === 'ArrowRight') { e.preventDefault(); stepPhoto(1); return; }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); stepPhoto(-1); return; }
+      }
+      if (e.key === 'Enter' && photoCount() > 0 && document.activeElement === photoTrack) {
+        e.preventDefault();
+        openImageModal(currentPhotoIndex);
+        return;
+      }
+    }
+
     if (!document.body.classList.contains('overlay-active')) return;
 
-    // Arrow keys to navigate between locations
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
       e.preventDefault();
       navigateToLocation(currentLocationIndex + 1);
@@ -826,14 +1133,12 @@ document.addEventListener('DOMContentLoaded', () => {
       navigateToLocation(currentLocationIndex - 1);
     }
 
-    // Number keys 1-9 to jump to location
     const num = parseInt(e.key);
     if (num >= 1 && num <= 9) {
       e.preventDefault();
       navigateToLocation(num - 1);
     }
 
-    // Tab to cycle through locations
     if (e.key === 'Tab') {
       e.preventDefault();
       if (e.shiftKey) {
@@ -843,4 +1148,65 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
+
+  // === PRINT: list every location under its map ===
+  // Built lazily on beforeprint from marker data attributes; print.css shows it.
+  function buildPrintLists() {
+    mapContainers.forEach(container => {
+      if (container.querySelector('.print-location-list')) return;
+      const markers = Array.from(container.querySelectorAll('.location-marker'))
+        .sort((a, b) => (parseInt(a.dataset.number) || 0) - (parseInt(b.dataset.number) || 0));
+      if (markers.length === 0) return;
+      const panel = container.closest('.map-panel');
+      const venue = container.closest('.venue');
+      if (panel && venue && !panel.querySelector('.print-map-label')) {
+        const tab = venue.querySelector(`.map-tab[data-map="${panel.id}"]`);
+        const labelText = tab ? tab.textContent.trim() : (markers[0].dataset.mapLabel || '');
+        if (labelText) {
+          const label = document.createElement('div');
+          label.className = 'print-map-label';
+          label.textContent = labelText;
+          panel.insertBefore(label, container);
+        }
+      }
+      const list = document.createElement('ol');
+      list.className = 'print-location-list';
+      markers.forEach(marker => {
+        const li = document.createElement('li');
+        const number = marker.dataset.number || '';
+        const fiber = marker.dataset.fiber ? ` (${marker.dataset.fiber})` : '';
+        li.innerHTML = `<strong>${escapeHtml(number)}. ${escapeHtml(marker.dataset.name || 'Location')}</strong>${escapeHtml(fiber)}` +
+          (marker.dataset.description ? `<span class="print-location-desc">${escapeHtml(marker.dataset.description)}</span>` : '');
+        list.appendChild(li);
+      });
+      container.appendChild(list);
+    });
+  }
+  window.addEventListener('beforeprint', buildPrintLists);
+  if (window.matchMedia) {
+    const printQuery = window.matchMedia('print');
+    if (printQuery.addEventListener) {
+      printQuery.addEventListener('change', (mq) => { if (mq.matches) buildPrintLists(); });
+    }
+  }
+
+  // === SERVICE WORKER UPDATE TOAST ===
+  // When a new service worker takes control, tell the user instead of
+  // silently serving cached content until the next visit.
+  if ('serviceWorker' in navigator) {
+    const hadController = !!navigator.serviceWorker.controller;
+    let toastShown = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController || toastShown) return;
+      toastShown = true;
+      const toast = document.createElement('button');
+      toast.type = 'button';
+      toast.className = 'sw-update-toast';
+      toast.setAttribute('aria-live', 'polite');
+      toast.textContent = 'Updated, tap to refresh';
+      toast.addEventListener('click', () => window.location.reload());
+      document.body.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.add('visible'));
+    });
+  }
 });

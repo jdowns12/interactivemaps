@@ -68,7 +68,6 @@ const Admin = {
             document.getElementById('location-image-input').click();
         });
         document.getElementById('location-image-input').addEventListener('change', (e) => this.handleImageUpload(e));
-        document.getElementById('delete-image-btn').addEventListener('click', () => this.deleteLocationImage());
 
         document.getElementById('upload-map-image-btn').addEventListener('click', () => {
             document.getElementById('map-image-input').click();
@@ -159,6 +158,7 @@ const Admin = {
         const password = document.getElementById('password').value;
         const errorEl = document.getElementById('login-error');
 
+        errorEl.textContent = '';
         try {
             const response = await this.api('/api/auth/login', 'POST', { password });
             if (response.success) {
@@ -170,7 +170,7 @@ const Admin = {
                 errorEl.textContent = response.error || 'Invalid password';
             }
         } catch (error) {
-            errorEl.textContent = 'Login failed. Please try again.';
+            errorEl.textContent = error.message || 'Login failed. Please try again.';
         }
     },
 
@@ -206,6 +206,11 @@ const Admin = {
     },
 
     // API Helper
+    // Resolves with the parsed JSON body only when the response is OK.
+    // 401 (except on the login endpoint) clears the session, shows the login
+    // screen with an explanation, and throws. Any other non-OK response throws
+    // an Error carrying the server's message, so callers never mutate local
+    // state on failure.
     async api(endpoint, method = 'GET', body = null) {
         const options = {
             method,
@@ -223,7 +228,7 @@ const Admin = {
         }
 
         const response = await fetch(this.apiBase + endpoint, options);
-        return response.json();
+        return this.handleResponse(response, endpoint);
     },
 
     async apiUpload(endpoint, file) {
@@ -238,7 +243,37 @@ const Admin = {
             body: formData
         });
 
-        return response.json();
+        return this.handleResponse(response, endpoint);
+    },
+
+    async handleResponse(response, endpoint) {
+        let payload = null;
+        try {
+            payload = await response.json();
+        } catch {
+            payload = null;
+        }
+
+        if (response.ok) {
+            return payload;
+        }
+
+        const message = (payload && payload.error) || `Request failed (${response.status})`;
+
+        if (response.status === 401 && endpoint !== '/api/auth/login') {
+            this.sessionExpired();
+            throw new Error('Session expired');
+        }
+
+        throw new Error(message);
+    },
+
+    sessionExpired() {
+        sessionStorage.removeItem('adminToken');
+        this.token = null;
+        this.showLogin();
+        const errorEl = document.getElementById('login-error');
+        if (errorEl) errorEl.textContent = 'Session expired, please log in again';
     },
 
     // Data Loading
@@ -267,7 +302,7 @@ const Admin = {
             // Check for draft
             this.checkForDraft();
         } catch (error) {
-            this.toast('Failed to load data', 'error');
+            this.toast(`Failed to load data: ${error.message}`, 'error');
         }
     },
 
@@ -376,8 +411,8 @@ const Admin = {
             item.innerHTML = `
                 <span class="landing-card-drag">&#9776;</span>
                 <div class="landing-card-info">
-                    <div class="landing-card-title">${card.title}</div>
-                    <div class="landing-card-type">${typeLabel}</div>
+                    <div class="landing-card-title">${this.escapeHtml(card.title)}</div>
+                    <div class="landing-card-type">${this.escapeHtml(typeLabel)}</div>
                 </div>
                 <div class="landing-card-actions">
                     <button class="visibility-toggle ${card.visible === false ? 'hidden-icon' : ''}" title="Toggle visibility">
@@ -476,6 +511,24 @@ const Admin = {
         modal.classList.remove('hidden');
     },
 
+    // Build a copy of the current landingPage config so a save can be
+    // attempted without touching local state until the server accepts it.
+    cloneLandingPage() {
+        const current = this.data.landingPage || { title: 'Athletics Information Hub', cards: [] };
+        return {
+            ...current,
+            cards: (current.cards || []).map(c => ({ ...c }))
+        };
+    },
+
+    // PUT /api/landing-page replaces only the landingPage key on the server.
+    // Local state is updated only after the server confirms.
+    async saveLandingPage(landingPage) {
+        await this.api('/api/landing-page', 'PUT', { landingPage });
+        this.data.landingPage = landingPage;
+        this.saveDraft();
+    },
+
     async saveCard() {
         const id = document.getElementById('card-id').value;
         const cardData = {
@@ -492,45 +545,42 @@ const Admin = {
             cardData.url = document.getElementById('card-url').value;
         }
 
-        if (!this.data.landingPage) {
-            this.data.landingPage = { title: 'Athletics Information Hub', cards: [] };
-        }
+        const landingPage = this.cloneLandingPage();
 
         if (id) {
             // Update existing
-            const index = this.data.landingPage.cards.findIndex(c => c.id === id);
+            const index = landingPage.cards.findIndex(c => c.id === id);
             if (index !== -1) {
-                this.data.landingPage.cards[index] = { ...this.data.landingPage.cards[index], ...cardData };
+                landingPage.cards[index] = { ...landingPage.cards[index], ...cardData };
             }
         } else {
             // Create new
             cardData.id = 'card-' + Date.now();
-            cardData.order = this.data.landingPage.cards.length + 1;
-            this.data.landingPage.cards.push(cardData);
+            cardData.order = landingPage.cards.length + 1;
+            landingPage.cards.push(cardData);
         }
 
         try {
-            await this.api('/api/data', 'POST', this.data);
-            this.saveDraft(); // Save draft after changes
+            await this.saveLandingPage(landingPage);
             this.closeModals();
             this.renderLandingPageCards();
             this.toast(id ? 'Card updated' : 'Card created', 'success');
         } catch (error) {
-            this.toast('Failed to save card', 'error');
+            this.toast(`Failed to save card: ${error.message}`, 'error');
         }
     },
 
     async toggleCardVisibility(cardId) {
-        const card = this.data.landingPage.cards.find(c => c.id === cardId);
-        if (card) {
-            card.visible = card.visible === false ? true : false;
-            try {
-                await this.api('/api/data', 'POST', this.data);
-                this.saveDraft();
-                this.renderLandingPageCards();
-            } catch (error) {
-                this.toast('Failed to update visibility', 'error');
-            }
+        const landingPage = this.cloneLandingPage();
+        const card = landingPage.cards.find(c => c.id === cardId);
+        if (!card) return;
+
+        card.visible = card.visible === false ? true : false;
+        try {
+            await this.saveLandingPage(landingPage);
+            this.renderLandingPageCards();
+        } catch (error) {
+            this.toast(`Failed to update visibility: ${error.message}`, 'error');
         }
     },
 
@@ -542,35 +592,37 @@ const Admin = {
     },
 
     async deleteCard(cardId) {
-        this.data.landingPage.cards = this.data.landingPage.cards.filter(c => c.id !== cardId);
+        const landingPage = this.cloneLandingPage();
+        landingPage.cards = landingPage.cards.filter(c => c.id !== cardId);
         try {
-            await this.api('/api/data', 'POST', this.data);
-            this.saveDraft();
+            await this.saveLandingPage(landingPage);
             this.renderLandingPageCards();
             this.toast('Card deleted', 'success');
+            await this.loadData();
         } catch (error) {
-            this.toast('Failed to delete card', 'error');
+            this.toast(`Failed to delete card: ${error.message}`, 'error');
         }
     },
 
     async reorderCards() {
         const container = document.getElementById('landing-page-cards');
         const items = container.querySelectorAll('.landing-card-item');
+        const landingPage = this.cloneLandingPage();
 
         items.forEach((item, index) => {
-            const cardId = item.dataset.cardId;
-            const card = this.data.landingPage.cards.find(c => c.id === cardId);
+            const card = landingPage.cards.find(c => c.id === item.dataset.cardId);
             if (card) {
                 card.order = index + 1;
             }
         });
 
         try {
-            await this.api('/api/data', 'POST', this.data);
-            this.saveDraft();
+            await this.saveLandingPage(landingPage);
             this.toast('Cards reordered', 'success');
         } catch (error) {
-            this.toast('Failed to save order', 'error');
+            this.toast(`Failed to save order: ${error.message}`, 'error');
+            // Put the list back in the order the server still has
+            this.renderLandingPageCards();
         }
     },
 
@@ -616,7 +668,7 @@ const Admin = {
             categoryEl.innerHTML = `
                 <div class="tree-category-header" data-category-id="${category.id}">
                     <span class="arrow">&#9654;</span>
-                    <span class="category-name">${category.name}</span>
+                    <span class="category-name">${this.escapeHtml(category.name)}</span>
                     <div class="category-actions">
                         <button class="edit-category" title="Edit">&#9998;</button>
                         <button class="delete-category" title="Delete">&times;</button>
@@ -689,7 +741,7 @@ const Admin = {
         venueEl.innerHTML = `
             <div class="tree-venue-header" data-venue-id="${venue.id}">
                 <span class="arrow">&#9654;</span>
-                <span class="venue-name">${venue.name}</span>
+                <span class="venue-name">${this.escapeHtml(venue.name)}</span>
                 <div class="venue-actions">
                     <button class="edit-venue" title="Edit">&#9998;</button>
                     <button class="delete-venue" title="Delete">&times;</button>
@@ -726,7 +778,7 @@ const Admin = {
             mapEl.dataset.venueId = venue.id;
             mapEl.dataset.mapId = map.id;
             mapEl.innerHTML = `
-                <span class="map-label">${map.label}</span>
+                <span class="map-label">${this.escapeHtml(map.label)}</span>
                 <div class="map-actions">
                     <button class="edit-map-btn" title="Edit">&#9998;</button>
                     <button class="delete-map-btn" title="Delete">&times;</button>
@@ -831,7 +883,7 @@ const Admin = {
             item.innerHTML = `
                 <span class="location-list-drag">&#9776;</span>
                 <span class="location-list-number">${location.number || ''}</span>
-                <span class="location-list-name">${location.name || 'Unnamed'}</span>
+                <span class="location-list-name">${this.escapeHtml(location.name) || 'Unnamed'}</span>
             `;
 
             // Click to select
@@ -913,8 +965,7 @@ const Admin = {
             if (location) {
                 const newNumber = index + 1;
                 if (location.number !== newNumber) {
-                    location.number = newNumber;
-                    updates.push({ id: locationId, number: newNumber });
+                    updates.push({ location, number: newNumber });
                 }
             }
         });
@@ -924,19 +975,24 @@ const Admin = {
             return;
         }
 
-        // Save all updates
+        // Save all updates; each location's local number changes only after
+        // the server confirms it
+        let saved = 0;
         try {
             for (const update of updates) {
                 await this.api(
-                    `/api/venues/${this.currentVenue.id}/maps/${this.currentMap.id}/locations/${update.id}`,
+                    `/api/venues/${this.currentVenue.id}/maps/${this.currentMap.id}/locations/${update.location.id}`,
                     'PUT',
                     { number: update.number }
                 );
+                update.location.number = update.number;
+                saved++;
             }
             this.renderMarkers();
-            this.toast(`Renumbered ${updates.length} locations`, 'success');
+            this.toast(`Renumbered ${saved} locations`, 'success');
         } catch (error) {
-            this.toast('Failed to renumber locations', 'error');
+            this.renderMarkers();
+            this.toast(`Failed to renumber locations: ${error.message}`, 'error');
         }
     },
 
@@ -990,6 +1046,10 @@ const Admin = {
         };
 
         const onMove = (moveEvent) => {
+            // Stop the page from scrolling under a marker being dragged on touch
+            if (moveEvent.type === 'touchmove' && moveEvent.cancelable) {
+                moveEvent.preventDefault();
+            }
             this.isDragging = true;
             marker.classList.add('dragging');
 
@@ -1025,13 +1085,22 @@ const Admin = {
                     left: marker.style.left
                 };
 
-                location.position = newPosition;
-                await this.updateLocationPosition(location.id, newPosition);
-
-                // Update panel if this location is selected
-                if (this.selectedLocation?.id === location.id) {
-                    document.getElementById('coord-top').textContent = newPosition.top;
-                    document.getElementById('coord-left').textContent = newPosition.left;
+                const saved = await this.updateLocationPosition(location.id, newPosition);
+                if (saved) {
+                    location.position = newPosition;
+                    // Update panel if this location is selected
+                    if (this.selectedLocation?.id === location.id) {
+                        document.getElementById('coord-top').textContent = newPosition.top;
+                        document.getElementById('coord-left').textContent = newPosition.left;
+                    }
+                } else {
+                    // Snap the marker back to its last saved position
+                    let top = location.position?.top ?? '50%';
+                    let left = location.position?.left ?? '50%';
+                    if (typeof top === 'number') top = top + '%';
+                    if (typeof left === 'number') left = left + '%';
+                    marker.style.top = top;
+                    marker.style.left = left;
                 }
             }
 
@@ -1054,8 +1123,10 @@ const Admin = {
                 'PUT',
                 { position }
             );
+            return true;
         } catch (error) {
-            this.toast('Failed to save position', 'error');
+            this.toast(`Failed to save position: ${error.message}`, 'error');
+            return false;
         }
     },
 
@@ -1095,18 +1166,8 @@ const Admin = {
         document.getElementById('coord-top').textContent = top;
         document.getElementById('coord-left').textContent = left;
 
-        // Image preview
-        const preview = document.getElementById('image-preview');
-        const deleteBtn = document.getElementById('delete-image-btn');
-        if (loc.image) {
-            preview.innerHTML = `<img src="${loc.image}" alt="Location image">`;
-            document.getElementById('image-filename').textContent = loc.image;
-            deleteBtn.classList.remove('hidden');
-        } else {
-            preview.innerHTML = '';
-            document.getElementById('image-filename').textContent = '';
-            deleteBtn.classList.add('hidden');
-        }
+        // Photo strip (cover first, drag to reorder)
+        this.renderPhotoRow();
     },
 
     closeLocationPanel() {
@@ -1135,6 +1196,7 @@ const Admin = {
             description: '',
             fiber: '',
             image: '',
+            images: [],
             position: { top, left }
         });
     },
@@ -1159,7 +1221,7 @@ const Admin = {
 
             this.toast('Location added', 'success');
         } catch (error) {
-            this.toast('Failed to add location', 'error');
+            this.toast(`Failed to add location: ${error.message}`, 'error');
         }
     },
 
@@ -1192,7 +1254,7 @@ const Admin = {
 
             this.toast('Location saved', 'success');
         } catch (error) {
-            this.toast('Failed to save location', 'error');
+            this.toast(`Failed to save location: ${error.message}`, 'error');
         }
     },
 
@@ -1223,72 +1285,288 @@ const Admin = {
             this.closeLocationPanel();
             this.renderLocationList();
             this.toast('Location deleted', 'success');
-            // Auto-regenerate HTML pages
+            // Auto-regenerate HTML pages, then resync with the server
             await this.generateHTML();
+            await this.reloadAndReselectMap();
         } catch (error) {
-            this.toast('Failed to delete location', 'error');
+            this.toast(`Failed to delete location: ${error.message}`, 'error');
         }
     },
 
-    // Image Upload
-    async handleImageUpload(e) {
-        const file = e.target.files[0];
-        if (!file) return;
+    // Image Upload (multi-photo)
+    // Every location carries an `images` array; `image` mirrors images[0].
+    getLocationImages(loc) {
+        if (!loc) return [];
+        if (Array.isArray(loc.images)) return loc.images.filter(Boolean);
+        return loc.image ? [loc.image] : [];
+    },
 
-        try {
-            const response = await this.apiUpload('/api/upload', file);
-            if (response.success) {
-                this.selectedLocation.image = response.filename;
+    // DIR/NAME.jpg -> DIR/thumbs/NAME.jpg (root photos -> thumbs/NAME.jpg)
+    thumbPath(path) {
+        if (!path) return '';
+        const slash = path.lastIndexOf('/');
+        const dir = slash === -1 ? '' : path.slice(0, slash + 1);
+        const name = slash === -1 ? path : path.slice(slash + 1);
+        return `${dir}thumbs/${name}`;
+    },
 
-                // Update preview
-                document.getElementById('image-preview').innerHTML = `<img src="${response.filename}" alt="Location image">`;
-                document.getElementById('image-filename').textContent = response.filename;
-                document.getElementById('delete-image-btn').classList.remove('hidden');
+    // Snapshot of the venue/map/location a photo edit applies to, taken when
+    // the edit starts so a later selection change cannot redirect the save.
+    photoTarget() {
+        const loc = this.selectedLocation;
+        if (!loc || !this.currentVenue || !this.currentMap) return null;
+        return { venueId: this.currentVenue.id, mapId: this.currentMap.id, loc };
+    },
 
-                // Save to server
-                await this.api(
-                    `/api/venues/${this.currentVenue.id}/maps/${this.currentMap.id}/locations/${this.selectedLocation.id}`,
-                    'PUT',
-                    { image: response.filename }
-                );
+    // PUT the images array for an explicit target, update that location's
+    // local state after success, and re-render if it is still selected.
+    async saveLocationImages(images, target) {
+        if (!target || !target.loc) return;
+        const { venueId, mapId, loc } = target;
+        const response = await this.api(
+            `/api/venues/${venueId}/maps/${mapId}/locations/${loc.id}`,
+            'PUT',
+            { images }
+        );
+        loc.images = Array.isArray(response?.images) ? response.images : images.slice();
+        loc.image = typeof response?.image === 'string' ? response.image : (loc.images[0] || '');
+        if (this.selectedLocation === loc) this.renderPhotoRow();
+    },
 
-                this.toast('Image uploaded', 'success');
-            } else {
-                this.toast(response.error || 'Upload failed', 'error');
+    renderPhotoRow() {
+        const row = document.getElementById('image-preview');
+        const filenameEl = document.getElementById('image-filename');
+        row.innerHTML = '';
+
+        const images = this.getLocationImages(this.selectedLocation);
+        filenameEl.textContent = images.length === 0 ? 'No photos yet'
+            : `${images.length} photo${images.length === 1 ? '' : 's'}`;
+
+        if (images.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'photo-row-empty';
+            empty.textContent = 'No photos. Add one or more photos below.';
+            row.appendChild(empty);
+            return;
+        }
+
+        images.forEach((path, index) => {
+            const thumb = document.createElement('div');
+            thumb.className = 'photo-thumb';
+            thumb.dataset.path = path;
+            thumb.title = path;
+
+            const img = document.createElement('img');
+            img.alt = `Photo ${index + 1}`;
+            img.draggable = false;
+            img.src = this.thumbPath(path);
+            img.onerror = () => {
+                img.onerror = null;
+                img.src = path;
+            };
+            thumb.appendChild(img);
+
+            if (index === 0) {
+                const cover = document.createElement('span');
+                cover.className = 'photo-cover-label';
+                cover.textContent = 'Cover';
+                thumb.appendChild(cover);
             }
-        } catch (error) {
-            this.toast('Failed to upload image', 'error');
-        }
 
-        e.target.value = '';
+            const handle = document.createElement('span');
+            handle.className = 'photo-handle';
+            handle.title = 'Drag to reorder';
+            handle.innerHTML = '&#9776;';
+            thumb.appendChild(handle);
+
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'photo-remove';
+            remove.title = 'Remove photo';
+            remove.setAttribute('aria-label', 'Remove photo');
+            remove.innerHTML = '&times;';
+            remove.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.removeLocationImage(path);
+            });
+            thumb.appendChild(remove);
+
+            thumb.addEventListener('pointerdown', (e) => this.startPhotoDrag(e, thumb));
+
+            row.appendChild(thumb);
+        });
     },
 
-    async deleteLocationImage() {
-        if (!this.selectedLocation || !this.selectedLocation.image) return;
+    // Reorder by dragging. Pointer events cover mouse and touch; on touch the
+    // drag must start from the grip handle so the row can still scroll.
+    startPhotoDrag(e, thumb) {
+        if (e.button !== undefined && e.button !== 0) return;
+        if (e.target.closest('.photo-remove')) return;
+        if (e.pointerType === 'touch' && !e.target.closest('.photo-handle')) return;
 
-        if (!confirm('Are you sure you want to delete this image?')) return;
+        const row = document.getElementById('image-preview');
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const pointerId = e.pointerId;
+        let dragging = false;
+
+        const onMove = (moveEvent) => {
+            if (moveEvent.pointerId !== pointerId) return;
+            if (!dragging) {
+                if (Math.abs(moveEvent.clientX - startX) < 6 && Math.abs(moveEvent.clientY - startY) < 6) return;
+                dragging = true;
+                thumb.classList.add('dragging');
+                row.classList.add('reordering');
+            }
+            moveEvent.preventDefault();
+
+            // Find the thumbnail under the pointer and slot the dragged one
+            // before or after it depending on which half was crossed
+            const over = document.elementFromPoint(moveEvent.clientX, moveEvent.clientY)?.closest('.photo-thumb');
+            if (over && over !== thumb && over.parentNode === row) {
+                const rect = over.getBoundingClientRect();
+                const before = moveEvent.clientX < rect.left + rect.width / 2;
+                row.insertBefore(thumb, before ? over : over.nextSibling);
+            }
+
+            // Auto-scroll the row when dragging near its edges
+            const rowRect = row.getBoundingClientRect();
+            if (moveEvent.clientX > rowRect.right - 30) row.scrollLeft += 8;
+            else if (moveEvent.clientX < rowRect.left + 30) row.scrollLeft -= 8;
+        };
+
+        const onEnd = async (endEvent) => {
+            if (endEvent.pointerId !== pointerId) return;
+            document.removeEventListener('pointermove', onMove);
+            document.removeEventListener('pointerup', onEnd);
+            document.removeEventListener('pointercancel', onEnd);
+            thumb.classList.remove('dragging');
+            row.classList.remove('reordering');
+            if (!dragging) return;
+
+            const target = this.photoTarget();
+            if (!target) return;
+            const newOrder = [...row.querySelectorAll('.photo-thumb')].map(t => t.dataset.path);
+            const current = this.getLocationImages(target.loc);
+            if (newOrder.join('\n') === current.join('\n')) return;
+
+            try {
+                await this.saveLocationImages(newOrder, target);
+                this.toast('Photos reordered', 'success');
+                await this.generateHTML();
+            } catch (error) {
+                this.renderPhotoRow();
+                this.toast(`Failed to reorder photos: ${error.message}`, 'error');
+            }
+        };
+
+        document.addEventListener('pointermove', onMove, { passive: false });
+        document.addEventListener('pointerup', onEnd);
+        document.addEventListener('pointercancel', onEnd);
+    },
+
+    async handleImageUpload(e) {
+        const files = Array.from(e.target.files || []);
+        e.target.value = '';
+        if (!files.length) return;
+        const target = this.photoTarget();
+        if (!target) return;
+        const loc = target.loc;
+
+        const uploadBtn = document.getElementById('upload-image-btn');
+        uploadBtn.disabled = true;
+
+        let added = 0;
+        try {
+            // Upload one at a time; each success is appended and saved before
+            // the next starts, so a failure part-way keeps what already landed.
+            // Every save targets the location captured above, and the loop
+            // stops if the admin selects a different location mid-upload.
+            for (let i = 0; i < files.length; i++) {
+                if (this.selectedLocation !== loc) {
+                    throw new Error('Location changed during upload; remaining photos were not added');
+                }
+                uploadBtn.textContent = `Uploading ${i + 1} of ${files.length}...`;
+                const response = await this.apiUpload('/api/upload', files[i]);
+                if (!response || !response.success || !response.filename) {
+                    throw new Error((response && response.error) || 'Upload failed');
+                }
+                const images = this.getLocationImages(loc).concat([response.filename]);
+                await this.saveLocationImages(images, target);
+                added++;
+            }
+            this.toast(added === 1 ? 'Photo added' : `${added} photos added`, 'success');
+        } catch (error) {
+            this.toast(`Failed to upload image: ${error.message}`, 'error');
+        } finally {
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = 'Add Photos';
+        }
+
+        if (added > 0) {
+            await this.generateHTML();
+        }
+    },
+
+    async removeLocationImage(path) {
+        const target = this.photoTarget();
+        if (!target) return;
+        const loc = target.loc;
+        const current = this.getLocationImages(loc);
+        if (!current.includes(path)) return;
+
+        if (!confirm('Remove this photo from the location?')) return;
 
         try {
-            // Clear the image from the location
-            await this.api(
-                `/api/venues/${this.currentVenue.id}/maps/${this.currentMap.id}/locations/${this.selectedLocation.id}`,
-                'PUT',
-                { image: '' }
-            );
-
-            this.selectedLocation.image = '';
-
-            // Update UI
-            document.getElementById('image-preview').innerHTML = '';
-            document.getElementById('image-filename').textContent = '';
-            document.getElementById('delete-image-btn').classList.add('hidden');
-
-            // Regenerate HTML
-            await this.generateHTML();
-
-            this.toast('Image deleted', 'success');
+            // Drop it from the location first; the file is only deleted once
+            // the server has accepted the new list
+            await this.saveLocationImages(current.filter(p => p !== path), target);
         } catch (error) {
-            this.toast('Failed to delete image', 'error');
+            this.toast(`Failed to remove photo: ${error.message}`, 'error');
+            return;
+        }
+
+        // Only uploaded files are deleted from disk; root photos are shared
+        if (path.startsWith('uploads/')) {
+            try {
+                await this.api(`/api/upload/${path}`, 'DELETE');
+            } catch (error) {
+                if (error.message !== 'Session expired') {
+                    this.toast(`Photo removed, but the file was not deleted: ${error.message}`, 'warning');
+                }
+            }
+        }
+
+        this.toast('Photo removed', 'success');
+        await this.generateHTML();
+    },
+
+    // Legacy single-image delete: kept as an alias for the multi-photo flow
+    async deleteLocationImage() {
+        const images = this.getLocationImages(this.selectedLocation);
+        if (images.length) await this.removeLocationImage(images[0]);
+    },
+
+    // Reload data from the server and keep the current map open
+    async reloadAndReselectMap() {
+        const venueId = this.currentVenue?.id;
+        const mapId = this.currentMap?.id;
+        const locationId = this.selectedLocation?.id;
+        await this.loadData();
+        if (venueId && mapId) {
+            const venue = this.data.venues.find(v => v.id === venueId);
+            const map = venue?.maps?.find(m => m.id === mapId);
+            if (venue && map) {
+                this.selectMap(venueId, mapId);
+                if (locationId && map.locations.some(l => l.id === locationId)) {
+                    this.selectLocation(locationId);
+                }
+            } else {
+                this.currentVenue = null;
+                this.currentMap = null;
+                document.getElementById('empty-state').classList.remove('hidden');
+                document.getElementById('map-editor').classList.add('hidden');
+            }
         }
     },
 
@@ -1299,7 +1577,7 @@ const Admin = {
         try {
             const response = await this.apiUpload('/api/upload/map', file);
             if (response.success) {
-                document.getElementById('map-image-preview').innerHTML = `<img src="${response.filename}" alt="Map image">`;
+                document.getElementById('map-image-preview').innerHTML = `<img src="${this.escapeHtml(response.filename)}" alt="Map image">`;
                 document.getElementById('map-image-filename').textContent = response.filename;
                 document.getElementById('map-form').dataset.newImage = response.filename;
                 this.toast('Map image uploaded', 'success');
@@ -1307,7 +1585,7 @@ const Admin = {
                 this.toast(response.error || 'Upload failed', 'error');
             }
         } catch (error) {
-            this.toast('Failed to upload image', 'error');
+            this.toast(`Failed to upload image: ${error.message}`, 'error');
         }
 
         e.target.value = '';
@@ -1353,7 +1631,7 @@ const Admin = {
             await this.loadData();
             this.toast(id ? 'Category updated' : 'Category created', 'success');
         } catch (error) {
-            this.toast('Failed to save category', 'error');
+            this.toast(`Failed to save category: ${error.message}`, 'error');
         }
     },
 
@@ -1372,7 +1650,7 @@ const Admin = {
             // Auto-regenerate HTML pages
             await this.generateHTML();
         } catch (error) {
-            this.toast('Failed to delete category', 'error');
+            this.toast(`Failed to delete category: ${error.message}`, 'error');
         }
     },
 
@@ -1417,7 +1695,7 @@ const Admin = {
             label.className = 'checkbox-label';
             label.innerHTML = `
                 <input type="checkbox" name="venue-category" value="${cat.id}">
-                <span>${cat.name}</span>
+                <span>${this.escapeHtml(cat.name)}</span>
             `;
             container.appendChild(label);
         });
@@ -1449,7 +1727,7 @@ const Admin = {
             await this.loadData();
             this.toast(id ? 'Venue updated' : 'Venue created', 'success');
         } catch (error) {
-            this.toast('Failed to save venue', 'error');
+            this.toast(`Failed to save venue: ${error.message}`, 'error');
         }
     },
 
@@ -1477,7 +1755,7 @@ const Admin = {
             // Auto-regenerate HTML pages
             await this.generateHTML();
         } catch (error) {
-            this.toast('Failed to delete venue', 'error');
+            this.toast(`Failed to delete venue: ${error.message}`, 'error');
         }
     },
 
@@ -1499,7 +1777,7 @@ const Admin = {
             document.getElementById('map-subtitle').value = this.currentMap.subtitle || '';
 
             if (this.currentMap.image) {
-                document.getElementById('map-image-preview').innerHTML = `<img src="${this.currentMap.image}" alt="Map image">`;
+                document.getElementById('map-image-preview').innerHTML = `<img src="${this.escapeHtml(this.currentMap.image)}" alt="Map image">`;
                 document.getElementById('map-image-filename').textContent = this.currentMap.image;
             }
         } else {
@@ -1543,7 +1821,7 @@ const Admin = {
 
             this.toast(id ? 'Map updated' : 'Map created', 'success');
         } catch (error) {
-            this.toast('Failed to save map', 'error');
+            this.toast(`Failed to save map: ${error.message}`, 'error');
         }
     },
 
@@ -1572,7 +1850,7 @@ const Admin = {
             // Auto-regenerate HTML pages
             await this.generateHTML();
         } catch (error) {
-            this.toast('Failed to delete map', 'error');
+            this.toast(`Failed to delete map: ${error.message}`, 'error');
         }
     },
 
@@ -1588,7 +1866,7 @@ const Admin = {
                 this.toast(response.error || 'Generation failed', 'error');
             }
         } catch (error) {
-            this.toast('Failed to publish', 'error');
+            this.toast(`Failed to publish: ${error.message}`, 'error');
         }
     },
 
@@ -1688,7 +1966,7 @@ const Admin = {
                 </div>
                 ${request.uploadedPhoto ? `
                     <div class="notification-photo-preview">
-                        <img src="${request.uploadedPhoto}" alt="Uploaded photo">
+                        <img src="${this.escapeHtml(request.uploadedPhoto)}" alt="Uploaded photo">
                     </div>
                 ` : ''}
                 <div class="notification-actions">
@@ -1727,14 +2005,16 @@ const Admin = {
             if (response.success) {
                 this.toast('Photo added to location!', 'success');
                 await this.loadPhotoRequests();
-                await this.loadData(); // Reload to get updated location image
+                // Reload so the location's images array (now with the approved
+                // photo appended) is current, keeping the open map and panel
+                await this.reloadAndReselectMap();
                 // Regenerate HTML
                 await this.generateHTML();
             } else {
                 this.toast(response.error || 'Failed to approve', 'error');
             }
         } catch (error) {
-            this.toast('Failed to approve photo request', 'error');
+            this.toast(`Failed to approve photo request: ${error.message}`, 'error');
         }
     },
 
@@ -1748,7 +2028,7 @@ const Admin = {
                 this.toast(response.error || 'Failed to dismiss', 'error');
             }
         } catch (error) {
-            this.toast('Failed to dismiss request', 'error');
+            this.toast(`Failed to dismiss request: ${error.message}`, 'error');
         }
     },
 
@@ -1993,7 +2273,7 @@ const Tutorial = {
             target: '#location-panel',
             targetFn: () => document.getElementById('location-panel'),
             title: 'Edit Location Details',
-            content: 'The location panel opens automatically. Here you can set the name, description, fiber info, and upload an image. Try editing the fields, then click "Save Location".',
+            content: 'The location panel opens automatically. Here you can set the name, description, and fiber info, and add one or more photos. The first photo is the cover; drag thumbnails to reorder them. Try editing the fields, then click "Save Location".',
             position: 'left',
             waitFor: 'click',
             waitForTarget: '#location-form button[type="submit"]'
@@ -2003,7 +2283,7 @@ const Tutorial = {
             type: 'highlight',
             target: '.notification-bell',
             title: 'Photo Request Notifications',
-            content: 'When users view a location without a photo, they can request one and optionally upload a suggested photo. You\'ll see a notification badge here showing how many photos have been requested. Click the bell to view requests, approve photos, or navigate directly to those locations.',
+            content: 'When users view a location without a photo, they can request one and optionally upload a suggested photo. You\'ll see a notification badge here showing how many photos have been requested. Click the bell to view requests, approve photos (an approved photo is added to the end of that location\'s photo list), or navigate directly to those locations.',
             position: 'bottom',
             buttons: { next: 'Got it!', skip: 'Skip' }
         },

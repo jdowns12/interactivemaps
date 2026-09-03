@@ -5,3 +5,5 @@ __pycache__/
 uploads/
 .DS_Store
 *.tmp
+.claude/
+*.tar.gz
