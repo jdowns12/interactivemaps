@@ -1766,9 +1766,16 @@ body {
         padding: 8px;
     }
 
+    /* Phones scroll the document, not an inner box: a fixed-height page with a
+       nested scroll region is unreliable under touch (map gestures, iOS chrome). */
+    .admin-dashboard {
+        height: auto;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+
     .editor-main {
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
+        overflow: visible;
     }
 
     .map-editor {
