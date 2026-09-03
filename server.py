@@ -54,7 +54,7 @@ DATA_FILE = os.path.join(BASE_DIR, 'data.json')
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 ANALYTICS_FILE = os.path.join(BASE_DIR, 'analytics.json')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'gif'}
-MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB max file size
+MAX_CONTENT_LENGTH = 25 * 1024 * 1024  # 25MB: phone photos are 4-10MB; server recompresses anyway
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 
 # Image sizing (see PLAN-FIXES-AND-MULTIPHOTO.md, "Thumbnails")
@@ -1437,7 +1437,7 @@ def get_analytics():
 
 @app.errorhandler(413)
 def too_large(e):
-    return jsonify({"error": "File too large. Maximum size is 5MB."}), 413
+    return jsonify({"error": "File too large. Maximum size is 25MB."}), 413
 
 @app.errorhandler(404)
 def not_found(e):

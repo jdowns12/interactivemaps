@@ -1486,8 +1486,13 @@ const Admin = {
                 if (this.selectedLocation !== loc) {
                     throw new Error('Location changed during upload; remaining photos were not added');
                 }
+                uploadBtn.textContent = `Preparing ${i + 1} of ${files.length}...`;
+                const prepared = await this.shrinkImageForUpload(files[i]);
+                if (prepared.size > this.MAX_UPLOAD_BYTES) {
+                    throw new Error(`${files[i].name} is ${(prepared.size / 1048576).toFixed(1)} MB; the limit is 25 MB`);
+                }
                 uploadBtn.textContent = `Uploading ${i + 1} of ${files.length}...`;
-                const response = await this.apiUpload('/api/upload', files[i]);
+                const response = await this.apiUpload('/api/upload', prepared);
                 if (!response || !response.success || !response.filename) {
                     throw new Error((response && response.error) || 'Upload failed');
                 }
@@ -1505,6 +1510,35 @@ const Admin = {
 
         if (added > 0) {
             await this.generateHTML();
+        }
+    },
+
+    MAX_UPLOAD_BYTES: 25 * 1024 * 1024,
+
+    // Downscale a photo in the browser before upload so a 4-10 MB phone photo
+    // becomes ~500 KB. Falls back to the original file if decoding fails
+    // (e.g. an unsupported format); the server recompresses everything anyway.
+    async shrinkImageForUpload(file, maxDim = 1920, quality = 0.85) {
+        if (!file.type.startsWith('image/') || file.type === 'image/gif') return file;
+        try {
+            const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+            const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+            if (scale === 1 && file.size < 1.5 * 1024 * 1024) {
+                bitmap.close();
+                return file;
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(bitmap.width * scale);
+            canvas.height = Math.round(bitmap.height * scale);
+            canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+            bitmap.close();
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+            if (!blob) return file;
+            const name = file.name.replace(/\.[^.]+$/, '') + '.jpg';
+            return new File([blob], name, { type: 'image/jpeg' });
+        } catch (err) {
+            console.warn('Client-side resize skipped:', err);
+            return file;
         }
     },
 
