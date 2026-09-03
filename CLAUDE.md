@@ -37,21 +37,30 @@ Interactive venue maps for Auburn Athletics with fiber connectivity, ESPN camera
 - `POST /api/upload` - Upload location images
 - `POST /api/upload/map` - Upload map images
 - `POST /api/generate-html` - Generate HTML from data
-- `POST /api/auth/login` - Admin authentication
+- `PUT /api/landing-page` - Replace only the landing page cards
+- `DELETE /api/upload/<path>` - Delete an uploaded image and its thumbnail (uploads/ only)
+- `GET /api/health` - Liveness check
+- `POST /api/auth/login` - Admin authentication (401 body is always `{"error": "Session expired"}`)
 
 ## File Upload
 - Max size: 5MB
 - Formats: PNG, JPG, JPEG, WebP, GIF
-- Location: `/uploads/`
+- Location: `/uploads/`, recompressed to 1600px JPEG q80
+- Thumbnail written to `DIR/thumbs/NAME` (480px, q78). Backfill: `python3 compress_existing_images.py --thumbs`
+
+## Photos per location
+- Each location has `images` (array, first is the cover) and `image` (mirror of `images[0]`, legacy)
+- Generated pages carry `data-images` (HTML-escaped JSON array) on each marker
+- Full contract: `PLAN-FIXES-AND-MULTIPHOTO.md`
+
+## Tests
+- `.venv/bin/python -m pytest tests -q` (sandboxed, never touches real data.json or uploads/)
+
+## Static serving
+- `server.py` only serves an allowlist (html/css/js/json/images, `uploads/`, `thumbs/`). Dotfiles, `.py`, `.md`, `tests/`, `templates/`, `analytics.json` are 404.
 
 ## Dependencies
-- flask==2.3.0
-- flask-cors==4.0.0
-- werkzeug>=2.3.0
-
-## Git Status
-- 11 staged files pending commit (admin editor system)
-- Need to commit and push
+- flask>=3.0,<4, werkzeug>=3.0,<4, flask-cors>=6, Pillow, pytest (see requirements.txt)
 
 ## Notes
 - Runs as systemd service `interactivemaps.service` (enabled, auto-restart)
