@@ -1,190 +1,202 @@
 /**
  * Print Stylesheet for WEP Venue Maps
- * Clean layout for printing venue information
+ * Every map prints with its numbered markers and a list of locations below
+ * (script.js builds .print-location-list from the markers on beforeprint).
  */
 
 @media print {
-  /* Hide interactive elements */
+  /* Hide interactive chrome */
   .site-header,
-  .sidebar,
-  .sidebar-toggle,
-  .nav-toggle,
   .header-search,
+  .nav-toggle,
+  .nav-menu,
+  .admin-btn,
+  .map-tabs,
   .close-button,
-  .info-close-button,
+  .map-close-btn,
   .dim-overlay,
+  .scroll-indicator,
+  .location-list,
+  .location-overlay,
+  .sw-update-toast,
   #image-modal-overlay,
-  .color-key input[type="checkbox"] {
+  .image-overlay,
+  #location-modal {
     display: none !important;
   }
 
-  /* Reset body */
+  html,
   body {
     background: white !important;
     margin: 0;
     padding: 0;
     font-size: 11pt;
-  }
-
-  /* Show all maps */
-  .map-container {
-    position: relative !important;
-    transform: none !important;
-    width: 100% !important;
+    overflow: visible !important;
     height: auto !important;
-    max-height: none !important;
-    page-break-inside: avoid;
-    break-inside: avoid;
-    margin-bottom: 2rem;
-    border: 1px solid #ccc;
-    border-radius: 0;
   }
 
+  .container {
+    max-width: none;
+    padding: 0;
+  }
+
+  .page-header {
+    background: #0C2340 !important;
+    border-radius: 0;
+    padding: 10pt 14pt;
+    margin-bottom: 12pt;
+    box-shadow: none;
+  }
+
+  .page-header::before {
+    display: none;
+  }
+
+  .page-title {
+    color: white !important;
+    font-size: 18pt;
+  }
+
+  /* Venues */
+  .venue {
+    background: white;
+    box-shadow: none;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    margin: 0 0 14pt 0;
+    overflow: visible;
+    break-inside: auto;
+  }
+
+  .venue-title {
+    background: white !important;
+    color: #0C2340 !important;
+    font-size: 15pt;
+    margin: 0 0 8pt 0;
+    padding: 0;
+    border-bottom: 2pt solid #E87722;
+    break-after: avoid;
+  }
+
+  .venue-title::before {
+    display: none;
+  }
+
+  /* Show every map panel, not just the active tab */
+  .map-panel {
+    display: block !important;
+    margin-bottom: 14pt;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .map-panel + .map-panel {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  .map-container,
   .map-container.expanded,
   .map-container.dimmed {
     position: relative !important;
+    top: auto !important;
+    left: auto !important;
     transform: none !important;
+    width: 100% !important;
+    height: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
     opacity: 1 !important;
-    pointer-events: auto !important;
+    pointer-events: none !important;
+    background: white !important;
+    border: 1pt solid #ccc;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible !important;
   }
 
-  /* Grid layout for print */
-  .map-row {
-    display: block !important;
+  .map-container:hover {
+    transform: none !important;
   }
 
-  /* Map content */
-  .map-content {
-    aspect-ratio: 4 / 3;
-    position: relative;
-  }
-
-  .map-image {
+  .map-container .map-image {
     width: 100%;
     height: auto;
+    display: block;
     object-fit: contain;
   }
 
-  .map-label {
-    background: #0C2340 !important;
+  /* Numbered markers stay pinned to the map */
+  .location-marker,
+  .location-wrapper {
+    position: absolute !important;
+    transform: translate(-50%, -50%) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  .location-marker .marker-number {
+    width: 16pt !important;
+    height: 16pt !important;
+    font-size: 9pt !important;
+    background: #E87722 !important;
     color: white !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    padding: 8pt;
-    font-size: 12pt;
-    font-weight: bold;
-  }
-
-  /* Location icons - make them visible */
-  .location-icon {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    width: 20pt !important;
-    height: 20pt !important;
-    font-size: 10pt !important;
-  }
-
-  /* Show all floating info boxes */
-  .floating-info-box {
-    display: block !important;
-    position: relative !important;
-    transform: none !important;
-    max-width: 100% !important;
-    width: 100% !important;
-    left: 0 !important;
-    margin: 1rem 0;
-    page-break-inside: avoid;
-    break-inside: avoid;
+    border: 1pt solid white;
     box-shadow: none;
-    border: 1px solid #ddd;
-    padding: 12pt;
   }
 
-  .floating-info-box img {
-    max-width: 200px !important;
-    height: auto;
+  .location-marker.keyboard-focus .marker-number {
+    outline: none;
   }
 
-  /* Color key for print */
-  .color-key {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    position: relative !important;
-    bottom: auto !important;
-    left: auto !important;
-    margin-top: 1rem;
+  .print-map-label {
+    display: block !important;
+    font-weight: 600;
+    font-size: 11pt;
+    color: #0C2340;
+    margin: 0 0 6pt 0;
   }
 
-  /* Page breaks */
-  .map-container {
-    page-break-after: always;
+  /* Location list printed under each map */
+  .print-location-list {
+    display: block !important;
+    columns: 2;
+    column-gap: 18pt;
+    margin: 8pt 0 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 9.5pt;
+    line-height: 1.35;
   }
 
-  .map-container:last-child {
-    page-break-after: auto;
+  .print-location-list li {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 5pt;
   }
 
-  /* Print header */
+  .print-location-list strong {
+    color: #0C2340;
+  }
+
+  .print-location-desc {
+    display: block;
+    color: #4b5563;
+  }
+
   @page {
     margin: 0.5in;
-    @top-center {
-      content: "Auburn Athletics - WEP Venue Maps";
-    }
-    @bottom-center {
-      content: counter(page);
-    }
   }
 
-  /* Links */
   a {
     color: #0C2340;
     text-decoration: none;
   }
 
-  /* Ensure backgrounds print */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-  }
-}
-
-/* Print-specific list view */
-@media print {
-  body.list-view-mode .map-container {
-    display: none;
-  }
-
-  body.list-view-mode .location-list-view {
-    display: block !important;
-  }
-
-  .location-list-view {
-    display: none;
-  }
-
-  .location-list-view table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 10pt;
-  }
-
-  .location-list-view th,
-  .location-list-view td {
-    border: 1px solid #ccc;
-    padding: 6pt;
-    text-align: left;
-  }
-
-  .location-list-view th {
-    background: #0C2340;
-    color: white;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  .location-list-view tr:nth-child(even) {
-    background: #f5f5f5;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
   }
 }

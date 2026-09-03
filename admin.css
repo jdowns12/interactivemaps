@@ -763,6 +763,118 @@ body {
     border: 1px solid var(--border-color);
 }
 
+/* Multi-photo row (admin location panel) */
+.photo-row {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 6px 2px 10px;
+    margin-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+
+.photo-row.reordering {
+    cursor: grabbing;
+    user-select: none;
+}
+
+.photo-row-empty {
+    flex: 1;
+    padding: 18px 12px;
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 13px;
+    text-align: center;
+}
+
+.photo-thumb {
+    position: relative;
+    flex: 0 0 auto;
+    width: 112px;
+    height: 84px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    background: var(--background-light);
+    cursor: grab;
+    touch-action: pan-x;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.photo-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+}
+
+.photo-thumb.dragging {
+    opacity: 0.6;
+    box-shadow: 0 0 0 2px var(--accent-orange);
+    cursor: grabbing;
+}
+
+.photo-cover-label {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    padding: 2px 8px;
+    background: var(--accent-orange);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border-top-right-radius: var(--radius-sm);
+}
+
+.photo-handle {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(12, 35, 64, 0.75);
+    color: #fff;
+    font-size: 14px;
+    border-bottom-right-radius: var(--radius-sm);
+    cursor: grab;
+    touch-action: none;
+}
+
+.photo-remove {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-bottom-left-radius: var(--radius-sm);
+    background: rgba(220, 53, 69, 0.9);
+    color: #fff;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.photo-remove:hover {
+    background: var(--danger-red);
+}
+
+.photo-hint {
+    margin: 0 0 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
 /* Coordinates Display */
 .coordinates .coord-display {
     display: flex;
@@ -1508,6 +1620,17 @@ body {
 
     .image-preview img {
         max-height: 150px;
+    }
+
+    .photo-thumb {
+        width: 96px;
+        height: 72px;
+    }
+
+    .photo-handle,
+    .photo-remove {
+        width: 32px;
+        height: 32px;
     }
 }
 
