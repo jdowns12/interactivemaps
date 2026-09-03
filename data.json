@@ -51,7 +51,20 @@
     ],
     "title": "Athletics Information Hub"
   },
-  "photoRequests": [],
+  "photoRequests": [
+    {
+      "id": "req-85143826",
+      "locationId": "4.6",
+      "locationName": "Top South VideoBoard East",
+      "venueName": "Jordan-Hare Stadium",
+      "mapLabel": "WEP Fiber Only",
+      "venueId": "jordan-hare",
+      "mapId": "map4",
+      "requestedAt": "2026-08-13T13:55:50.172341",
+      "status": "pending",
+      "uploadedPhoto": null
+    }
+  ],
   "venues": [
     {
       "categories": [
@@ -189,7 +202,7 @@
               "description": "testing 123",
               "fiber": "test again",
               "id": "3446948f",
-              "image": "uploads/location-20260130125415-2e77d1aa.png",
+              "image": "uploads/location-20260130125415-2e77d1aa.jpg",
               "name": "Test Location",
               "number": 11,
               "position": {
@@ -428,16 +441,40 @@
               }
             },
             {
-              "description": "Between section 12 and 13. 1415 is the main fiber hub for all connections that do not originate in the truck pedistal.",
-              "fiber": "Main Hub",
+              "description": "Between section 6 and 7. Direct runs back to 1415. Against wall between hedges.",
+              "fiber": "",
               "id": "3.8",
               "image": "location3-8.jpg",
-              "name": "1415",
+              "name": "Field Level 50",
               "number": 8,
               "position": {
                 "left": "38%",
                 "top": "50%"
               }
+            },
+            {
+              "number": 9,
+              "name": "North High Endzone Camera",
+              "description": "Underneath north scoreboard in camera pill box",
+              "fiber": "12 ST",
+              "image": "",
+              "position": {
+                "top": "4.57%",
+                "left": "48.77%"
+              },
+              "id": "08530c6e"
+            },
+            {
+              "number": 10,
+              "name": "Broadcast Distribution Room",
+              "description": "New demarc room (2026 season) for connectivity from stadium to TV dock underneath NW stands to left of walking path. Some fiber in here for WEP back to 1415.",
+              "fiber": "24 ST",
+              "image": "",
+              "position": {
+                "top": "16.21%",
+                "left": "35.53%"
+              },
+              "id": "aaae932a"
             }
           ],
           "subtitle": "6 ST Fiber & 2 SMPTE"
@@ -766,15 +803,15 @@
               }
             },
             {
-              "description": "24 LC - Located between the West side elevators - this pedestal holds the connection between 1415 and Truck Pedestal. It also holds some legacy cables from when this was the main stadium truck pedestal.",
+              "description": "New demarc room (2026 season) for connectivity from stadium to TV dock underneath NW stands.",
               "fiber": "24 LC",
               "id": "6.7",
               "image": "",
-              "name": "West Truck Box",
+              "name": "Broadcast Distribution Room",
               "number": 7,
               "position": {
-                "left": "11%",
-                "top": "42%"
+                "top": "17.3254%",
+                "left": "33.9765%"
               }
             },
             {
@@ -1405,7 +1442,7 @@
               "description": "Cute quincey",
               "fiber": "1 nap",
               "id": "194d5b2c",
-              "image": "uploads/location-20251202110351-7178a08c.jpeg",
+              "image": "uploads/location-20251202110351-7178a08c.jpg",
               "name": "Test place ",
               "number": 1,
               "position": {
@@ -1435,7 +1472,7 @@
               "description": "Giselle",
               "fiber": "1 cute ",
               "id": "16c0c292",
-              "image": "uploads/location-20251202113110-c5204615.jpeg",
+              "image": "uploads/location-20251202113110-c5204615.jpg",
               "name": "Cute Kitty",
               "number": 1,
               "position": {
@@ -1477,7 +1514,7 @@
               "description": "Above FFL truck dock area - access from 4th floor middle doubles doors on south side of arena",
               "fiber": "2 gang power ",
               "id": "1014568c",
-              "image": "uploads/location-20260130131350-e2dd85e5.png",
+              "image": "uploads/location-20260130131350-e2dd85e5.jpg",
               "name": "CatWalk Far Left ",
               "number": 1,
               "position": {
