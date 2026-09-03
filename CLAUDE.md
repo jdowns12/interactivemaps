@@ -44,7 +44,7 @@ Interactive venue maps for Auburn Athletics with fiber connectivity, ESPN camera
 - `POST /api/auth/login` - Admin authentication (401 body is always `{"error": "Session expired"}`)
 
 ## File Upload
-- Max size: 5MB
+- Max size: 25MB (browser shrinks to 1920px before upload)
 - Formats: PNG, JPG, JPEG, WebP, GIF
 - Location: `/uploads/`, recompressed to 1600px JPEG q80
 - Thumbnail written to `DIR/thumbs/NAME` (480px, q78). Backfill: `python3 compress_existing_images.py --thumbs`
@@ -56,7 +56,7 @@ Interactive venue maps for Auburn Athletics with fiber connectivity, ESPN camera
 
 ## Admin editor
 - Workflow contract in `PLAN-ADMIN-WORKFLOW.md` (placement mode, drawer, accordion, auto-publish, Photos needed view, pinch zoom, blank-map `canvas` ratio)
-- Playwright harness for regression: scratchpad `admin-verify.js` pattern (login with a preview `.env`, port 8092)
+- Playwright regression harness: `tests/e2e/admin-verify.js` (run against a preview copy on port 8092 whose `.env` hash is for password `preview123`; playwright lives in `~/.npm/_npx/e41f203b7505f1fb`)
 
 ## Tests
 - `.venv/bin/python -m pytest tests -q` (sandboxed, never touches real data.json or uploads/)
