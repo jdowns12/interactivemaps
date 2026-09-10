@@ -425,14 +425,16 @@
               "description": "Left silver box on photo deck. Located near south 45 yd line.",
               "fiber": "6 ST + 2 SMPTE",
               "id": "3.1",
-              "image": "location3-1.jpg",
+              "image": "uploads/location-20260908103926-0eafe072.jpg",
               "name": "Press Level 1",
               "number": 1,
               "position": {
-                "left": "32%",
-                "top": "48%"
+                "top": "48.1065%",
+                "left": "31.9163%"
               },
               "images": [
+                "uploads/location-20260908103926-0eafe072.jpg",
+                "uploads/location-20260908103926-1439ce08.jpg",
                 "location3-1.jpg"
               ]
             },
@@ -440,7 +442,7 @@
               "description": "Right silver box on photo deck. Located near south 45 yd line.",
               "fiber": "6 ST + 2 SMPTE",
               "id": "3.2",
-              "image": "location3-2.jpg",
+              "image": "uploads/location-20260908103956-944e66af.jpg",
               "name": "Press Level 2",
               "number": 2,
               "position": {
@@ -448,6 +450,8 @@
                 "top": "52%"
               },
               "images": [
+                "uploads/location-20260908103956-944e66af.jpg",
+                "uploads/location-20260908103957-0dcbc96f.jpg",
                 "location3-2.jpg"
               ]
             },
@@ -455,15 +459,16 @@
               "description": "Silver box on the NorthWest corner on a brick wall at field level. Power is located on the west sideline fence.",
               "fiber": "6 ST + 2 SMPTE",
               "id": "3.3",
-              "image": "location3-3.jpg",
+              "image": "uploads/location-20260908103806-abb516c1.jpg",
               "name": "North Endzone",
               "number": 3,
               "position": {
-                "left": "45%",
-                "top": "25%"
+                "top": "24.9996%",
+                "left": "44.9164%"
               },
               "images": [
-                "location3-3.jpg"
+                "uploads/location-20260908103806-abb516c1.jpg",
+                "uploads/location-20260908103807-111cc029.jpg"
               ]
             },
             {
@@ -474,8 +479,8 @@
               "name": "South Endzone",
               "number": 4,
               "position": {
-                "left": "60%",
-                "top": "64%"
+                "top": "63.9991%",
+                "left": "59.9997%"
               },
               "images": [
                 "location3-4.jpg"
@@ -489,8 +494,8 @@
               "name": "Tunnel",
               "number": 5,
               "position": {
-                "left": "49%",
-                "top": "70%"
+                "top": "69.9981%",
+                "left": "48.9999%"
               },
               "images": [
                 "location3-5.jpg"
@@ -508,21 +513,35 @@
                 "top": "85%"
               },
               "images": [
-                "location3-6.jpg"
+                "location3-6.jpg",
+                "uploads/location-20260908110417-7547c4fc.jpg"
               ]
             },
             {
               "description": "Between section 12 and 13. 1415 is the main fiber hub for all connections that do not originate in the truck pedistal.",
               "fiber": "Main Hub",
               "id": "3.7",
-              "image": "",
+              "image": "uploads/location-20260908105540-212b32c3.jpg",
               "name": "1415",
               "number": 7,
               "position": {
-                "left": "34%",
-                "top": "73%"
+                "top": "72.9985%",
+                "left": "33.9996%"
               },
-              "images": []
+              "images": [
+                "uploads/location-20260908105540-212b32c3.jpg",
+                "uploads/location-20260908105541-193ff4db.jpg",
+                "uploads/location-20260908105541-92d77783.jpg",
+                "uploads/location-20260908105542-864919e6.jpg",
+                "uploads/location-20260908105542-82e6ff5f.jpg",
+                "uploads/location-20260908105543-b0e102a6.jpg",
+                "uploads/location-20260908105549-1a4875e8.jpg",
+                "uploads/location-20260908105550-ff6ae95b.jpg",
+                "uploads/location-20260908105550-b882a2be.jpg",
+                "uploads/location-20260908105554-80112084.jpg",
+                "uploads/location-20260908105555-7fae2668.jpg",
+                "uploads/location-20260908105555-3450dd9f.jpg"
+              ]
             },
             {
               "description": "Between section 6 and 7. Direct runs back to 1415. Against wall between hedges.",
@@ -542,28 +561,38 @@
             {
               "number": 9,
               "name": "North High Endzone Camera",
-              "description": "Underneath north scoreboard in camera pill box",
-              "fiber": "12 ST",
-              "image": "",
+              "description": "Underneath north scoreboard in camera pill box. Videoboard box located to right of garage openings. Musco box located past second set of yellow beams on the left.",
+              "fiber": "12 ST (Videoboard) + 48 LC (Musco)",
+              "image": "uploads/location-20260908103119-9f15ac29.jpg",
               "position": {
-                "top": "4.57%",
+                "top": "4.5686%",
                 "left": "48.77%"
               },
               "id": "08530c6e",
-              "images": []
+              "images": [
+                "uploads/location-20260908103119-9f15ac29.jpg",
+                "uploads/location-20260908103120-49a19323.jpg",
+                "uploads/location-20260908103120-9eeb2c47.jpg",
+                "uploads/location-20260908103121-9ccb50fb.jpg",
+                "uploads/location-20260908103121-e9ef7432.jpg",
+                "uploads/location-20260908103122-423422dc.jpg"
+              ]
             },
             {
               "number": 10,
               "name": "Broadcast Distribution Room",
               "description": "New demarc room (2026 season) for connectivity from stadium to TV dock underneath NW stands to left of walking path. Some fiber in here for WEP back to 1415.",
               "fiber": "24 ST",
-              "image": "",
+              "image": "uploads/location-20260908103519-3e03041e.jpg",
               "position": {
                 "top": "16.21%",
                 "left": "35.53%"
               },
               "id": "aaae932a",
-              "images": []
+              "images": [
+                "uploads/location-20260908103519-3e03041e.jpg",
+                "uploads/location-20260908103520-540f9c89.jpg"
+              ]
             }
           ],
           "subtitle": "6 ST Fiber & 2 SMPTE",
@@ -588,15 +617,15 @@
               "images": []
             },
             {
-              "description": "Take the SouthWest elevator to the third floor, take the last door on the left and its the room straight ahead. 12 ST Fiber located near the top of the wall in the back of the room.",
+              "description": "Take the Southwest elevator to the third floor, take the last door on the left and its the room straight ahead. 12 ST Fiber located near the top of the wall in the back of the room.",
               "fiber": "12 ST",
               "id": "4.2",
               "image": "location4-2.jpg",
-              "name": "PA Room",
+              "name": "Audio Room",
               "number": 2,
               "position": {
-                "left": "24%",
-                "top": "59%"
+                "top": "58.9969%",
+                "left": "23.9986%"
               },
               "images": [
                 "location4-2.jpg"
@@ -636,8 +665,8 @@
               "name": "Top South Videoboard West",
               "number": 5,
               "position": {
-                "left": "47%",
-                "top": "88%"
+                "top": "87.9969%",
+                "left": "47.0815%"
               },
               "images": []
             },
@@ -646,24 +675,11 @@
               "fiber": "12 ST",
               "id": "4.6",
               "image": "",
-              "name": "Top South VideoBoard East",
+              "name": "Top South Videoboard East",
               "number": 6,
               "position": {
                 "left": "58%",
                 "top": "88%"
-              },
-              "images": []
-            },
-            {
-              "description": "24 LC - Located between the West side elevators - this pedestal holds the connection between 1415 and Truck Pedestal. It also holds some legacy cables from when this was the main stadium truck pedestal.",
-              "fiber": "24 LC",
-              "id": "4.7",
-              "image": "",
-              "name": "West Truck Dock",
-              "number": 7,
-              "position": {
-                "left": "11%",
-                "top": "42%"
               },
               "images": []
             },
@@ -673,10 +689,10 @@
               "id": "4.8",
               "image": "",
               "name": "Room 2130F",
-              "number": 8,
+              "number": 7,
               "position": {
-                "left": "24%",
-                "top": "46%"
+                "top": "45.9987%",
+                "left": "23.9999%"
               },
               "images": []
             },
@@ -684,14 +700,27 @@
               "description": "Between section 12 and 13. 1415 is the main fiber hub for all connections that do not originate in the truck pedistal.",
               "fiber": "Main Hub",
               "id": "4.9",
-              "image": "",
+              "image": "uploads/location-20260908105912-60921097.jpg",
               "name": "1415",
-              "number": 9,
+              "number": 8,
               "position": {
-                "left": "34%",
-                "top": "73%"
+                "top": "72.9968%",
+                "left": "33.9996%"
               },
-              "images": []
+              "images": [
+                "uploads/location-20260908105912-60921097.jpg",
+                "uploads/location-20260908105913-89b886b4.jpg",
+                "uploads/location-20260908105913-c5ced8c7.jpg",
+                "uploads/location-20260908105914-16c74bff.jpg",
+                "uploads/location-20260908105916-2a64c3e0.jpg",
+                "uploads/location-20260908105917-c37dc3c1.jpg",
+                "uploads/location-20260908105917-c4c7623f.jpg",
+                "uploads/location-20260908105919-b8072593.jpg",
+                "uploads/location-20260908105920-e986c77a.jpg",
+                "uploads/location-20260908105920-1a739d68.jpg",
+                "uploads/location-20260908105921-90ea6c8f.jpg",
+                "uploads/location-20260908105921-6f1bf24d.jpg"
+              ]
             }
           ],
           "subtitle": "Patches From 1415",
@@ -712,31 +741,36 @@
               "fiber": "6 ST",
               "floorColor": "purple",
               "id": "5.1",
-              "image": "location5-1.jpg",
-              "name": "Home Radio",
+              "image": "uploads/location-20260908110852-e9b6defc.jpg",
+              "name": "Home Radio (2450A)",
               "number": 1,
               "position": {
-                "left": "31%",
-                "top": "28%"
+                "top": "27.9997%",
+                "left": "30.9993%"
               },
               "images": [
-                "location5-1.jpg"
+                "uploads/location-20260908110852-e9b6defc.jpg",
+                "location5-1.jpg",
+                "uploads/location-20260908110855-4797ec9b.jpg",
+                "uploads/location-20260908110854-9372b3db.jpg"
               ]
             },
             {
-              "description": "6 ST - 5th Floor of South West Recruiting Building",
-              "fiber": "6 ST",
+              "description": "12 ST - 5th Floor of South West Recruiting Building",
+              "fiber": "12 ST",
               "floorColor": "purple",
               "id": "5.2",
-              "image": "location5-2.jpg",
-              "name": "Away Radio",
-              "number": 2,
+              "image": "uploads/location-20260908112208-27f53dc2.jpg",
+              "name": "Away Radio (2450K)",
+              "number": 3,
               "position": {
-                "left": "42%",
-                "top": "38%"
+                "top": "41.7692%",
+                "left": "49.4753%"
               },
               "images": [
-                "location5-2.jpg"
+                "uploads/location-20260908112208-27f53dc2.jpg",
+                "uploads/location-20260908112209-924c6a74.jpg",
+                "uploads/location-20260908112209-fdfb1817.jpg"
               ]
             },
             {
@@ -746,10 +780,10 @@
               "id": "5.3",
               "image": "location5-3.jpg",
               "name": "Press Level on Wall",
-              "number": 3,
+              "number": 4,
               "position": {
-                "left": "35%",
-                "top": "38%"
+                "top": "37.9994%",
+                "left": "34.9997%"
               },
               "images": [
                 "location5-3.jpg"
@@ -762,10 +796,10 @@
               "id": "5.4",
               "image": "location5-4.jpg",
               "name": "TWC Front Door Brick Wall",
-              "number": 4,
+              "number": 5,
               "position": {
-                "left": "72%",
-                "top": "72%"
+                "top": "71.9985%",
+                "left": "71.9958%"
               },
               "images": [
                 "location5-4.jpg"
@@ -778,10 +812,10 @@
               "id": "5.5",
               "image": "location5-5.jpg",
               "name": "TWC Main Entrance Blue Wall",
-              "number": 5,
+              "number": 6,
               "position": {
-                "left": "58%",
-                "top": "54%"
+                "top": "53.9985%",
+                "left": "57.9995%"
               },
               "images": [
                 "location5-5.jpg"
@@ -794,7 +828,7 @@
               "id": "5.6",
               "image": "location5-6.jpg",
               "name": "AV Room 0463",
-              "number": 6,
+              "number": 7,
               "position": {
                 "left": "66%",
                 "top": "52%"
@@ -810,7 +844,7 @@
               "id": "5.7",
               "image": "location5-7.jpg",
               "name": "Locker Room",
-              "number": 7,
+              "number": 8,
               "position": {
                 "left": "84%",
                 "top": "52%"
@@ -826,7 +860,7 @@
               "id": "5.8",
               "image": "location5-8.jpg",
               "name": "TV Wall",
-              "number": 8,
+              "number": 9,
               "position": {
                 "left": "43%",
                 "top": "52%"
@@ -842,14 +876,31 @@
               "id": "5.9",
               "image": "location5-9.jpg",
               "name": "TWC 2nd Floor",
-              "number": 9,
+              "number": 10,
               "position": {
-                "left": "45%",
-                "top": "48%"
+                "top": "47.8882%",
+                "left": "44.9982%"
               },
               "images": [
                 "location5-9.jpg"
               ]
+            },
+            {
+              "number": 2,
+              "name": "PA Booth (2450F)",
+              "description": "Game location for 2 DAK ops, Fan Experience producer, secondary Fan Experience, DJ, PA, PA Spotter. Room connections are to the left under the table when you enter.",
+              "fiber": "12 ST (1415) + 24 ST (unterminated)",
+              "image": "uploads/location-20260908111648-d172a661.jpg",
+              "images": [
+                "uploads/location-20260908111648-d172a661.jpg",
+                "uploads/location-20260908111648-4425e305.jpg",
+                "uploads/location-20260908111649-ea2af2b7.jpg"
+              ],
+              "position": {
+                "top": "36.9253%",
+                "left": "41.3978%"
+              },
+              "id": "695d6267"
             }
           ],
           "subtitle": "Patches From 1415",
@@ -861,51 +912,58 @@
           "label": "Truck Patches",
           "locations": [
             {
-              "description": "12 ST, 3 SMPTE, 2 Triax, 6 XLR - Located on the photodeck at the North 25 yd line on the third floor concourse",
-              "fiber": "12 ST + 3 SMPTE + 2 Triax + 6 XLR",
+              "description": "12 ST, 3 SMPTE, 6 XLR - Located on the photodeck at the North 25 yd line on the third floor concourse",
+              "fiber": "12 ST + 3 SMPTE + 6 XLR",
               "id": "6.1",
-              "image": "",
+              "image": "uploads/location-20260907120405-6752850b.jpg",
               "name": "Left 25",
               "number": 1,
               "position": {
-                "left": "25%",
-                "top": "37%"
-              },
-              "images": []
-            },
-            {
-              "description": "12 ST, 6 SMPTE, 4 Triax, 6 XLR - Located on the photodeck at the 50 yd line on the third floor concourse",
-              "fiber": "12 ST + 6 SMPTE + 4 Triax + 6 XLR",
-              "id": "6.2",
-              "image": "location6-2.jpg",
-              "name": "50 yd",
-              "number": 2,
-              "position": {
-                "left": "23%",
-                "top": "46%"
+                "top": "36.9993%",
+                "left": "25%"
               },
               "images": [
-                "location6-2.jpg"
+                "uploads/location-20260907120405-6752850b.jpg",
+                "uploads/location-20260907120405-d0415327.jpg"
               ]
             },
             {
-              "description": "12 ST, 3 SMPTE, 2 Triax, 6 XLR - Located on the photodeck at the South 25 yd line on the third floor concourse",
-              "fiber": "12 ST + 3 SMPTE + 2 Triax + 6 XLR",
+              "description": "12 ST, 6 SMPTE, 6 XLR - Located on the photodeck at the 50 yd line on the third floor concourse",
+              "fiber": "12 ST + 6 SMPTE +  6 XLR",
+              "id": "6.2",
+              "image": "uploads/location-20260907120440-fbedc03d.jpg",
+              "name": "50 yd",
+              "number": 2,
+              "position": {
+                "top": "45.9987%",
+                "left": "22.9998%"
+              },
+              "images": [
+                "uploads/location-20260907120440-fbedc03d.jpg",
+                "uploads/location-20260907120440-39d4bf95.jpg"
+              ]
+            },
+            {
+              "description": "12 ST, 3 SMPTE, 6 XLR - Located on the photodeck at the South 25 yd line on the third floor concourse",
+              "fiber": "12 ST + 3 SMPTE + 6 XLR",
               "id": "6.3",
-              "image": "",
+              "image": "uploads/location-20260907120510-d2aaa7cf.jpg",
               "name": "Right 25",
               "number": 3,
               "position": {
-                "left": "25%",
-                "top": "55%"
+                "top": "54.9997%",
+                "left": "25%"
               },
-              "images": []
+              "images": [
+                "uploads/location-20260907120510-d2aaa7cf.jpg",
+                "uploads/location-20260907120511-08dc171a.jpg"
+              ]
             },
             {
-              "description": "48 ST, 3 SMPTE, 2 Triax, 36 (DT12) XLR - Located off the North West elevator - take the last hallway on your right and the room is straight down the hallway from the door.",
-              "fiber": "48 ST + 3 SMPTE + 2 Triax + 36 XLR",
+              "description": "48 ST, 3 SMPTE, 36 (DT12) XLR - Located off the North West elevator - take the last hallway on your right and the room is straight down the hallway from the door.",
+              "fiber": "48 ST + 3 SMPTE + 36 XLR (DT12)",
               "id": "6.4",
-              "image": "location6-4.jpg",
+              "image": "uploads/location-20260907120831-87bffe2e.jpg",
               "name": "Booth",
               "number": 4,
               "position": {
@@ -913,27 +971,35 @@
                 "top": "35%"
               },
               "images": [
-                "location6-4.jpg"
+                "uploads/location-20260907120831-87bffe2e.jpg",
+                "uploads/location-20260907120832-34c22903.jpg",
+                "uploads/location-20260907120832-339330e4.jpg",
+                "uploads/location-20260907120833-03897477.jpg",
+                "uploads/location-20260907120833-d8c4a9e5.jpg",
+                "uploads/location-20260907120833-e332a485.jpg"
               ]
             },
             {
-              "description": "12 ST, 3 SMPTE, 2 Triax, 6 XLR - Located at the top of the South Endzone directly under the VideoBoard clock.",
-              "fiber": "12 ST + 3 SMPTE + 2 Triax + 6 XLR",
+              "description": "12 ST, 3 SMPTE, 6 XLR - Located at the top of the South Endzone directly under the VideoBoard clock.",
+              "fiber": "12 ST + 3 SMPTE + 6 XLR",
               "id": "6.5",
-              "image": "",
+              "image": "uploads/location-20260907120008-48525abf.jpg",
               "name": "High South EZ",
               "number": 5,
               "position": {
                 "left": "50%",
                 "top": "85%"
               },
-              "images": []
+              "images": [
+                "uploads/location-20260907120008-48525abf.jpg",
+                "uploads/location-20260907120015-04153b57.jpg"
+              ]
             },
             {
-              "description": "12 ST, 3 SMPTE, 2 Triax, 6 XLR - Located inside the North ScoreBoard. Enter from the top of the bowl in section 41.",
-              "fiber": "12 ST + 3 SMPTE + 2 Triax + 6 XLR",
+              "description": "12 ST, 3 SMPTE, 6 XLR - Located inside the North ScoreBoard. Enter from the top of the bowl in section 41. JBT is on wall past the left garage opening.",
+              "fiber": "12 ST + 3 SMPTE + 6 XLR",
               "id": "6.6",
-              "image": "location6-6.jpg",
+              "image": "uploads/location-20260907120258-e947a245.jpg",
               "name": "High North EZ",
               "number": 6,
               "position": {
@@ -941,27 +1007,35 @@
                 "top": "5%"
               },
               "images": [
-                "location6-6.jpg"
+                "uploads/location-20260907120258-e947a245.jpg",
+                "uploads/location-20260907120259-021fa227.jpg"
               ]
             },
             {
-              "description": "New demarc room (2026 season) for connectivity from stadium to TV dock underneath NW stands.",
-              "fiber": "24 LC",
+              "description": "New demarc room (2026 season) for connectivity from stadium to TV dock underneath NW stands. Plyon camera crew will operate from this location.",
+              "fiber": "96 ST + 18 SMPTE + 24 XLR (DT12)",
               "id": "6.7",
-              "image": "",
+              "image": "uploads/location-20260907120210-fbc7ca7c.jpg",
               "name": "Broadcast Distribution Room",
               "number": 7,
               "position": {
-                "top": "17.3254%",
-                "left": "33.9765%"
+                "top": "17.3247%",
+                "left": "33.9763%"
               },
-              "images": []
+              "images": [
+                "uploads/location-20260907120210-fbc7ca7c.jpg",
+                "uploads/location-20260907120211-8d8e994f.jpg",
+                "uploads/location-20260907120211-d6aa9700.jpg",
+                "uploads/location-20260907120212-a5532069.jpg",
+                "uploads/location-20260907120212-5ba143cf.jpg",
+                "uploads/location-20260907120213-d8bfe26c.jpg"
+              ]
             },
             {
               "description": "12 ST - Take the South West Elevator, take the last door on your left and the official replay room is the 4th door on your right.",
               "fiber": "12 ST",
               "id": "6.8",
-              "image": "location6-8.jpg",
+              "image": "uploads/location-20260907121046-5c07a096.jpg",
               "name": "Official Replay",
               "number": 8,
               "position": {
@@ -969,8 +1043,31 @@
                 "top": "52%"
               },
               "images": [
-                "location6-8.jpg"
+                "uploads/location-20260907121046-5c07a096.jpg",
+                "uploads/location-20260907121047-6d6edfda.jpg"
               ]
+            },
+            {
+              "number": 9,
+              "name": "Truck Dock",
+              "description": "Located across Heisman Drive. Access from NW gates, no longer access from field level on North side. All connections to Locations 1-6 are home runs to room. All other connections go to Broadcast Distribution Room (Location 7) in cabinets 3-5. Power located in cabinet 2, SEC/AT&T TX/RX in cabinet 7.",
+              "fiber": "96 ST + 18 SMPTE + 24 XLR (DT12) to Distribution Room. Home runs to Locations 1-6",
+              "image": "uploads/location-20260907121846-d430f32b.jpg",
+              "images": [
+                "uploads/location-20260907121846-d430f32b.jpg",
+                "uploads/location-20260907121846-f2282d8a.jpg",
+                "uploads/location-20260907121847-1f796b30.jpg",
+                "uploads/location-20260907121847-0e190667.jpg",
+                "uploads/location-20260907121847-8f0abbc3.jpg",
+                "uploads/location-20260907121848-3fea9c0d.jpg",
+                "uploads/location-20260907121848-09866892.jpg",
+                "uploads/location-20260907121849-80c98493.jpg"
+              ],
+              "position": {
+                "top": "1.51%",
+                "left": "23.36%"
+              },
+              "id": "0bba7b99"
             }
           ],
           "subtitle": "From Truck Dock",
@@ -1408,8 +1505,8 @@
               "name": "High Endzone (2nd Floor)",
               "number": 4,
               "position": {
-                "left": "72%",
-                "top": "48%"
+                "top": "51.868538%",
+                "left": "70.639273%"
               },
               "images": [
                 "location9-4.jpg"
@@ -1474,19 +1571,6 @@
               "images": [
                 "location9-8.jpg"
               ]
-            },
-            {
-              "description": "",
-              "fiber": "",
-              "id": "bf0c7561",
-              "image": "",
-              "name": "",
-              "number": 9,
-              "position": {
-                "left": "69.95%",
-                "top": "72.45%"
-              },
-              "images": []
             }
           ],
           "subtitle": "From closet by trophy case poolside",
@@ -1704,45 +1788,7 @@
         "9d56d076"
       ],
       "id": "e96204e9",
-      "maps": [
-        {
-          "id": "af85ecb1",
-          "image": "uploads/maps/map-20251202113036-5e33b604.jpeg",
-          "label": "Test Map",
-          "locations": [
-            {
-              "description": "Giselle",
-              "fiber": "1 cute ",
-              "id": "16c0c292",
-              "image": "uploads/location-20251202113110-c5204615.jpg",
-              "name": "Cute Kitty",
-              "number": 1,
-              "position": {
-                "left": "48.80%",
-                "top": "47.25%"
-              },
-              "images": [
-                "uploads/location-20251202113110-c5204615.jpg"
-              ]
-            },
-            {
-              "description": "",
-              "fiber": "",
-              "id": "70698318",
-              "image": "",
-              "name": "",
-              "number": 2,
-              "position": {
-                "left": "66.75%",
-                "top": "62.50%"
-              },
-              "images": []
-            }
-          ],
-          "subtitle": "1",
-          "canvas": "16:9"
-        }
-      ],
+      "maps": [],
       "name": "Test Venue",
       "type": "arena"
     },
@@ -1782,7 +1828,7 @@
     }
   ],
   "meta": {
-    "lastModified": "2026-09-03T22:28:03.644893+00:00",
-    "lastPublished": "2026-09-03T23:35:34.743136+00:00"
+    "lastModified": "2026-09-08T16:22:21.154545+00:00",
+    "lastPublished": "2026-09-08T16:22:22.750735+00:00"
   }
 }
