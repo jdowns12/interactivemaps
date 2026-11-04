@@ -6,6 +6,8 @@ Athletics / WEP, with a password-protected admin editor. Live on the Raspberry P
 LAN http://192.168.1.5:8081). Quiet since 2026-09-10. Successor of `../wepmaps` (static).
 Primary users are on phones at venues: check every change at 390x844 first, then 1440x900.
 
+Stack: follows ~/Projects/STACK.md. Here: Raspberry Pi (`interactivemaps.service`, :8081) behind Cloudflare Tunnel at wepmaps.gumdrop.space, Flask, `data.json` + uploads. Deviations: one admin password hash instead of accounts; repo on personal `jdowns12`.
+
 ## Commands
 - Tests: `python3 -m pytest tests -q` (sandboxed; never touches `data.json` or `uploads/`).
   There is no `.venv` in this checkout on the Mac; the Pi has one (`.venv/bin/python`).
